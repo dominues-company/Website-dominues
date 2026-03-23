@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test - Flujo de Invitado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test - Flujo de Invitado al Juego de Dominó</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Instrucciones de Prueba</h3>
+            <p>Este test verifica que las correcciones implementadas funcionen correctamente:</p>
+            <ol>
+                <li><strong>Validaciones de seguridad</strong> en las funciones del juego</li>
+                <li><strong>Manejo de errores</strong> cuando los contenedores no están inicializados</li>
+                <li><strong>Sistema de reintentos</strong> automáticos</li>
+                <li><strong>Navegación segura</strong> entre páginas del juego</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🎮 Simulación de Invitado</h3>
+            <button onclick="startInviteTest()">🚀 Iniciar Test de Invitado</button>
+            <button onclick="clearLogs()">🗑️ Limpiar Logs</button>
+            <button onclick="checkGameStatus()">📊 Verificar Estado del Juego</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Logs de Prueba</h3>
+            <div id="testLogs" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Juego en Iframe</h3>
+            <iframe id="gameFrame" src="http://localhost:8080/waiting-room/1"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let testLogs = document.getElementById('testLogs');
+        let gameFrame = document.getElementById('gameFrame');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            testLogs.appendChild(logEntry);
+            testLogs.scrollTop = testLogs.scrollHeight;
+            console.log(`[TEST] ${message}`);
+        }
+
+        function clearLogs() {
+            testLogs.innerHTML = '';
+            log('Logs limpiados', 'info');
+        }
+
+        function startInviteTest() {
+            log('🚀 Iniciando test de flujo de invitado...', 'info');
+            
+            // Simular datos de invitación
+            const inviteData = {
+                roomCode: 'TEST123',
+                playerName: 'TestPlayer',
+                tableId: 5,
+                entryPrice: 300,
+                winPoints: 15
+            };
+
+            log(`📤 Enviando datos de invitación: ${JSON.stringify(inviteData)}`, 'info');
+
+            // Esperar a que el iframe esté listo
+            setTimeout(() => {
+                try {
+                    const message = {
+                        type: 'GAME_INIT',
+                        data: {
+                            mode: 'online',
+                            playersRoom: 2,
+                            playerName: inviteData.playerName,
+                            opponentName: 'Jugador 2',
+                            players: 2,
+                            gameType: 'draw',
+                            points: inviteData.winPoints,
+                            autoStart: false,
+                            inviteMode: false,
+                            joinMode: true,
+                            roomCode: inviteData.roomCode,
+                            tableId: inviteData.tableId,
+                            entryPrice: inviteData.entryPrice,
+                            winPoints: inviteData.winPoints
+                        }
+                    };
+
+                    gameFrame.contentWindow.postMessage(message, '*');
+                    log('✅ Mensaje GAME_INIT enviado al juego', 'success');
+                    
+                    // Monitorear errores en el iframe
+                    monitorGameErrors();
+                    
+                } catch (error) {
+                    log(`❌ Error al enviar mensaje: ${error.message}`, 'error');
+                }
+            }, 2000);
+        }
+
+        function monitorGameErrors() {
+            log('👁️ Monitoreando errores del juego...', 'info');
+            
+            // Escuchar mensajes del iframe
+            window.addEventListener('message', (event) => {
+                if (event.origin !== 'http://localhost:8080') return;
+                
+                log(`📨 Mensaje recibido del juego: ${event.data.type || 'unknown'}`, 'info');
+                
+                if (event.data.type === 'GAME_ERROR') {
+                    log(`❌ Error reportado por el juego: ${event.data.error}`, 'error');
+                } else if (event.data.type === 'GAME_READY') {
+                    log('✅ Juego reporta que está listo', 'success');
+                }
+            });
+
+            // Verificar errores en la consola del iframe
+            setTimeout(() => {
+                try {
+                    const iframeWindow = gameFrame.contentWindow;
+                    if (iframeWindow && iframeWindow.console) {
+                        log('🔍 Verificando estado del juego...', 'info');
+                        
+                        // Verificar si las funciones de seguridad están disponibles
+                        if (iframeWindow.GameSafety) {
+                            log('✅ GameSafety module detectado', 'success');
+                            log(`📊 Estado: ${JSON.stringify(iframeWindow.GameSafety.getGameStatus())}`, 'info');
+                        } else {
+                            log('⚠️ GameSafety module no detectado', 'error');
+                        }
+                    }
+                } catch (error) {
+                    log(`❌ Error al verificar estado: ${error.message}`, 'error');
+                }
+            }, 5000);
+        }
+
+        function checkGameStatus() {
+            log('📊 Verificando estado del juego...', 'info');
+            
+            try {
+                const iframeWindow = gameFrame.contentWindow;
+                if (iframeWindow) {
+                    // Verificar funciones críticas
+                    const functions = ['goPage', 'togglePop', 'toggleOptions', 'safeGoPage'];
+                    functions.forEach(funcName => {
+                        if (typeof iframeWindow[funcName] === 'function') {
+                            log(`✅ Función ${funcName} disponible`, 'success');
+                        } else {
+                            log(`❌ Función ${funcName} no disponible`, 'error');
+                        }
+                    });
+
+                    // Verificar contenedores
+                    const containers = ['gameLogsTxt', 'mainContainer', 'roomContainer', 'exitContainer', 'optionsContainer'];
+                    containers.forEach(containerName => {
+                        const container = iframeWindow[containerName];
+                        if (container && typeof container.visible !== 'undefined') {
+                            log(`✅ Contenedor ${containerName} inicializado`, 'success');
+                        } else {
+                            log(`⚠️ Contenedor ${containerName} no inicializado`, 'error');
+                        }
+                    });
+                }
+            } catch (error) {
+                log(`❌ Error al verificar estado: ${error.message}`, 'error');
+            }
+        }
+
+        // Inicializar test cuando se carga la página
+        window.addEventListener('load', () => {
+            log('🧪 Test de invitado cargado y listo', 'info');
+            log('💡 Haz clic en "Iniciar Test de Invitado" para comenzar', 'info');
+        });
+
+        // Interceptar errores del iframe
+        gameFrame.addEventListener('error', (event) => {
+            log(`❌ Error en iframe: ${event.message}`, 'error');
+        });
+    </script>
+</body>
+</html>
