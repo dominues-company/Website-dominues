@@ -293,6 +293,7 @@
 
 <script>
 import api from '@/services/api';
+import { normalizeHistoryGame } from '@/utils/gameHistoryNormalize';
 
 export default {
   name: 'PoteView',
@@ -364,7 +365,7 @@ export default {
       
       try {
         const response = await api.get(`/api/stats/player/${player.user_id}/history`);
-        this.playerHistory = response.data.history || [];
+        this.playerHistory = (response.data.history || []).map(normalizeHistoryGame);
       } catch (error) {
         console.error('Error loading player history:', error);
         this.playerHistory = [];
