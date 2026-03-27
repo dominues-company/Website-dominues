@@ -1,32 +1,25 @@
 /**
- * Une campos del JSON game_data (game_results) con el ítem de /history.
- * Fix: string doble-encoded, prioriza finalScore / opponentFinalScore,
- *      mapea isWinner desde game_data, debug opcional.
+ * Une game_data del historial con player_score / opponent_score en la raíz del ítem.
  */
 
 function tryParseJson(val) {
   if (val == null) return null;
   if (typeof val === 'object') return val;
   if (typeof val !== 'string') return null;
-
   const s = val.trim().replace(/^\uFEFF/, '');
   if (!s || s === 'null') return null;
-
   try {
     let parsed = JSON.parse(s);
-
     if (typeof parsed === 'string') {
       try {
         parsed = JSON.parse(parsed);
       } catch {
-        /* string de un solo nivel, no es JSON */
+        /* un solo nivel */
       }
     }
-
     if (Array.isArray(parsed) && parsed.length === 1 && typeof parsed[0] === 'object') {
       parsed = parsed[0];
     }
-
     return typeof parsed === 'object' && parsed !== null ? parsed : null;
   } catch {
     return null;
@@ -38,9 +31,7 @@ function unwrapSingleKeyPayload(obj) {
   const keys = Object.keys(obj);
   if (keys.length !== 1) return obj;
   const k = keys[0];
-  if (
-    !['data', 'payload', 'result', 'game', 'attributes', 'gameData', 'game_data'].includes(k)
-  ) {
+  if (!['data', 'payload', 'result', 'game', 'attributes', 'gameData', 'game_data'].includes(k)) {
     return obj;
   }
   const inner = tryParseJson(obj[k]) ?? obj[k];
@@ -57,7 +48,6 @@ function normalizeScoreValue(v) {
 
 function pickScoresFromObject(obj) {
   if (!obj || typeof obj !== 'object') return null;
-
   const ps = normalizeScoreValue(
     obj.finalScore ?? obj.playerScore ?? obj.final_score ?? obj.player_score
   );
@@ -67,7 +57,6 @@ function pickScoresFromObject(obj) {
       obj.opponent_final_score ??
       obj.opponent_score
   );
-
   if (ps == null && os == null) return null;
   return { ps, os };
 }
@@ -90,7 +79,6 @@ function collectJsonCandidates(raw) {
     raw?.details,
     raw?.payload
   ];
-
   const out = [];
   for (const p of paths) {
     let parsed = tryParseJson(p) ?? (p && typeof p === 'object' ? p : null);
@@ -98,9 +86,7 @@ function collectJsonCandidates(raw) {
     if (Array.isArray(parsed) && parsed.length === 1 && typeof parsed[0] === 'object') {
       parsed = parsed[0];
     }
-    if (parsed && typeof parsed === 'object') {
-      out.push(unwrapSingleKeyPayload(parsed));
-    }
+    if (parsed && typeof parsed === 'object') out.push(unwrapSingleKeyPayload(parsed));
   }
   return out;
 }
@@ -109,7 +95,6 @@ function extractScoresFromCandidates(blobs) {
   for (const blob of blobs) {
     const scores = pickScoresFromObject(blob);
     if (scores && (scores.ps != null || scores.os != null)) return scores;
-
     if (blob && typeof blob === 'object') {
       for (const v of Object.values(blob)) {
         const inner = tryParseJson(v) ?? (v && typeof v === 'object' ? v : null);
@@ -123,28 +108,19 @@ function extractScoresFromCandidates(blobs) {
   return null;
 }
 
-/**
- * @param {object} raw - Ítem del endpoint /history
- * @param {boolean} [debug=false] - Logs en consola (desarrollo)
- */
 export function normalizeHistoryGame(raw, debug = false) {
   if (!raw || typeof raw !== 'object') return raw;
   const game = { ...raw };
-
   const blobs = collectJsonCandidates(game);
 
   if (debug) {
     console.group('[normalizeHistoryGame] id:', game.id ?? game.result_id ?? game.game_id ?? '?');
-    console.log('raw.game_data type:', typeof raw.game_data);
-    console.log('blobs encontrados:', blobs.length);
-    blobs.forEach((b, i) => console.log(`  blob[${i}]:`, b));
+    console.log('game_data type:', typeof raw.game_data);
+    console.log('blobs:', blobs.length, blobs);
   }
 
   const fromJson = extractScoresFromCandidates(blobs);
-
-  if (debug) {
-    console.log('scores extraídos:', fromJson);
-  }
+  if (debug) console.log('scores:', fromJson);
 
   if (fromJson) {
     if (fromJson.ps != null) game.player_score = fromJson.ps;
@@ -161,9 +137,7 @@ export function normalizeHistoryGame(raw, debug = false) {
           b.gameMode != null ||
           b.game_mode != null ||
           b.playerScore != null ||
-          b.player_score != null ||
-          b.finalScore != null ||
-          b.final_score != null)
+          b.finalScore != null)
     ) ??
     blobs[0] ??
     tryParseJson(game.game_data ?? game.gameData) ??
@@ -176,34 +150,20 @@ export function normalizeHistoryGame(raw, debug = false) {
     if (!game.game_mode && (data.gameMode || data.game_mode)) {
       game.game_mode = data.gameMode ?? data.game_mode;
     }
-
     const winRaw = data.isWinner ?? data.is_winner;
-    if (game.is_winner == null && winRaw != null) {
-      game.is_winner = !!winRaw;
-    }
-
+    if (game.is_winner == null && winRaw != null) game.is_winner = !!winRaw;
     const sur = data.surrendered;
-    if (sur != null) {
-      game.surrendered = String(!!sur);
-    }
-
+    if (sur != null) game.surrendered = String(!!sur);
     const disc = data.disconnectReason ?? data.disconnect_reason;
-    if (disc != null && disc !== '') {
-      game.disconnect_reason = disc;
-    } else if (data.opponentDisconnected ?? data.opponent_disconnected) {
+    if (disc != null && disc !== '') game.disconnect_reason = disc;
+    else if (data.opponentDisconnected ?? data.opponent_disconnected) {
       game.disconnect_reason = game.disconnect_reason || 'Desconexión del oponente';
     }
   }
 
   if (debug) {
-    console.log(
-      'resultado → player_score:',
-      game.player_score,
-      '| opponent_score:',
-      game.opponent_score
-    );
+    console.log('player_score:', game.player_score, '| opponent_score:', game.opponent_score);
     console.groupEnd();
   }
-
   return game;
 }

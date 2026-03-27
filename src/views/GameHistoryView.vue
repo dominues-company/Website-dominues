@@ -20,22 +20,22 @@
 
       <div class="stats-grid">
         <div class="stat-card green">
-          <span class="stat-icon" aria-hidden="true">🏆</span>
+          <span class="stat-icon">🏆</span>
           <div class="stat-value">{{ totalWins }}</div>
           <div class="stat-label">Victorias</div>
         </div>
         <div class="stat-card">
-          <span class="stat-icon" aria-hidden="true">🎮</span>
+          <span class="stat-icon">🎮</span>
           <div class="stat-value">{{ totalGames }}</div>
           <div class="stat-label">Total Partidas</div>
         </div>
         <div class="stat-card">
-          <span class="stat-icon" aria-hidden="true">📊</span>
+          <span class="stat-icon">📊</span>
           <div class="stat-value">{{ winRate }}%</div>
           <div class="stat-label">Win Rate</div>
         </div>
         <div class="stat-card gold">
-          <span class="stat-icon" aria-hidden="true">💰</span>
+          <span class="stat-icon">💰</span>
           <div class="stat-value gold-value">{{ formatCurrencyPlain(totalEarnings) }}</div>
           <div class="stat-label">Total Ganado</div>
         </div>
@@ -50,7 +50,7 @@
             <option value="online">Online</option>
             <option value="invite">Invitación</option>
           </select>
-          <span class="chevron" aria-hidden="true">▼</span>
+          <span class="chevron">▼</span>
         </div>
         <div class="filter-group">
           <span class="filter-label">Resultado</span>
@@ -59,7 +59,7 @@
             <option value="win">Victoria</option>
             <option value="loss">Otras partidas</option>
           </select>
-          <span class="chevron" aria-hidden="true">▼</span>
+          <span class="chevron">▼</span>
         </div>
         <div class="filter-group">
           <span class="filter-label">Período</span>
@@ -69,7 +69,7 @@
             <option value="week">Última semana</option>
             <option value="month">Último mes</option>
           </select>
-          <span class="chevron" aria-hidden="true">▼</span>
+          <span class="chevron">▼</span>
         </div>
         <button type="button" class="btn-refresh" @click="loadHistory" :disabled="loading">
           <span class="spin" :class="{ spinning: loading }">↻</span>
@@ -81,7 +81,6 @@
         <div class="spinner" />
         <p>Cargando historial…</p>
       </div>
-
       <div v-else-if="error" class="state-panel state-error">
         <p>{{ error }}</p>
         <button type="button" class="btn-retry" @click="loadHistory">Reintentar</button>
@@ -91,11 +90,10 @@
         <div class="section-divider">
           <span>Partidas recientes — Página {{ currentPage }} de {{ totalPages }}</span>
         </div>
-
         <div class="matches-list">
           <div
             v-for="game in paginatedGames"
-            :key="game.result_id"
+            :key="game.result_id || game.id"
             class="match-card"
             :class="matchCardClass(game)"
           >
@@ -107,13 +105,12 @@
               <div class="match-date">{{ formatDateHistory(game.game_date) }}</div>
             </div>
             <div class="match-meta">
-              <span class="table-icon" aria-hidden="true">{{ matchTableIcon(game) }}</span>
+              <span class="table-icon">{{ matchTableIcon(game) }}</span>
               <span>{{ game.table_name }} — {{ game.mode_name }}</span>
             </div>
             <div v-if="game.opponent_name" class="match-opponent-line">
               vs {{ game.opponent_name }}
             </div>
-
             <div class="match-body">
               <div class="score-section">
                 <div class="score-label">Tu score</div>
@@ -124,7 +121,6 @@
                 <div class="score-value">{{ displayScore(game, 'opponent') }}</div>
               </div>
             </div>
-
             <div class="match-footer">
               <div class="footer-cell">
                 <div class="footer-label">Apuesta</div>
@@ -132,16 +128,12 @@
               </div>
               <div class="footer-cell">
                 <div class="footer-label">Premio</div>
-                <div
-                  class="footer-value"
-                  :class="isWinner(game) ? 'pos' : 'neutral'"
-                >
+                <div class="footer-value" :class="isWinner(game) ? 'pos' : 'neutral'">
                   <template v-if="isWinner(game)">+{{ formatCurrencyPlain(game.winner_amount) }}</template>
                   <template v-else>{{ formatCurrencyPlain(0) }}</template>
                 </div>
               </div>
             </div>
-
             <div v-if="hasBadges(game)" class="match-badges">
               <span v-if="game.surrendered === 'true'" class="badge surrender">Rendición</span>
               <span v-if="game.disconnect_reason" class="badge disconnect">Desconexión</span>
@@ -150,14 +142,13 @@
             </div>
           </div>
         </div>
-
         <div v-if="totalPages > 1" class="pagination">
           <button
             type="button"
             class="page-arrow"
             :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)"
             aria-label="Página anterior"
+            @click="changePage(currentPage - 1)"
           >
             ‹
           </button>
@@ -177,8 +168,8 @@
             type="button"
             class="page-arrow"
             :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)"
             aria-label="Página siguiente"
+            @click="changePage(currentPage + 1)"
           >
             ›
           </button>
@@ -208,11 +199,7 @@ export default {
       filteredGames: [],
       loading: true,
       error: null,
-      filters: {
-        gameMode: '',
-        result: '',
-        period: ''
-      },
+      filters: { gameMode: '', result: '', period: '' },
       currentPage: 1,
       itemsPerPage: 10
     };
@@ -221,8 +208,7 @@ export default {
     ...mapGetters('auth', ['currentUser']),
     displayUserName() {
       const u = this.currentUser;
-      if (!u) return '';
-      return u.name || u.username || u.email || 'Jugador';
+      return u?.name || u?.username || u?.email || 'Jugador';
     },
     totalGames() {
       return this.games.length;
@@ -231,28 +217,26 @@ export default {
       return this.games.filter(g => this.isWinner(g)).length;
     },
     winRate() {
-      if (this.totalGames === 0) return 0;
+      if (!this.totalGames) return 0;
       return ((this.totalWins / this.totalGames) * 100).toFixed(1);
     },
     totalEarnings() {
-      return this.games.reduce((sum, g) => {
-        const winnings = this.isWinner(g) ? (parseFloat(g.winner_amount) || 0) : 0;
-        return sum + winnings;
-      }, 0);
+      return this.games.reduce(
+        (s, g) => s + (this.isWinner(g) ? parseFloat(g.winner_amount) || 0 : 0),
+        0
+      );
     },
     totalPages() {
       return Math.ceil(this.filteredGames.length / this.itemsPerPage) || 1;
     },
     paginatedGames() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      return this.filteredGames.slice(start, start + this.itemsPerPage);
+      const s = (this.currentPage - 1) * this.itemsPerPage;
+      return this.filteredGames.slice(s, s + this.itemsPerPage);
     },
     pageNumbers() {
       const t = this.totalPages;
       const c = this.currentPage;
-      if (t <= 7) {
-        return Array.from({ length: t }, (_, i) => i + 1);
-      }
+      if (t <= 7) return Array.from({ length: t }, (_, i) => i + 1);
       const set = new Set([1, 2, 3, t, c, c - 1, c + 1].filter(n => n >= 1 && n <= t));
       const sorted = [...set].sort((a, b) => a - b);
       const out = [];
@@ -269,24 +253,16 @@ export default {
     this.loadHistory();
   },
   methods: {
-    /**
-     * Normaliza is_winner: true | false | 1 | 0 | "true" | "false" | "1" | "win" | "victoria"
-     */
     isWinner(game) {
       const v = game.is_winner;
       if (v == null) return false;
       if (typeof v === 'boolean') return v;
       if (typeof v === 'number') return v === 1;
       if (typeof v === 'string') {
-        const s = v.trim().toLowerCase();
-        return s === 'true' || s === '1' || s === 'win' || s === 'victoria';
+        return ['true', '1', 'win', 'victoria'].includes(v.trim().toLowerCase());
       }
       return false;
     },
-
-    /**
-     * Scores: raíz puede traer snake_case o camelCase; game_data lo rellena normalize.
-     */
     displayScore(game, side) {
       const raw =
         side === 'player'
@@ -298,132 +274,102 @@ export default {
             game.opponentScore ??
             game.opponentFinalScore ??
             game.opponent_final_score;
-      if (raw == null || raw === '') return '0';
+      if (raw == null || raw === '') return '—';
       const n = Number(String(raw).trim());
-      return Number.isFinite(n) ? n : '0';
+      return Number.isFinite(n) ? n : '—';
     },
-
-    hasBadges(game) {
+    hasBadges(g) {
       return (
-        game.surrendered === 'true' ||
-        !!game.disconnect_reason ||
-        game.game_mode === 'cpu' ||
-        !!game.room_code
+        g.surrendered === 'true' ||
+        !!g.disconnect_reason ||
+        g.game_mode === 'cpu' ||
+        !!g.room_code
       );
     },
-    matchCardClass(game) {
-      return this.isWinner(game) ? 'victoria' : 'jugada';
+    matchCardClass(g) {
+      return this.isWinner(g) ? 'victoria' : 'jugada';
     },
-    resultBadgeClass(game) {
-      return this.isWinner(game) ? 'victoria' : 'jugada';
+    resultBadgeClass(g) {
+      return this.isWinner(g) ? 'victoria' : 'jugada';
     },
-    matchTableIcon(game) {
-      const m = game.game_mode;
-      if (m === 'cpu') return '🏠';
-      if (m === 'online' || m === 'invite') return '👥';
+    matchTableIcon(g) {
+      if (g.game_mode === 'cpu') return '🏠';
+      if (g.game_mode === 'online' || g.game_mode === 'invite') return '👥';
       return '🏠';
     },
-    formatWallet(balance) {
-      const n = parseFloat(balance);
-      const safe = Number.isFinite(n) ? n : 0;
-      return this.formatCurrencyPlain(safe);
+    formatWallet(b) {
+      const n = parseFloat(b);
+      return this.formatCurrencyPlain(Number.isFinite(n) ? n : 0);
     },
     formatCurrencyPlain(amount) {
-      const formatted = new Intl.NumberFormat('es-BO', {
+      return new Intl.NumberFormat('es-BO', {
         style: 'currency',
         currency: 'BOB',
         minimumFractionDigits: 2
-      }).format(amount || 0);
-      return formatted.replace('BOB', 'Rup');
+      })
+        .format(amount || 0)
+        .replace('BOB', 'Bs');
     },
     async loadHistory() {
       try {
         this.loading = true;
         this.error = null;
-
         const user = this.currentUser;
-        if (!user) {
-          throw new Error('Usuario no autenticado');
-        }
-
+        if (!user) throw new Error('Usuario no autenticado');
         const response = await api.get(`/api/stats/player/${user.id}/history?limit=100`);
-        const raw = response.data.history || [];
-
-        if (raw.length > 0 && process.env.NODE_ENV !== 'production') {
-          console.group('[GameHistory] diagnóstico primer ítem');
-          console.log('RAW:', JSON.stringify(raw[0], null, 2));
-          const normalized = normalizeHistoryGame(raw[0], true);
-          console.log('NORMALIZADO player_score:', normalized.player_score);
-          console.log('NORMALIZADO opponent_score:', normalized.opponent_score);
-          console.log('NORMALIZADO is_winner:', normalized.is_winner, '→ isWinner():', this.isWinner(normalized));
-          console.groupEnd();
+        if (process.env.NODE_ENV !== 'production' && response.data.history?.length) {
+          console.log('[GameHistory raw item 0]', JSON.stringify(response.data.history[0]));
+          console.log('[GameHistory normalized]', normalizeHistoryGame(response.data.history[0], true));
         }
-
-        this.games = raw.map(g => normalizeHistoryGame(g));
+        this.games = (response.data.history || []).map(g => normalizeHistoryGame(g));
         this.applyFilters();
-      } catch (error) {
-        console.error('Error loading game history:', error);
+      } catch (err) {
+        console.error('Error loading history:', err);
         this.error = 'Error al cargar el historial. Por favor intenta nuevamente.';
       } finally {
         this.loading = false;
       }
     },
-
     applyFilters() {
-      let filtered = [...this.games];
-
-      if (this.filters.gameMode) {
-        filtered = filtered.filter(g => g.game_mode === this.filters.gameMode);
-      }
-
-      if (this.filters.result === 'win') {
-        filtered = filtered.filter(g => this.isWinner(g));
-      } else if (this.filters.result === 'loss') {
-        filtered = filtered.filter(g => !this.isWinner(g));
-      }
-
+      let f = [...this.games];
+      if (this.filters.gameMode) f = f.filter(g => g.game_mode === this.filters.gameMode);
+      if (this.filters.result === 'win') f = f.filter(g => this.isWinner(g));
+      else if (this.filters.result === 'loss') f = f.filter(g => !this.isWinner(g));
       if (this.filters.period) {
         const now = new Date();
-        filtered = filtered.filter(g => {
-          const gameDate = new Date(g.game_date);
-          if (this.filters.period === 'today') {
-            return gameDate.toDateString() === now.toDateString();
-          }
+        f = f.filter(g => {
+          const d = new Date(g.game_date);
+          if (this.filters.period === 'today') return d.toDateString() === now.toDateString();
           if (this.filters.period === 'week') {
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            return gameDate >= weekAgo;
+            return d >= new Date(now.getTime() - 7 * 86400000);
           }
           if (this.filters.period === 'month') {
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            return gameDate >= monthAgo;
+            return d >= new Date(now.getTime() - 30 * 86400000);
           }
           return true;
         });
       }
-
-      this.filteredGames = filtered;
+      this.filteredGames = f;
       this.currentPage = 1;
     },
-
-    changePage(page) {
-      if (page >= 1 && page <= this.totalPages) {
-        this.currentPage = page;
-      }
+    changePage(p) {
+      if (p >= 1 && p <= this.totalPages) this.currentPage = p;
     },
-
     formatDateHistory(date) {
       const d = new Date(date);
-      const datePart = d.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      });
-      const timePart = d.toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-      return `${datePart} · ${timePart}`;
+      return (
+        d.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        }) +
+        ' · ' +
+        d.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        })
+      );
     }
   }
 };
