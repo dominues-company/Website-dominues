@@ -3,7 +3,7 @@ export const GAME_CONFIG = {
   // URLs
   GAME_URL: 'https://kubgame.dominues.com/',
   // GAME_URL: 'http://localhost:3030',
-  API_BASE_URL: 'https://apidomis.bloumydigital.com/public/api',
+  API_BASE_URL: 'https://xpanelx.dominues.com/public/api',
   // API_BASE_URL: 'http://192.168.1.105:3010/api',
   DASHBOARD_URL: 'https://dominues.com/dashboard',
   // DASHBOARD_URL: 'http://localhost:8080/dashboard', // Solo para desarrollo local

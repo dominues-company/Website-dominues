@@ -3,7 +3,7 @@ import axios from 'axios';
 // import store from '@/store'; // Temporalmente comentado para debug
 
 const api = axios.create({
-  baseURL: process.env.VUE_APP_API_URL || 'https://apidomis.bloumydigital.com/public',
+  baseURL: process.env.VUE_APP_API_URL || 'https://xpanelx.dominues.com/public',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

@@ -3,7 +3,7 @@ import axios from 'axios';
 import store from '@/store';
 
 const apiGame = axios.create({
-  // baseURL: 'https://apidomis.bloumydigital.com/public', // Producción
+  // baseURL: 'https://xpanelx.dominues.com/public', // Producción
   baseURL: 'http://192.168.1.105:3010', // Desarrollo local
   headers: {
     'Content-Type': 'application/json',
