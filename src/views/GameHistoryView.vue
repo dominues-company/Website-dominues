@@ -102,7 +102,7 @@
             <div class="match-header">
               <div class="result-badge" :class="resultBadgeClass(game)">
                 <span class="dot" />
-                {{ game.is_winner ? 'Victoria' : 'Partida jugada' }}
+                {{ isWinner(game) ? 'Victoria' : 'Partida jugada' }}
               </div>
               <div class="match-date">{{ formatDateHistory(game.game_date) }}</div>
             </div>
@@ -134,9 +134,9 @@
                 <div class="footer-label">Premio</div>
                 <div
                   class="footer-value"
-                  :class="game.is_winner ? 'pos' : 'neutral'"
+                  :class="isWinner(game) ? 'pos' : 'neutral'"
                 >
-                  <template v-if="game.is_winner">+{{ formatCurrencyPlain(game.winner_amount) }}</template>
+                  <template v-if="isWinner(game)">+{{ formatCurrencyPlain(game.winner_amount) }}</template>
                   <template v-else>{{ formatCurrencyPlain(0) }}</template>
                 </div>
               </div>
@@ -228,7 +228,7 @@ export default {
       return this.games.length;
     },
     totalWins() {
-      return this.games.filter(g => g.is_winner).length;
+      return this.games.filter(g => this.isWinner(g)).length;
     },
     winRate() {
       if (this.totalGames === 0) return 0;
@@ -236,7 +236,7 @@ export default {
     },
     totalEarnings() {
       return this.games.reduce((sum, g) => {
-        const winnings = g.is_winner ? (parseFloat(g.winner_amount) || 0) : 0;
+        const winnings = this.isWinner(g) ? (parseFloat(g.winner_amount) || 0) : 0;
         return sum + winnings;
       }, 0);
     },
@@ -269,6 +269,31 @@ export default {
     this.loadHistory();
   },
   methods: {
+    /**
+     * Normaliza is_winner: true | false | 1 | 0 | "true" | "false" | "1" | "win" | "victoria"
+     */
+    isWinner(game) {
+      const v = game.is_winner;
+      if (v == null) return false;
+      if (typeof v === 'boolean') return v;
+      if (typeof v === 'number') return v === 1;
+      if (typeof v === 'string') {
+        const s = v.trim().toLowerCase();
+        return s === 'true' || s === '1' || s === 'win' || s === 'victoria';
+      }
+      return false;
+    },
+
+    /**
+     * Muestra puntos numéricos o "—" si no hay dato (evita confundir con cero real).
+     */
+    displayScore(game, side) {
+      const raw = side === 'player' ? game.player_score : game.opponent_score;
+      if (raw == null || raw === '') return '—';
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : '—';
+    },
+
     hasBadges(game) {
       return (
         game.surrendered === 'true' ||
@@ -278,23 +303,16 @@ export default {
       );
     },
     matchCardClass(game) {
-      if (game.is_winner) return 'victoria';
-      return 'jugada';
+      return this.isWinner(game) ? 'victoria' : 'jugada';
     },
     resultBadgeClass(game) {
-      if (game.is_winner) return 'victoria';
-      return 'jugada';
+      return this.isWinner(game) ? 'victoria' : 'jugada';
     },
     matchTableIcon(game) {
       const m = game.game_mode;
       if (m === 'cpu') return '🏠';
       if (m === 'online' || m === 'invite') return '👥';
       return '🏠';
-    },
-    displayScore(game, side) {
-      const v = side === 'player' ? game.player_score : game.opponent_score;
-      if (v == null || v === '') return '0';
-      return v;
     },
     formatWallet(balance) {
       const n = parseFloat(balance);
@@ -320,8 +338,19 @@ export default {
         }
 
         const response = await api.get(`/api/stats/player/${user.id}/history?limit=100`);
+        const raw = response.data.history || [];
 
-        this.games = (response.data.history || []).map(normalizeHistoryGame);
+        if (raw.length > 0 && process.env.NODE_ENV !== 'production') {
+          console.group('[GameHistory] diagnóstico primer ítem');
+          console.log('RAW:', JSON.stringify(raw[0], null, 2));
+          const normalized = normalizeHistoryGame(raw[0], true);
+          console.log('NORMALIZADO player_score:', normalized.player_score);
+          console.log('NORMALIZADO opponent_score:', normalized.opponent_score);
+          console.log('NORMALIZADO is_winner:', normalized.is_winner, '→ isWinner():', this.isWinner(normalized));
+          console.groupEnd();
+        }
+
+        this.games = raw.map(g => normalizeHistoryGame(g));
         this.applyFilters();
       } catch (error) {
         console.error('Error loading game history:', error);
@@ -339,9 +368,9 @@ export default {
       }
 
       if (this.filters.result === 'win') {
-        filtered = filtered.filter(g => g.is_winner);
+        filtered = filtered.filter(g => this.isWinner(g));
       } else if (this.filters.result === 'loss') {
-        filtered = filtered.filter(g => !g.is_winner);
+        filtered = filtered.filter(g => !this.isWinner(g));
       }
 
       if (this.filters.period) {
