@@ -46,6 +46,15 @@ module.exports = defineConfig({
   },
   
   chainWebpack: config => {
+    // Vue 3: evita warning "feature flags" en consola (https://link.vuejs.org/feature-flags)
+    config.plugin('define').tap((definitions) => {
+      const d = definitions[0]
+      d.__VUE_OPTIONS_API__ = JSON.stringify(true)
+      d.__VUE_PROD_DEVTOOLS__ = JSON.stringify(false)
+      d.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ = JSON.stringify(false)
+      return definitions
+    })
+
     // Título del sitio (para pestaña del navegador y aprobación Cryptomus)
     config.plugin('html').tap(args => {
       args[0].title = 'Dominues – Dominó Online';

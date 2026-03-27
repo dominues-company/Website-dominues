@@ -1,5 +1,6 @@
 /**
- * Une game_data del historial con player_score / opponent_score en la raíz del ítem.
+ * Historial: Laravel ya expone player_score / opponent_score desde game_data (SQL).
+ * Aquí se normalizan tipos y, solo si faltan datos en raíz, se lee game_data (JSON).
  */
 
 function tryParseJson(val) {
@@ -40,9 +41,9 @@ function unwrapSingleKeyPayload(obj) {
 }
 
 function normalizeScoreValue(v) {
-  if (v == null || v === '') return null;
+  if (v == null || v === '' || v === 'null') return null;
   if (typeof v === 'number' && Number.isFinite(v)) return v;
-  const n = Number(v);
+  const n = Number(String(v).trim());
   return Number.isFinite(n) ? n : null;
 }
 
@@ -61,23 +62,14 @@ function pickScoresFromObject(obj) {
   return { ps, os };
 }
 
-function collectJsonCandidates(raw) {
+function collectGameDataBlobs(raw) {
   const paths = [
-    raw,
     raw?.game_data,
     raw?.gameData,
     raw?.attributes?.game_data,
-    raw?.attributes?.gameData,
+    raw?.data?.game_data,
     raw?.game?.game_data,
-    raw?.game?.gameData,
-    raw?.game_result?.game_data,
-    raw?.gameResult?.game_data,
-    raw?.game_result?.gameData,
-    raw?.result?.game_data,
-    raw?.result?.gameData,
-    raw?.meta?.game_data,
-    raw?.details,
-    raw?.payload
+    raw?.result?.game_data
   ];
   const out = [];
   for (const p of paths) {
@@ -91,40 +83,139 @@ function collectJsonCandidates(raw) {
   return out;
 }
 
-function extractScoresFromCandidates(blobs) {
-  for (const blob of blobs) {
-    const scores = pickScoresFromObject(blob);
-    if (scores && (scores.ps != null || scores.os != null)) return scores;
-    if (blob && typeof blob === 'object') {
-      for (const v of Object.values(blob)) {
-        const inner = tryParseJson(v) ?? (v && typeof v === 'object' ? v : null);
-        if (inner && typeof inner === 'object') {
-          const nested = pickScoresFromObject(inner);
-          if (nested && (nested.ps != null || nested.os != null)) return nested;
+/**
+ * Une filas con arrays paralelos o mapas por result_id en la raíz de la respuesta.
+ */
+export function mergeHistoryResponsePayload(responseData) {
+  if (!responseData || typeof responseData !== 'object') return [];
+
+  let list = responseData.history;
+  if (!Array.isArray(list)) return [];
+
+  const mergeRow = (item, patch) => {
+    if (patch == null) return item;
+    const base = item && typeof item === 'object' ? { ...item } : {};
+    if (typeof patch === 'string') {
+      const parsed = tryParseJson(patch);
+      const m = { ...base, game_data: patch };
+      if (parsed && typeof parsed === 'object') {
+        const sc = pickScoresFromObject(parsed);
+        if (sc) {
+          if (m.player_score == null && sc.ps != null) m.player_score = sc.ps;
+          if (m.opponent_score == null && sc.os != null) m.opponent_score = sc.os;
+        }
+        if (!m.opponent_name && (parsed.opponentName || parsed.opponent_name)) {
+          m.opponent_name = parsed.opponentName ?? parsed.opponent_name;
+        }
+        if (!m.game_mode && (parsed.gameMode || parsed.game_mode)) {
+          m.game_mode = parsed.gameMode ?? parsed.game_mode;
         }
       }
+      return m;
     }
+    if (typeof patch === 'object') {
+      const m = { ...base };
+      for (const [k, v] of Object.entries(patch)) {
+        if (v !== undefined) m[k] = v;
+      }
+      const gd = patch.game_data ?? patch.gameData;
+      if (gd != null && m.game_data == null && m.gameData == null) {
+        m.game_data = typeof gd === 'string' ? gd : JSON.stringify(gd);
+      }
+      return m;
+    }
+    return base;
+  };
+
+  const parallelKeys = [
+    'game_data',
+    'game_details',
+    'history_details',
+    'history_game_data',
+    'results_meta',
+    'history_meta',
+    'meta_history',
+    'raw_games'
+  ];
+  for (const key of parallelKeys) {
+    const arr = responseData[key];
+    if (!Array.isArray(arr) || arr.length !== list.length) continue;
+    list = list.map((item, i) => mergeRow(item, arr[i]));
+    break;
   }
-  return null;
+
+  const mapKeys = ['game_data_by_result', 'game_data_map', 'history_extras', 'results_by_id'];
+  for (const key of mapKeys) {
+    const m = responseData[key];
+    if (!m || typeof m !== 'object' || Array.isArray(m) || Object.keys(m).length === 0) continue;
+    list = list.map(item => {
+      const id = item?.result_id ?? item?.id;
+      if (id == null) return item;
+      const patch = m[id] ?? m[String(id)];
+      return mergeRow(item, patch);
+    });
+    break;
+  }
+
+  return list;
 }
 
-export function normalizeHistoryGame(raw, debug = false) {
+/** Normaliza entrada string JSON o tupla [fila, payload]. */
+export function coerceHistoryEntries(list) {
+  if (!Array.isArray(list)) return [];
+  return list.map(entry => {
+    if (typeof entry === 'string') {
+      const o = tryParseJson(entry);
+      return o && typeof o === 'object' ? o : { _raw_entry: entry };
+    }
+    if (Array.isArray(entry) && entry.length >= 2) {
+      const [a, b, ...rest] = entry;
+      if (a && typeof a === 'object') {
+        let merged = { ...a };
+        for (const extra of [b, ...rest]) {
+          if (typeof extra === 'string' && extra.trim().startsWith('{')) {
+            merged.game_data = merged.game_data ?? extra;
+            const p = tryParseJson(extra);
+            const sc = p && typeof p === 'object' ? pickScoresFromObject(p) : null;
+            if (sc) {
+              if (merged.player_score == null && sc.ps != null) merged.player_score = sc.ps;
+              if (merged.opponent_score == null && sc.os != null) merged.opponent_score = sc.os;
+            }
+            if (p && typeof p === 'object') {
+              if (!merged.opponent_name) merged.opponent_name = p.opponentName ?? p.opponent_name ?? null;
+              if (!merged.game_mode) merged.game_mode = p.gameMode ?? p.game_mode ?? null;
+            }
+          } else if (extra && typeof extra === 'object') {
+            merged = mergeHistoryResponsePayload({ history: [merged], game_data: [extra] })[0];
+          }
+        }
+        return merged;
+      }
+    }
+    return entry;
+  });
+}
+
+export function normalizeHistoryGame(raw) {
   if (!raw || typeof raw !== 'object') return raw;
   const game = { ...raw };
-  const blobs = collectJsonCandidates(game);
 
-  if (debug) {
-    console.group('[normalizeHistoryGame] id:', game.id ?? game.result_id ?? game.game_id ?? '?');
-    console.log('game_data type:', typeof raw.game_data);
-    console.log('blobs:', blobs.length, blobs);
-  }
+  game.player_score = normalizeScoreValue(game.player_score);
+  game.opponent_score = normalizeScoreValue(game.opponent_score);
 
-  const fromJson = extractScoresFromCandidates(blobs);
-  if (debug) console.log('scores:', fromJson);
+  const blobs = collectGameDataBlobs(game);
+  const needScores = game.player_score == null && game.opponent_score == null;
 
-  if (fromJson) {
-    if (fromJson.ps != null) game.player_score = fromJson.ps;
-    if (fromJson.os != null) game.opponent_score = fromJson.os;
+  if (needScores && blobs.length) {
+    let fromJson = null;
+    for (const b of blobs) {
+      fromJson = pickScoresFromObject(b);
+      if (fromJson && (fromJson.ps != null || fromJson.os != null)) break;
+    }
+    if (fromJson) {
+      if (fromJson.ps != null) game.player_score = fromJson.ps;
+      if (fromJson.os != null) game.opponent_score = fromJson.os;
+    }
   }
 
   const data =
@@ -161,9 +252,5 @@ export function normalizeHistoryGame(raw, debug = false) {
     }
   }
 
-  if (debug) {
-    console.log('player_score:', game.player_score, '| opponent_score:', game.opponent_score);
-    console.groupEnd();
-  }
   return game;
 }
