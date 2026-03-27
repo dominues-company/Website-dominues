@@ -74,6 +74,7 @@ function pickScoresFromObject(obj) {
 
 function collectJsonCandidates(raw) {
   const paths = [
+    raw,
     raw?.game_data,
     raw?.gameData,
     raw?.attributes?.game_data,

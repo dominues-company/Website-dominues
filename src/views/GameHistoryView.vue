@@ -285,13 +285,22 @@ export default {
     },
 
     /**
-     * Muestra puntos numéricos o "—" si no hay dato (evita confundir con cero real).
+     * Scores: raíz puede traer snake_case o camelCase; game_data lo rellena normalize.
      */
     displayScore(game, side) {
-      const raw = side === 'player' ? game.player_score : game.opponent_score;
-      if (raw == null || raw === '') return '—';
-      const n = Number(raw);
-      return Number.isFinite(n) ? n : '—';
+      const raw =
+        side === 'player'
+          ? game.player_score ??
+            game.playerScore ??
+            game.finalScore ??
+            game.final_score
+          : game.opponent_score ??
+            game.opponentScore ??
+            game.opponentFinalScore ??
+            game.opponent_final_score;
+      if (raw == null || raw === '') return '0';
+      const n = Number(String(raw).trim());
+      return Number.isFinite(n) ? n : '0';
     },
 
     hasBadges(game) {
