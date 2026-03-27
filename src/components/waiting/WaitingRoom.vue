@@ -2117,7 +2117,8 @@ export default {
         'http://localhost:3030',
         'http://localhost:8080',
         'https://kubgame.dominues.com',
-        'https://dominues.com'
+        'https://dominues.com',
+        'https://www.dominues.com'
       ];
       
       if (!allowedOrigins.includes(event.origin)) {
