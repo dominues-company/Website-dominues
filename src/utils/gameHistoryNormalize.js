@@ -59,7 +59,7 @@ function normalizeScoreValue(v) {
 }
 
 /**
- * Scores en game_data: primero resultado final (final*), luego player*/opponent* y snake_case.
+ * Scores en game_data: primero finalScore / opponentFinalScore, luego playerScore y snake_case.
  */
 function pickScoresFromObject(obj) {
   if (!obj || typeof obj !== 'object') return null;
