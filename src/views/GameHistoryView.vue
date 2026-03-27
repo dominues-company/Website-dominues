@@ -263,19 +263,40 @@ export default {
       }
       return false;
     },
+    _parseGameData(game) {
+      if (game._parsed) return game._parsed;
+      let gd = game.game_data ?? game.gameData;
+      if (typeof gd === 'string') {
+        try {
+          gd = JSON.parse(gd);
+          if (typeof gd === 'string') gd = JSON.parse(gd);
+        } catch {
+          gd = null;
+        }
+      }
+      game._parsed = gd && typeof gd === 'object' ? gd : null;
+      return game._parsed;
+    },
     displayScore(game, side) {
-      const raw =
-        side === 'player'
-          ? game.player_score ??
-            game.playerScore ??
-            game.finalScore ??
-            game.final_score
-          : game.opponent_score ??
-            game.opponentScore ??
-            game.opponentFinalScore ??
-            game.opponent_final_score;
-      if (raw == null || raw === '') return '—';
-      const n = Number(String(raw).trim());
+      const pd = this._parseGameData(game);
+      let val;
+      if (side === 'player') {
+        val =
+          game.player_score ??
+          game.playerScore ??
+          game.finalScore ??
+          game.final_score ??
+          (pd && (pd.finalScore ?? pd.playerScore ?? pd.final_score ?? pd.player_score));
+      } else {
+        val =
+          game.opponent_score ??
+          game.opponentScore ??
+          game.opponentFinalScore ??
+          game.opponent_final_score ??
+          (pd && (pd.opponentFinalScore ?? pd.opponentScore ?? pd.opponent_final_score ?? pd.opponent_score));
+      }
+      if (val == null || val === '') return '—';
+      const n = Number(String(val).trim());
       return Number.isFinite(n) ? n : '—';
     },
     hasBadges(g) {
@@ -321,7 +342,30 @@ export default {
           console.log('[GameHistory raw item 0]', JSON.stringify(response.data.history[0]));
           console.log('[GameHistory normalized]', normalizeHistoryGame(response.data.history[0], true));
         }
-        this.games = (response.data.history || []).map(g => normalizeHistoryGame(g));
+        this.games = (response.data.history || []).map(g => {
+          const n = normalizeHistoryGame(g);
+          let gd = n.game_data ?? n.gameData;
+          if (typeof gd === 'string') {
+            try {
+              gd = JSON.parse(gd);
+              if (typeof gd === 'string') gd = JSON.parse(gd);
+            } catch {
+              gd = null;
+            }
+          }
+          if (gd && typeof gd === 'object') {
+            if (n.player_score == null) {
+              n.player_score = gd.finalScore ?? gd.playerScore ?? gd.final_score ?? gd.player_score ?? null;
+            }
+            if (n.opponent_score == null) {
+              n.opponent_score = gd.opponentFinalScore ?? gd.opponentScore ?? gd.opponent_final_score ?? gd.opponent_score ?? null;
+            }
+            if (!n.opponent_name) n.opponent_name = gd.opponentName ?? gd.opponent_name ?? null;
+            if (!n.game_mode) n.game_mode = gd.gameMode ?? gd.game_mode ?? null;
+            if (n.is_winner == null && gd.isWinner != null) n.is_winner = !!gd.isWinner;
+          }
+          return n;
+        });
         this.applyFilters();
       } catch (err) {
         console.error('Error loading history:', err);
