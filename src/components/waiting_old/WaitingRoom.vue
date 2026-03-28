@@ -2118,7 +2118,7 @@ export default {
         'http://localhost:8080',
         'https://kubgame.dominues.com',
         'https://dominues.com',
-        'https://dominoes-game-1.onrender.com'
+        'https://www.dominues.com'
       ];
       
       if (!allowedOrigins.includes(event.origin)) {
@@ -2291,8 +2291,6 @@ export default {
         roomCode: roomCode, // 🔧 FIX: Incluir roomCode en gameResult también
         surrendered: data.surrendered || false, // 🔧 FIX: Incluir flag de rendición
         opponentSurrendered: data.opponentSurrendered || false, // 🔧 FIX: Incluir flag de oponente rendido
-        botPlayed: data.botPlayed || false, // 🔧 FIX: Flag de victoria por bot
-        botWinReason: data.botWinReason || null, // 🔧 FIX: Mensaje o razón de victoria por bot
         gameData: completeGameData
       };
       
@@ -2514,9 +2512,7 @@ export default {
           tableType: safeTable?.type || 'invite',
           gameMode: this.gameMode,
           entryPrice: safeTable?.entry_price ?? 0,
-          winnerPayout: safeTable?.winner_payout ?? 0,
-          botPlayed: gameData.botPlayed || false,
-          botWinReason: gameData.botWinReason || null
+          winnerPayout: safeTable?.winner_payout ?? 0
         };
         
         // 🔧 FIX: Para juegos de 4 jugadores, agregar datos multi-jugador
