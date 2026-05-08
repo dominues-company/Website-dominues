@@ -2202,6 +2202,16 @@ export default {
           this.markMatchmakingUpdate();
           this.handleMatchmakingWarning(data);
           break;
+        case 'RECONNECT_FAILED_WIN':
+          // El oponente no pudo reconectar después de 10 intentos - yo gano
+          console.log('🏆 [WAITING-ROOM] Victoria por fallo de reconexión del oponente:', data);
+          this.handleReconnectFailedWin(data);
+          break;
+        case 'RECONNECT_FAILED_LOSE':
+          // Yo no pude reconectar - perdí
+          console.log('❌ [WAITING-ROOM] Derrota por fallo de reconexión:', data);
+          this.handleReconnectFailedLose(data);
+          break;
         default:
           // 🔧 FIX MOBILE: Para cualquier otro mensaje durante matchmaking, marcarlo como actualización
           if (this.isConnecting && this.gameMode === 'online' && type && type !== 'ADAPTER_READY') {
@@ -2395,6 +2405,74 @@ export default {
         console.log('🏠 Redirigiendo al dashboard después de desconexión...');
         window.location.href = GAME_CONFIG.DASHBOARD_URL;
       }, 3000); // 3 segundos para mostrar el mensaje
+    },
+    
+    async handleReconnectFailedWin(data) {
+      // Victoria porque el oponente no pudo reconectar después de 10 intentos
+      console.log('🏆 [WAITING-ROOM] Victoria por fallo de reconexión del oponente:', data);
+      
+      if (this.resultSent) {
+        console.log('⏭️ [WAITING-ROOM] Resultado ya enviado - Ignorando duplicado');
+        return;
+      }
+      
+      const roomCode = this.roomCode || data.roomCode || '';
+      
+      const gameResult = {
+        playerName: data.playerName || data.winner || 'Jugador',
+        opponentName: data.opponentName || 'Oponente',
+        playerScore: data.playerScore || 0,
+        opponentScore: data.opponentScore || 0,
+        isWinner: true,
+        winner: data.winner || data.playerName || 'Jugador',
+        gameMode: data.gameMode || this.gameMode || 'online',
+        roomCode: roomCode,
+        disconnected: true,
+        opponentDisconnected: true,
+        disconnectReason: data.disconnectReason || 'El oponente no pudo reconectar (10 intentos agotados)',
+        gameData: {
+          playerName: data.playerName || data.winner,
+          opponentName: data.opponentName || 'Oponente',
+          playerScore: data.playerScore || 0,
+          opponentScore: data.opponentScore || 0,
+          isWinner: true,
+          winner: data.winner || data.playerName,
+          gameMode: 'online',
+          roomCode: roomCode,
+          disconnected: true,
+          opponentDisconnected: true,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      this.resultSent = true;
+      
+      // Enviar resultado al backend desde el GANADOR (el oponente no puede porque no tiene internet)
+      console.log('📤 [WAITING-ROOM] Enviando resultado al backend desde el ganador (oponente sin conexión)');
+      await this.sendGameResultToBackend(gameResult);
+      
+      this.$emit('game-ended', gameResult);
+      
+      // Mostrar mensaje de victoria
+      this.showDisconnectResultMessage(data, 'Tu oponente no pudo reconectar. ¡Ganaste!');
+      
+      // Redirigir al dashboard
+      setTimeout(() => {
+        console.log('🏠 Redirigiendo al dashboard después de victoria por reconexión fallida...');
+        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+      }, 4000);
+    },
+    
+    handleReconnectFailedLose(data) {
+      // Derrota porque no pude reconectar
+      console.log('❌ [WAITING-ROOM] Derrota por fallo de reconexión propia');
+      
+      // No enviar resultado - el ganador lo hará desde su lado
+      // Solo redirigir al dashboard
+      setTimeout(() => {
+        console.log('🏠 Redirigiendo al dashboard después de fallo de reconexión...');
+        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+      }, 2000);
     },
     
     async handleRoomCodeGenerated(data) {
