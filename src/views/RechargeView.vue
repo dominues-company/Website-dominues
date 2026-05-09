@@ -2,7 +2,7 @@
   <div class="recharge-container">
     <div class="recharge-card">
       <div class="recharge-header">
-        <h2>Recargas</h2>
+        <h2>Reportar Pago</h2>
         <p>Elige el método de pago para recargar tu cuenta</p>
       </div>
 
@@ -206,6 +206,16 @@
           <i v-else class="fas fa-credit-card me-2"></i> 
           {{ isLoading ? 'Procesando...' : 'Solicitar Recarga' }}
         </button>
+
+        <p class="whatsapp-notify-hint">Después de pagar, puedes enviar los datos por WhatsApp para agilizar la revisión:</p>
+        <a
+          :href="whatsappPagoMovilNotifyUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-whatsapp-notify btn-block"
+        >
+          <i class="fab fa-whatsapp me-2"></i> Notifica aquí
+        </a>
       </form>
 
       <!-- Información importante -->
@@ -245,6 +255,14 @@
               <i class="fas fa-external-link-alt me-2"></i> Ir a pagar en BlockBee
             </a>
             <p class="mt-3 small" style="color:#495057;">Cuando termines de pagar, tu transacción quedará en revisión y un administrador la aprobará en breve.</p>
+            <a
+              :href="whatsappBlockbeeNotifyUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-whatsapp-notify btn-block mt-3"
+            >
+              <i class="fab fa-whatsapp me-2"></i> Notifica aquí
+            </a>
             <button type="button" class="btn btn-outline-secondary btn-sm mt-2" @click="blockbeePaymentUrl = null; blockbeeForm.amount = ''">
               Crear otra recarga
             </button>
@@ -276,6 +294,15 @@
             <i v-else class="fas fa-link me-2"></i>
             {{ blockbeeLoading ? 'Generando enlace...' : 'Generar enlace de pago' }}
           </button>
+          <p class="whatsapp-notify-hint mt-3">Si ya realizaste el pago en BlockBee, notifica aquí con el monto en USD:</p>
+          <a
+            :href="whatsappBlockbeeNotifyUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-whatsapp-notify btn-block"
+          >
+            <i class="fab fa-whatsapp me-2"></i> Notifica aquí
+          </a>
         </form>
 
         <div class="important-info mt-4">
@@ -828,6 +855,36 @@ label {
   width: 100%;
 }
 
+.whatsapp-notify-hint {
+  margin: 16px 0 10px;
+  font-size: 14px;
+  color: #495057;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.btn-whatsapp-notify {
+  background-color: #25d366;
+  border: none;
+  color: #fff;
+  height: 50px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-whatsapp-notify:hover {
+  background-color: #20ba5a;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(37, 211, 102, 0.35);
+}
+
 .important-info {
   background: #e8f4fd;
   border-left: 4px solid #e67e22;
@@ -887,6 +944,11 @@ label {
 <script>
 import api from '@/services/api';
 import EventBus from '@/EventBus';
+import { mapGetters } from 'vuex';
+import {
+  buildRechargeReportMessage,
+  rechargeWhatsAppUrl
+} from '@/utils/rechargeWhatsApp';
 
 export default {
   name: 'RechargeView',
@@ -948,6 +1010,39 @@ export default {
     };
   },
   computed: {
+    ...mapGetters('auth', ['currentUser']),
+
+    displayUserName() {
+      if (this.currentUser?.name) return this.currentUser.name;
+      if (this.currentUser?.email) return this.currentUser.email.split('@')[0];
+      return '';
+    },
+
+    whatsappPagoMovilNotifyUrl() {
+      const amountStr = this.form.amount
+        ? `Bs. ${this.form.amount}`
+        : '';
+      const msg = buildRechargeReportMessage({
+        userName: this.displayUserName,
+        amount: amountStr,
+        methodLabel: 'Pago Móvil'
+      });
+      return rechargeWhatsAppUrl(msg);
+    },
+
+    whatsappBlockbeeNotifyUrl() {
+      const amt = this.blockbeeForm.amount;
+      const amountStr = amt && String(amt).trim() !== ''
+        ? `US$ ${amt} (USDT)`
+        : '';
+      const msg = buildRechargeReportMessage({
+        userName: this.displayUserName,
+        amount: amountStr,
+        methodLabel: 'USDT'
+      });
+      return rechargeWhatsAppUrl(msg);
+    },
+
     isFormValid() {
       const { amount, reference } = this.form;
       const requiredFieldsFilled = amount && reference;

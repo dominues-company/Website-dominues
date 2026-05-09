@@ -5,7 +5,7 @@
     <FooterComponent />
     <NotificationToast />
     <BackgroundMusic />
-    <WhatsAppButton />
+    <WhatsAppButton v-if="$route.name === 'RechargeView'" />
     
     <!-- Notificación de sesión expirada (opcional) -->
     <div v-if="showSessionExpiredAlert" class="session-expired-alert">

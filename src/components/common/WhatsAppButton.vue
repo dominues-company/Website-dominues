@@ -10,18 +10,22 @@
   >
     <i class="fab fa-whatsapp whatsapp-icon"></i>
     <span class="whatsapp-badge">Recarga</span>
-    <span class="whatsapp-tooltip">Recarga tu saldo y obtén soporte</span>
+    <span class="whatsapp-tooltip">Escribe por WhatsApp si necesitas ayuda</span>
   </a>
 </template>
 
 <script>
 import { mapGetters } from 'vuex';
+import {
+  RECHARGE_WHATSAPP_PHONE,
+  WHATSAPP_FLOAT_GREETING
+} from '@/utils/rechargeWhatsApp';
 
 export default {
   name: 'WhatsAppButton',
   data() {
     return {
-      phoneNumber: '584243447604' // Número sin espacios ni caracteres especiales: +58 424-3447604
+      phoneNumber: RECHARGE_WHATSAPP_PHONE
     }
   },
   computed: {
@@ -47,8 +51,7 @@ export default {
     },
     
     whatsappMessage() {
-      // Mensaje personalizado con el nombre del usuario
-      return `Hola, Equipo de Dominues. Quisiera información para recargar saldo en mi cuenta y empezar a jugar.\nMi usuario es: ${this.userName}`;
+      return WHATSAPP_FLOAT_GREETING;
     },
     
     whatsappLink() {
