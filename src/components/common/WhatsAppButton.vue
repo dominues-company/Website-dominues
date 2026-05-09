@@ -8,9 +8,9 @@
     aria-label="Reportar pago por WhatsApp"
     @click="handleClick"
   >
-    <i class="fab fa-whatsapp whatsapp-icon"></i>
-    <span class="whatsapp-badge">Reportar pago</span>
-    <span class="whatsapp-tooltip">Reporta tu pago o solicita ayuda por WhatsApp</span>
+    <span class="whatsapp-label">Reportar pago</span>
+    <i class="fab fa-whatsapp whatsapp-icon" aria-hidden="true"></i>
+    <span class="whatsapp-tooltip">Abre WhatsApp para enviar tu comprobante o consultar</span>
   </a>
 </template>
 
@@ -74,68 +74,67 @@ export default {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 60px;
-  height: 60px;
-  background-color: #25D366;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
   z-index: 9998;
-  transition: all 0.3s ease;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 18px;
+  min-height: 52px;
+  background-color: #25d366;
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12);
   text-decoration: none;
   cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.2s ease;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 .whatsapp-float:hover {
-  background-color: #20BA5A;
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+  background-color: #20ba5a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.5), 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .whatsapp-float:active {
-  transform: scale(1.05);
+  transform: translateY(0);
+}
+
+.whatsapp-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  line-height: 1.2;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
 }
 
 .whatsapp-icon {
-  animation: pulse 2s infinite;
-}
-
-.whatsapp-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: #FF4444;
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 3px 6px;
-  border-radius: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  font-family: Arial, sans-serif;
-  animation: badgePulse 2s infinite;
+  font-size: 28px;
+  flex-shrink: 0;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
 }
 
 .whatsapp-tooltip {
   position: absolute;
-  right: 70px;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
   background-color: #fff;
   color: #333;
   padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 500;
-  white-space: nowrap;
+  max-width: 220px;
+  white-space: normal;
+  line-height: 1.35;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
-  font-family: Arial, sans-serif;
 }
 
 .whatsapp-tooltip::after {
@@ -153,50 +152,34 @@ export default {
   opacity: 1;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-@keyframes badgePulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 0.8;
-  }
-}
-
 /* Responsive - ajustar posición en móviles */
 @media (max-width: 768px) {
   .whatsapp-float {
-    width: 55px;
-    height: 55px;
-    font-size: 28px;
     bottom: 15px;
     right: 15px;
+    padding: 9px 12px 9px 16px;
+    gap: 8px;
+    min-height: 48px;
   }
-  
-  .whatsapp-badge {
-    font-size: 9px;
-    padding: 2px 5px;
+
+  .whatsapp-label {
+    font-size: 13px;
   }
-  
+
+  .whatsapp-icon {
+    font-size: 26px;
+  }
+
   .whatsapp-tooltip {
-    display: none; /* Ocultar tooltip en móviles para no molestar */
+    display: none;
   }
 }
 
 /* Evitar conflicto con otros elementos flotantes */
 @media (max-width: 480px) {
   .whatsapp-float {
-    bottom: 80px; /* Subir un poco si hay otros botones flotantes */
+    bottom: 80px;
+    max-width: calc(100vw - 30px);
   }
 }
 </style>
