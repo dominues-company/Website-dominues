@@ -206,16 +206,6 @@
           <i v-else class="fas fa-credit-card me-2"></i> 
           {{ isLoading ? 'Procesando...' : 'Solicitar Recarga' }}
         </button>
-
-        <p class="whatsapp-notify-hint">Después de pagar, puedes enviar los datos por WhatsApp para agilizar la revisión:</p>
-        <a
-          :href="whatsappPagoMovilNotifyUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="btn btn-whatsapp-notify btn-block"
-        >
-          <i class="fab fa-whatsapp me-2"></i> Notifica aquí
-        </a>
       </form>
 
       <!-- Información importante -->
@@ -1136,18 +1126,6 @@ export default {
       if (this.currentUser?.name) return this.currentUser.name;
       if (this.currentUser?.email) return this.currentUser.email.split('@')[0];
       return '';
-    },
-
-    whatsappPagoMovilNotifyUrl() {
-      const amountStr = this.form.amount
-        ? `Bs. ${this.form.amount}`
-        : '';
-      const msg = buildRechargeReportMessage({
-        userName: this.displayUserName,
-        amount: amountStr,
-        methodLabel: 'Pago Móvil'
-      });
-      return rechargeWhatsAppUrl(msg);
     },
 
     whatsappBlockbeeNotifyUrl() {
