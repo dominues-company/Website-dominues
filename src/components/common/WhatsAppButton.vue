@@ -5,12 +5,12 @@
     target="_blank"
     rel="noopener noreferrer"
     class="whatsapp-float"
-    aria-label="Contactar por WhatsApp"
+    aria-label="Reportar pago por WhatsApp"
     @click="handleClick"
   >
     <i class="fab fa-whatsapp whatsapp-icon"></i>
-    <span class="whatsapp-badge">Recarga</span>
-    <span class="whatsapp-tooltip">Escribe por WhatsApp si necesitas ayuda</span>
+    <span class="whatsapp-badge">Reportar pago</span>
+    <span class="whatsapp-tooltip">Reporta tu pago o solicita ayuda por WhatsApp</span>
   </a>
 </template>
 

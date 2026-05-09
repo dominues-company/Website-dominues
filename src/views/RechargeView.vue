@@ -2,7 +2,7 @@
   <div class="recharge-container">
     <div class="recharge-card">
       <div class="recharge-header">
-        <h2>Reportar Pago</h2>
+        <h2>Recargas</h2>
         <p>Elige el método de pago para recargar tu cuenta</p>
       </div>
 

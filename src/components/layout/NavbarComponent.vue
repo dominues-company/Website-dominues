@@ -96,7 +96,7 @@
                   </li>
                   <li>
                     <router-link to="/recharge" class="dropdown-item">
-                      <i class="fas fa-wallet me-2"></i> Reportar Pago
+                      <i class="fas fa-wallet me-2"></i> Recargas
                     </router-link>
                   </li>
                   <li>
