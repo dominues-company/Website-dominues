@@ -1219,7 +1219,8 @@ export default {
 
       this.isConnecting = true;
       this.connectingMessage = this.getConnectingMessage();
-      
+      this.scrollWaitingViewToTop();
+
       console.log('🎮 [WAITING-ROOM] Iniciando juego con mesa:', this.selectedTable);
       console.log('🎮 [WAITING-ROOM] GameMode actual:', this.gameMode);
       
@@ -1856,13 +1857,18 @@ export default {
     },
 
     // Métodos para modo de invitación
+    // Scroll al inicio de la página (el antiguo scrollTo(0,430) empujaba el footer en móvil).
+    scrollWaitingViewToTop() {
+      if (typeof window === 'undefined') return
+      this.$nextTick(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      })
+    },
+
     showInviteChoice() {
       // Mostrar popup de elección para invitados
       this.showInviteChoiceModal = true;
-      // Hacer scroll al inicio
-      this.$nextTick(() => {
-        window.scrollTo(0, 430);
-      });
+      this.scrollWaitingViewToTop();
     },
 
     async createNewRoom() {
@@ -2071,7 +2077,8 @@ export default {
       this.isInviteGuest = true; // 🔧 FIX: Marcar como INVITADO para mensajes específicos
       this.isConnecting = true;
       this.connectingMessage = '🔗 Enlazando con la sala...';
-      
+      this.scrollWaitingViewToTop();
+
       // 🔧 FIX: Iniciar actualizador de mensaje de matchmaking
       this.startMatchmakingMessageUpdater();
       // 🔧 FIX MOBILE: Iniciar watchdog para detectar desconexiones
