@@ -1064,6 +1064,15 @@ export default {
     await this.loadLastRecharge();
   },
   methods: {
+    /** Alinea valores del API (p. ej. pago_movil) con las claves usadas en la vista (pagomovil). */
+    normalizePaymentMethod(raw) {
+      if (raw == null || raw === '') return 'pagomovil';
+      const m = String(raw).toLowerCase().replace(/\s+/g, '_');
+      if (m === 'pago_movil' || m === 'pagomovil') return 'pagomovil';
+      if (m === 'blockbee') return 'blockbee';
+      return 'pagomovil';
+    },
+
     // Cargar última recarga para determinar método preferido
     async loadLastRecharge() {
       try {
@@ -1095,7 +1104,7 @@ export default {
           const lastRecharge = response.data.transactions[0];
           console.log('Última recarga cruda:', lastRecharge);
           
-          this.lastRechargeMethod = lastRecharge.payment_method;
+          this.lastRechargeMethod = this.normalizePaymentMethod(lastRecharge.payment_method);
           this.showOnlyLastMethod = true;
           
           // Establecer el método de pago al de la última recarga
@@ -1130,7 +1139,7 @@ export default {
             
             if (lastDeposit) {
               console.log('Depósito encontrado:', lastDeposit);
-              this.lastRechargeMethod = lastDeposit.payment_method;
+              this.lastRechargeMethod = this.normalizePaymentMethod(lastDeposit.payment_method);
               this.showOnlyLastMethod = true;
               this.paymentMethod = this.lastRechargeMethod;
               
