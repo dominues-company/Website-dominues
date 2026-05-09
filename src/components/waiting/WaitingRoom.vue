@@ -283,7 +283,9 @@
         <span>{{ isSurrendering ? 'Rindiéndose...' : 'Rendirse' }}</span>
       </button>
     </div>
+    </div>
 
+      <!-- Overlays de invitación fuera de .waiting-container: backdrop-filter del contenedor rompe position:fixed en móvil -->
       <!-- Modal de elección para invitación -->
       <div v-if="showInviteChoiceModal" class="invite-choice-modal">
         <div class="choice-container">
@@ -385,8 +387,6 @@
           </div>
         </div>
       </div>
-          </div>
-        </div>
 
       <!-- Popup de confirmación para unirse a mesa -->
       <div v-if="showConfirmModal" class="confirm-modal-overlay">
@@ -453,6 +453,7 @@
           <span>{{ balanceNotificationMessage }}</span>
         </div>
       </div>
+  </div>
 </template>
 
 <script>
@@ -1978,6 +1979,7 @@ export default {
       
       // NO construir URL ni cargar el juego aquí
       // El juego se cargará SOLO cuando el usuario haga clic en "Unirse a la Sala"
+      this.scrollWaitingViewToTop();
     },
 
 
@@ -5122,14 +5124,23 @@ export default {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: max(0px, env(safe-area-inset-top, 0px)) max(0px, env(safe-area-inset-right, 0px))
+    max(0px, env(safe-area-inset-bottom, 0px)) max(0px, env(safe-area-inset-left, 0px));
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   font-family: 'Arial', sans-serif;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Modo overlay - cuando el juego está cargando */
@@ -5143,14 +5154,23 @@ export default {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
   background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
   backdrop-filter: blur(5px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .choice-container {
@@ -5159,9 +5179,14 @@ export default {
   padding: 40px;
   max-width: 500px;
   width: 90%;
+  max-height: min(560px, calc(100vh - 32px));
+  max-height: min(560px, calc(100dvh - 32px));
+  overflow-y: auto;
+  margin: auto;
   text-align: center;
   position: relative;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
 }
 
 .choice-header h2 {
@@ -5433,10 +5458,15 @@ export default {
   padding: 40px;
   max-width: 500px;
   width: 90%;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  margin: auto;
   text-align: center;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   animation: slideInUp 0.5s ease-out;
   position: relative;
+  flex-shrink: 0;
 }
 
 .close-invite-btn {
