@@ -317,6 +317,42 @@
       <!-- Fin BlockBee -->
 
     </div>
+
+    <teleport to="body">
+      <div
+        v-if="showPostRechargeModal"
+        class="post-recharge-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="post-recharge-title"
+      >
+        <div class="post-recharge-modal" @click.stop>
+          <div class="post-recharge-modal-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h3 id="post-recharge-title" class="post-recharge-modal-title">¡Solicitud enviada!</h3>
+          <p class="post-recharge-modal-text">
+            Tu recarga quedó registrada. Puedes <strong>notificar por WhatsApp</strong> para adjuntar el comprobante y agilizar la revisión, o <strong>cerrar</strong> para volver al panel.
+          </p>
+          <div class="post-recharge-modal-actions">
+            <button
+              type="button"
+              class="btn btn-whatsapp-notify btn-post-recharge-primary"
+              @click="notifyPostRechargeViaWhatsApp"
+            >
+              <i class="fab fa-whatsapp me-2"></i> Notificar por WhatsApp
+            </button>
+            <button
+              type="button"
+              class="btn btn-post-recharge-secondary"
+              @click="closePostRechargeModalAndRedirect"
+            >
+              Cerrar solicitud
+            </button>
+          </div>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>
 
@@ -939,6 +975,88 @@ label {
     gap: 10px;
   }
 }
+
+/* Modal tras solicitar recarga (Pago Móvil) */
+.post-recharge-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.post-recharge-modal {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 24px 24px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+.post-recharge-modal-icon {
+  font-size: 3rem;
+  color: #22c55e;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.post-recharge-modal-title {
+  margin: 0 0 12px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.post-recharge-modal-text {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.post-recharge-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-post-recharge-primary {
+  width: 100%;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-post-recharge-secondary {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-post-recharge-secondary:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
 </style>
 
 <script>
@@ -984,6 +1102,8 @@ export default {
       lastRechargeMethod: null, // Método de la última recarga
       showOnlyLastMethod: false, // Si debe mostrar solo el método de la última recarga
       isLoadingMethod: true, // Loading para determinar método preferido
+      showPostRechargeModal: false,
+      rechargeSuccessSnapshot: null,
       banks: [
         {
           code: '0175',
@@ -1043,6 +1163,21 @@ export default {
       return rechargeWhatsAppUrl(msg);
     },
 
+    postRechargeWhatsAppUrl() {
+      const s = this.rechargeSuccessSnapshot;
+      if (!s) return '#';
+      const amountStr = s.amount ? `Bs. ${s.amount}` : '';
+      let msg = buildRechargeReportMessage({
+        userName: this.displayUserName,
+        amount: amountStr,
+        methodLabel: 'Pago Móvil'
+      });
+      if (s.reference) {
+        msg += `\nReferencia: ${s.reference}`;
+      }
+      return rechargeWhatsAppUrl(msg);
+    },
+
     isFormValid() {
       const { amount, reference } = this.form;
       const requiredFieldsFilled = amount && reference;
@@ -1071,6 +1206,22 @@ export default {
       if (m === 'pago_movil' || m === 'pagomovil') return 'pagomovil';
       if (m === 'blockbee') return 'blockbee';
       return 'pagomovil';
+    },
+
+    closePostRechargeModalAndRedirect() {
+      this.showPostRechargeModal = false;
+      this.rechargeSuccessSnapshot = null;
+      this.$router.push('/dashboard');
+    },
+
+    notifyPostRechargeViaWhatsApp() {
+      const url = this.postRechargeWhatsAppUrl;
+      this.showPostRechargeModal = false;
+      this.rechargeSuccessSnapshot = null;
+      if (url && url !== '#') {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+      this.$router.push('/dashboard');
     },
 
     // Cargar última recarga para determinar método preferido
@@ -1344,6 +1495,11 @@ export default {
             duration: 2000
           });
           
+          this.rechargeSuccessSnapshot = {
+            amount: String(this.form.amount),
+            reference: String(this.form.reference)
+          };
+
           // Limpiar formulario
           this.form = {
             amount: '',
@@ -1351,11 +1507,8 @@ export default {
             paymentProof: null
           };
           this.$refs.fileInput.value = '';
-          
-          // Redirigir al dashboard después de 2 segundos
-          setTimeout(() => {
-            this.$router.push('/dashboard');
-          }, 2000);
+
+          this.showPostRechargeModal = true;
           
         } catch (error) {
           console.error('Error durante la recarga:', error);
