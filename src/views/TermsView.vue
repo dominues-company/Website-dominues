@@ -17,8 +17,9 @@ const termsContent = `
 
 <h2>3. Gestión de saldos y Dcoins</h2>
 <p><strong>Naturaleza:</strong> Los Dcoins son unidades de valor interno y no constituyen moneda de curso legal fuera de la plataforma.</p>
+<p><strong>No institución financiera:</strong> Los saldos reflejados en la cuenta del usuario no constituyen depósitos bancarios, no generan intereses y no representan un monedero virtual de libre convertibilidad. Son créditos de uso exclusivo para la participación en las mesas de la plataforma.</p>
 <p><strong>Cargas:</strong> Toda carga de saldo manual requiere validación del comprobante. Dominues se reserva el derecho de rechazar transacciones sospechosas.</p>
-<p><strong>Retiros:</strong> Se procesan de forma manual en un plazo de horas hábiles. El usuario es responsable de suministrar correctamente sus datos de pago. Dominues no se hace responsable por fondos enviados a direcciones o cuentas erróneas proporcionadas por el usuario.</p>
+<p><strong>Retiros:</strong> Se procesan de forma manual y están sujetos a auditoría de cumplimiento. El plazo de verificación puede ser de hasta cuarenta y ocho (48) horas hábiles (ver sección 30). El usuario es responsable de suministrar correctamente sus datos de pago. Dominues no se hace responsable por fondos enviados a direcciones o cuentas erróneas proporcionadas por el usuario.</p>
 
 <h2>4. Uso de datos (protección de privacidad)</h2>
 <p>Dominues recopila datos mínimos necesarios (correo, usuario, país) para gestionar la cuenta y la seguridad del jugador. No compartimos ni vendemos datos a terceros. Al utilizar la plataforma, el usuario consiente el tratamiento de sus datos conforme a esta finalidad.</p>
@@ -44,8 +45,9 @@ const termsContent = `
 <h2>11. Cumplimiento regulatorio</h2>
 <p>Dominues coopera con las autoridades competentes. Cualquier intento de utilizar la plataforma para procesar dinero de origen ilícito resultará en la entrega de logs y datos a los organismos correspondientes y el cierre inmediato de la cuenta.</p>
 
-<h2>12. Fallos técnicos y caso fortuito</h2>
-<p>Dominues no se responsabiliza por pérdidas derivadas de fallos de conexión del usuario, cortes de energía o mal funcionamiento del dispositivo. En falla general comprobada del servidor, Dominues se reserva el derecho de anular partidas afectadas y reintegrar exclusivamente la apuesta inicial.</p>
+<h2>12. Limitación por desconexión y fallos técnicos del usuario</h2>
+<p>Dominues no se hace responsable por pérdidas financieras resultantes de fallas en el suministro eléctrico, caídas de conectividad del operador de internet del usuario o transiciones de red defectuosas. El sistema de reconexión y la asistencia de software automatizado (bots) son herramientas de mitigación de cortesía y no generan derecho a reembolso.</p>
+<p>En falla general comprobada del servidor de Dominues, la plataforma se reserva el derecho de anular partidas afectadas y reintegrar exclusivamente la apuesta inicial, sin que ello implique obligación automática de compensación adicional.</p>
 
 <h2>13. Anti-colusión y juego limpio</h2>
 <p>Se prohíbe que dos o más usuarios coordinen jugadas para perjudicar a terceros. Dominues utiliza análisis de comportamiento para detectar patrones inusuales y puede congelar saldos bajo sospecha mientras se realiza auditoría.</p>
@@ -54,7 +56,8 @@ const termsContent = `
 <p>Dominues se reserva el derecho de cerrar o cobrar una tasa administrativa a cuentas sin actividad de juego o transaccional por más de seis (6) meses, previa notificación al correo registrado.</p>
 
 <h2>15. Procedimiento de verificación (KYC)</h2>
-<p>Dominues se reserva el derecho, especialmente antes de procesar un retiro, de solicitar prueba de identidad válida y/o comprobante de titularidad de la cuenta bancaria. El rechazo a suministrar dicha información resultará en la suspensión de la transacción.</p>
+<p>Dominues se reserva el derecho de solicitar verificación de identidad (foto de cédula/pasaporte o selfie con el documento) en cualquier momento, especialmente antes de aprobar de manera manual un retiro. También puede solicitarse comprobante de titularidad de la cuenta bancaria o billetera de destino. El rechazo a suministrar dicha información resultará en la suspensión de la transacción.</p>
+<p>Si se demuestra o se sospecha razonablemente que una cuenta es operada por un menor de edad, el acceso será revocado de inmediato y los fondos depositados podrán ser confiscados en su totalidad por violación contractual.</p>
 
 <h2>16. Política de mismo método de pago</h2>
 <p>Para prevenir lavado de activos, los fondos deben retirarse preferiblemente por la misma vía por la cual fueron depositados. No se permite el uso de la plataforma como mezclador. Depósitos con retiro inmediato sin haber jugado al menos un porcentaje del saldo pueden ser señalados como sospechosos.</p>
@@ -62,7 +65,8 @@ const termsContent = `
 <h2>17. Decisión final del administrador</h2>
 <p>En discrepancias, errores visuales o reclamos sobre resultados de partida, los logs del servidor de Dominues son la única prueba válida. La decisión del equipo técnico será definitiva e inapelable.</p>
 
-<h2>18. Errores de sistema y pagos erróneos</h2>
+<h2>18. Errores de sistema, glitches y pagos erróneos</h2>
+<p>Dominues se reserva el derecho de anular, revocar o corregir cualquier saldo, jugada o ganancia que haya sido resultado directo de un error técnico, falla de software, «glitch» del sistema o error manifiesto del servidor. Los errores tecnológicos no generan derechos de cobro ni obligaciones financieras para la plataforma.</p>
 <p>En caso de acreditación incorrecta por error técnico o humano, Dominues se reserva el derecho de anular transacciones y corregir el saldo. El aprovechamiento consciente de un error del sistema será motivo de cierre de cuenta inmediato.</p>
 
 <h2>19. Juego responsable y edad mínima</h2>
@@ -87,7 +91,8 @@ const termsContent = `
 <p>Si alguna cláusula fuera declarada nula, las demás seguirán vigentes. El no ejercicio de un derecho por Dominues no constituye renuncia al mismo.</p>
 
 <h2>26. Bonos y promociones</h2>
-<p>Cualquier bono o Dcoins gratuitos están sujetos a condiciones de rollover antes de poder ser retirados. Dominues se reserva el derecho de anular bonos si se sospecha abuso.</p>
+<p>Cualquier bono, Dcoins gratuitos o promoción (incluido el «Bono de Inauguración») están sujetos a condiciones de apuesta obligatoria y rollover antes de poder ser retirados. El usuario debe cumplir con los requisitos publicados en cada promoción (por ejemplo, apostar el 100% del depósito inicial cuando aplique).</p>
+<p>Dominues se reserva el derecho unilateral de auditar el historial de jugadas de cualquier usuario antes de proceder a la aprobación manual de un retiro. Si se detectan prácticas de colusión, «chip-dumping» (pérdida intencional de partidas para transferir saldo), uso de múltiples cuentas bajo la misma identidad real, uso de redes VPN o patrones de juego coordinados para limpiar el bono de bienvenida, Dominues revocará inmediatamente el total del bono otorgado, anulará las ganancias derivadas y se reserva el derecho de suspender permanentemente la cuenta sin derecho a reclamo.</p>
 
 <h2>27. Seguridad de la cuenta y contraseñas</h2>
 <p>El usuario es responsable de mantener la confidencialidad de su contraseña. Cualquier operación desde la cuenta se considerará legítima.</p>
@@ -97,6 +102,16 @@ const termsContent = `
 
 <h2>29. Modificación unilateral</h2>
 <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Es responsabilidad del usuario revisar este documento periódicamente. El uso continuo implica aceptación tácita de las nuevas condiciones.</p>
+
+<h2>30. Políticas, límites y plazos de retiro</h2>
+<p><strong>30.1 Auditoría y aprobación manual.</strong> Con el objetivo de garantizar la seguridad de los fondos, prevenir actividades de colusión, manipulación de software («glitches») y asegurar el cumplimiento de nuestras normativas de juego justo, todas las solicitudes de retiro en Dominues están sujetas a un proceso de auditoría y aprobación manual por parte del departamento de cumplimiento.</p>
+<p><strong>30.2 Plazos de procesamiento.</strong> Una vez introducida la solicitud de retiro a través de los canales oficiales de la plataforma, el sistema y los administradores disponen de un plazo de hasta cuarenta y ocho (48) horas hábiles para verificar el historial de jugadas del usuario, validar el origen lícito de los fondos y proceder con la liberación del pago. El usuario acepta que este período es necesario para mitigar riesgos de seguridad bancaria y de red.</p>
+<p><strong>30.3 Límites diarios de retiro (cap de liquidez).</strong> Para preservar la estabilidad financiera y el flujo de caja operativo de la plataforma, se establece un límite máximo de retiro equivalente a cincuenta dólares estadounidenses ($50.00 USD) diarios por usuario (o su equivalente en moneda local a la tasa interna de la plataforma). Cualquier ganancia acumulada que exceda dicho monto diario permanecerá segura en el balance del jugador y deberá ser solicitada en montos subsecuentes en los días calendario siguientes, respetando el mismo tope diario establecido.</p>
+<p><strong>30.4 Retención por abuso de promociones.</strong> Si durante el período de verificación de 48 horas se constata que el usuario no ha cumplido con el requisito de apuesta obligatoria (apostar el 100% de su depósito inicial) o se detectan patrones de abuso con el «Bono de Inauguración» (como la creación de cuentas múltiples o colusión en mesas), Dominues se reserva el derecho de retener el pago, anular las ganancias derivadas de la promoción y suspender la cuenta de manera definitiva.</p>
+
+<h2>31. Política de identidad bancaria (mismo banco, mismo titular)</h2>
+<p><strong>Titularidad única y verificación de fondos:</strong> Para proceder con cualquier retiro de saldo o ganancias en Dominues, es condición obligatoria e indispensable que la cuenta de destino (cuenta bancaria, Pago Móvil o wallet de criptoactivos) pertenezca única y exclusivamente al mismo titular y número de identificación (cédula/ID) registrado en la cuenta de usuario de la plataforma.</p>
+<p>Queda terminantemente prohibido el retiro de fondos hacia cuentas de terceros, familiares o amigos. Dominues se reserva el derecho de congelar los fondos y suspender de forma permanente cualquier cuenta que intente triangular pagos o retirar dinero hacia un titular distinto al registrado originariamente, como medida estricta de prevención contra el fraude de identidad y la legitimación de capitales.</p>
 `;
 
 export default {

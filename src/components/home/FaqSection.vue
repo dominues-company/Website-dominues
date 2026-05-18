@@ -62,7 +62,7 @@ export default {
         },
         {
           q: '¿Cómo retiro mis ganancias?',
-          a: '¡Felicidades por ganar! Para retirar, solo ve a la sección de Retiros, elige tu método favorito (Banco o Cripto) y solicita el monto. Nosotros verificamos que todo esté en orden y te enviamos tu dinero de forma manual por seguridad.'
+          a: 'Ve a la sección de Retiros, elige tu método (Banco o Cripto) y solicita el monto. La cuenta de destino debe ser tuya (mismo titular y cédula registrados). Verificamos tu historial de juego y el origen de los fondos; el proceso puede tardar hasta <strong>48 horas hábiles</strong>. Hay un tope diario de retiro equivalente a <strong>$50 USD</strong> por usuario. Más detalle en <a href="/terms" style="color:#FFC827;">Términos y Condiciones</a>.'
         }
       ],
       faqRight: [
@@ -72,7 +72,7 @@ export default {
         },
         {
           q: '¿Qué pasa si se me cae el internet en plena partida?',
-          a: 'El dominó no espera: el sistema jugará por ti para no trancar la mesa, pero trata de jugar siempre con buena señal para no perder tu ventaja.'
+          a: 'El sistema de reconexión y el bot automático ayudan a no trancar la mesa, pero son herramientas de cortesía: Dominues <strong>no se hace responsable</strong> por pérdidas por cortes de luz, fallas de tu operador o mala señal, y <strong>no generan derecho a reembolso</strong>. Juega siempre con buena conexión.'
         },
         {
           q: '¿Puedo jugar desde mi teléfono?',

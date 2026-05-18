@@ -29,6 +29,12 @@
           <div class="notice-text blue-text">
             El monto mínimo por retiro es de <strong>Bs 500,00</strong>
           </div>
+          <div class="notice-text blue-text">
+            La cuenta de destino debe pertenecer al mismo titular y cédula registrados en Dominues. No se permiten retiros a terceros.
+          </div>
+          <div class="notice-text blue-text">
+            Las solicitudes se verifican manualmente y pueden tardar hasta <strong>48 horas hábiles</strong>. Tope diario equivalente a <strong>$50 USD</strong> por usuario.
+          </div>
         </div>
 
         <!--<button type="button" class="btn-add-account" @click="showAddAccountModal = true">
@@ -709,7 +715,7 @@ export default {
           // Mostrar toast de éxito
           EventBus.emit('show-notification', {
             type: 'success',
-            message: 'Solicitud de retiro enviada exitosamente. Será procesada en cuestion de minutos.',
+            message: 'Solicitud de retiro enviada exitosamente. Será verificada y procesada en un plazo de hasta 48 horas hábiles.',
             duration: 3000
           });
           
