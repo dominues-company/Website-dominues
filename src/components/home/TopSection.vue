@@ -8,7 +8,7 @@
             <div v-for="player in recentPlayers" :key="'recent-' + player.name" class="investor-item">
               <div class="investor-item__thumb">
                 <img
-                  :src="getAvatarUrl(player.avatarSeed)"
+                  :src="getAvatarUrl(player)"
                   :alt="player.name"
                   class="player-avatar"
                   loading="lazy"
@@ -42,7 +42,7 @@
             <div v-for="player in activePlayers" :key="'active-' + player.name" class="investor-item">
               <div class="investor-item__thumb">
                 <img
-                  :src="getAvatarUrl(player.avatarSeed)"
+                  :src="getAvatarUrl(player)"
                   :alt="player.name"
                   class="player-avatar"
                   loading="lazy"
@@ -62,20 +62,21 @@
 
 <script>
 import AuthService from '@/services/auth.service';
+import { getPlayerAvatarUrl } from '@/utils/playerAvatar';
 
 export default {
   name: 'TopSection',
   data() {
     return {
       recentPlayers: [
-        { name: 'Carlos Rodríguez', amount: '200 Dcoins', avatarSeed: 'carlos-rodriguez' },
-        { name: 'Luis Mendoza', amount: '120 Dcoins', avatarSeed: 'luis-mendoza' },
-        { name: 'Valentina Pérez', amount: '50 Dcoins', avatarSeed: 'valentina-perez' }
+        { name: 'Carlos Rodríguez', amount: '200 Dcoins', avatarSeed: 'carlos-rodriguez', gender: 'male' },
+        { name: 'Luis Mendoza', amount: '120 Dcoins', avatarSeed: 'luis-mendoza', gender: 'male' },
+        { name: 'Valentina Pérez', amount: '50 Dcoins', avatarSeed: 'valentina-perez', gender: 'female' }
       ],
       activePlayers: [
-        { name: 'Valentina Pérez', amount: '50 Dcoins', avatarSeed: 'valentina-perez-activa' },
-        { name: 'Carlos Rodríguez', amount: '200 Dcoins', avatarSeed: 'carlos-rodriguez-activo' },
-        { name: 'Luis Mendoza', amount: '120 Dcoins', avatarSeed: 'luis-mendoza-activo' }
+        { name: 'Valentina Pérez', amount: '50 Dcoins', avatarSeed: 'valentina-perez-activa', gender: 'female' },
+        { name: 'Carlos Rodríguez', amount: '200 Dcoins', avatarSeed: 'carlos-rodriguez-activo', gender: 'male' },
+        { name: 'Luis Mendoza', amount: '120 Dcoins', avatarSeed: 'luis-mendoza-activo', gender: 'male' }
       ]
     };
   },
@@ -88,17 +89,8 @@ export default {
     getImageUrl(name) {
       return require(`@/assets/img/${name}`);
     },
-    getAvatarUrl(seed) {
-      const params = new URLSearchParams({
-        seed,
-        backgroundColor: 'ffc827,f5d78e,e8b86d',
-        radius: '50',
-        mouth: 'smile,smirk',
-        shirt: 'collared,crew,open',
-        facialHairProbability: '35',
-        glassesProbability: '20'
-      });
-      return `https://api.dicebear.com/9.x/micah/svg?${params.toString()}`;
+    getAvatarUrl(player) {
+      return getPlayerAvatarUrl(player.avatarSeed, player.gender);
     }
   }
 };

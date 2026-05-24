@@ -24,7 +24,7 @@
               <div class="thumb-wrapper">
                 <div class="thumb">
                   <img
-                    :src="getAvatarUrl(testimonial.avatarSeed)"
+                    :src="getAvatarUrl(testimonial)"
                     :alt="testimonial.name"
                     class="testimonial-avatar"
                     loading="lazy"
@@ -47,6 +47,8 @@
 </template>
 
 <script>
+import { getPlayerAvatarUrl } from '@/utils/playerAvatar';
+
 export default {
   name: 'TestimonialsSection',
   data() {
@@ -56,25 +58,29 @@ export default {
           name: 'Carlos Rodríguez',
           designation: 'Jugador reciente',
           quote: 'La encontré buscando dominó online. Es sencilla: entras, eliges mesa y juegas. Sin complicaciones.',
-          avatarSeed: 'carlos-rodriguez-testimonio'
+          avatarSeed: 'carlos-rodriguez-testimonio',
+          gender: 'male'
         },
         {
           name: 'María González',
           designation: 'Usuario nuevo',
           quote: 'Llevo pocos días jugando. Me gusta que puedo entrar rápido a una mesa y retar a alguien al momento.',
-          avatarSeed: 'maria-gonzalez-testimonio'
+          avatarSeed: 'maria-gonzalez-testimonio',
+          gender: 'female'
         },
         {
           name: 'José Martínez',
           designation: 'Jugador habitual',
           quote: 'Plataforma recién lanzada, pero el juego va fluido. Ojalá se una más gente para tener más rivales.',
-          avatarSeed: 'jose-martinez-testimonio'
+          avatarSeed: 'jose-martinez-testimonio',
+          gender: 'male'
         },
         {
           name: 'Ana Pérez',
           designation: 'De los primeros',
           quote: 'Probé la plataforma en sus primeros días. Funciona bien y se nota que van mejorando cosas poco a poco.',
-          avatarSeed: 'ana-perez-testimonio'
+          avatarSeed: 'ana-perez-testimonio',
+          gender: 'female'
         }
       ]
     };
@@ -83,17 +89,8 @@ export default {
     getImageUrl(name) {
       return require(`@/assets/img/${name}`);
     },
-    getAvatarUrl(seed) {
-      const params = new URLSearchParams({
-        seed,
-        backgroundColor: 'ffc827,f5d78e,e8b86d',
-        radius: '50',
-        mouth: 'smile,smirk',
-        shirt: 'collared,crew,open',
-        facialHairProbability: '35',
-        glassesProbability: '20'
-      });
-      return `https://api.dicebear.com/9.x/micah/svg?${params.toString()}`;
+    getAvatarUrl(testimonial) {
+      return getPlayerAvatarUrl(testimonial.avatarSeed, testimonial.gender);
     }
   }
 };
