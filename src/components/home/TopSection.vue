@@ -106,6 +106,13 @@ export default {
   background: #ffc827;
 }
 
+.investor-item .amount {
+  white-space: nowrap;
+  padding: 2px 14px;
+  width: max-content;
+  min-width: max-content;
+}
+
 .top-tagline {
   margin-top: 1.25rem;
   margin-bottom: 0;
