@@ -56,25 +56,25 @@ export default {
           name: 'Carlos Rodríguez',
           designation: 'Jugador reciente',
           quote: 'La encontré buscando dominó online. Es sencilla: entras, eliges mesa y juegas. Sin complicaciones.',
-          avatarSeed: 'carlos-testimonial'
+          avatarSeed: 'carlos-rodriguez-testimonio'
         },
         {
           name: 'María González',
           designation: 'Usuario nuevo',
           quote: 'Llevo pocos días jugando. Me gusta que puedo entrar rápido a una mesa y retar a alguien al momento.',
-          avatarSeed: 'maria-testimonial'
+          avatarSeed: 'maria-gonzalez-testimonio'
         },
         {
           name: 'José Martínez',
           designation: 'Jugador habitual',
           quote: 'Plataforma recién lanzada, pero el juego va fluido. Ojalá se una más gente para tener más rivales.',
-          avatarSeed: 'jose-testimonial'
+          avatarSeed: 'jose-martinez-testimonio'
         },
         {
           name: 'Ana Pérez',
           designation: 'De los primeros',
           quote: 'Probé la plataforma en sus primeros días. Funciona bien y se nota que van mejorando cosas poco a poco.',
-          avatarSeed: 'ana-testimonial'
+          avatarSeed: 'ana-perez-testimonio'
         }
       ]
     };
@@ -87,9 +87,13 @@ export default {
       const params = new URLSearchParams({
         seed,
         backgroundColor: 'ffc827,f5d78e,e8b86d',
-        radius: '50'
+        radius: '50',
+        mouth: 'smile,smirk',
+        shirt: 'collared,crew,open',
+        facialHairProbability: '35',
+        glassesProbability: '20'
       });
-      return `https://api.dicebear.com/9.x/personas/svg?${params.toString()}`;
+      return `https://api.dicebear.com/9.x/micah/svg?${params.toString()}`;
     }
   }
 };
