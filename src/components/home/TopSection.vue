@@ -3,7 +3,7 @@
         <div class="container">
             <div class="row align-items-center gy-5">
                 <div class="col-lg-4">
-                    <h3 class="part-title mb-4">Últimos Ganadores</h3>
+                    <h3 class="part-title mb-4">Partidas recientes</h3>
                     <div class="top-investor-slider">
                         <div class="investor-item">
                             <div class="investor-item__thumb">
@@ -26,7 +26,7 @@
                         <div class="investor-item">
                             <div class="investor-item__thumb">
                                 <img :src="getImageUrl('img_17.png')" alt="top">
-                                <p class="amount">$52000</p>
+                                <p class="amount">$52</p>
                             </div>
                             <div class="investor-item__content">
                                 <h6 class="name">José Martínez</h6>
@@ -54,15 +54,15 @@
                 </div>
                 <div class="col-lg-4">
                     <div class="cla-wrapper text-center">
-                        <h3 class="title mb-4">¡GANA!!! y <br> Obtén millones de dólares</h3>
-                        <a :href="isAuthenticated ? '#games' : '/login'" class="cmn--btn active btn--md radius-0">Jugar Ahora</a>
+                        <h3 class="title mb-4">Dominó online, <br> partidas con premios reales</h3>
+                        <a :href="isAuthenticated ? '#games' : '/login'" class="cmn--btn active btn--md radius-0">Empezar a jugar</a>
                         <div class="thumb">
                             <img :src="getImageUrl('img_20.png')" alt="top">
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <h3 class="part-title mb-4">Mejores Jugadores</h3>
+                    <h3 class="part-title mb-4">Jugadores activos</h3>
                     <div class="top-investor-slider">
                         <div class="investor-item">
                             <div class="investor-item__thumb">
@@ -85,7 +85,7 @@
                         <div class="investor-item">
                             <div class="investor-item__thumb">
                                 <img :src="getImageUrl('img_23.png')" alt="top">
-                                <p class="amount">$52000</p>
+                                <p class="amount">$52</p>
                             </div>
                             <div class="investor-item__content">
                                 <h6 class="name">José Martínez</h6>

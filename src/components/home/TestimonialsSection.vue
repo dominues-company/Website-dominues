@@ -4,8 +4,8 @@
             <div class="row justify-content-center">
                 <div class="col-lg-7 col-xl-6">
                     <div class="section-header text-center">
-                        <h2 class="section-header__title">Lo que dicen nuestros Jugadores</h2>
-                        <p>En nuestra plataforma de dominó, los jugadores disfrutan de una experiencia única, competitiva y divertida. Aquí te mostramos algunas opiniones de nuestros usuarios satisfechos.</p>
+                        <h2 class="section-header__title">Estamos empezando</h2>
+                        <p>Somos una plataforma nueva de dominó online. Cada partida nos ayuda a mejorar. Si te gusta el juego, queremos que seas de los primeros en probarla.</p>
                     </div>
                 </div>
             </div>
@@ -15,7 +15,7 @@
                         <div class="testimonial-inner">
                             <div class="testimonial-item__content">
                                 <div class="quote-icon"><i class="fas fa-quote-left"></i></div>
-                                <p>Me encanta jugar dominó en línea con mis amigos. La plataforma es increíblemente fácil de usar y siempre me ofrece una gran experiencia.</p>
+                                <p>La encontré buscando dominó online. Es sencilla: entras, eliges mesa y juegas. Sin complicaciones.</p>
                             </div>
                             <div class="thumb-wrapper">
                                 <div class="thumb">
@@ -23,7 +23,7 @@
                                 </div>
                                 <div class="content">
                                     <h6 class="name">Carlos Rodríguez</h6>
-                                    <span class="designation">Jugador de Dominó</span>
+                                    <span class="designation">Jugador reciente</span>
                                 </div>
                             </div>
                         </div>
@@ -34,7 +34,7 @@
                         <div class="testimonial-inner">
                             <div class="testimonial-item__content">
                                 <div class="quote-icon"><i class="fas fa-quote-left"></i></div>
-                                <p>Una plataforma excelente para mejorar mis habilidades en dominó. ¡He ganado varios torneos y cada día es más emocionante!</p>
+                                <p>Llevo pocos días jugando. Me gusta que puedo entrar rápido a una mesa y retar a alguien al momento.</p>
                             </div>
                             <div class="thumb-wrapper">
                                 <div class="thumb">
@@ -42,7 +42,7 @@
                                 </div>
                                 <div class="content">
                                     <h6 class="name">María González</h6>
-                                    <span class="designation">Jugadora Profesional</span>
+                                    <span class="designation">Usuario nuevo</span>
                                 </div>
                             </div>
                         </div>
@@ -53,7 +53,7 @@
                         <div class="testimonial-inner">
                             <div class="testimonial-item__content">
                                 <div class="quote-icon"><i class="fas fa-quote-left"></i></div>
-                                <p>Me encanta la comunidad de jugadores. Es fácil conectarse y siempre es un reto jugar contra otros de todo el mundo.</p>
+                                <p>Plataforma recién lanzada, pero el juego va fluido. Ojalá se una más gente para tener más rivales.</p>
                             </div>
                             <div class="thumb-wrapper">
                                 <div class="thumb">
@@ -61,7 +61,7 @@
                                 </div>
                                 <div class="content">
                                     <h6 class="name">José Martínez</h6>
-                                    <span class="designation">Jugador Habitual</span>
+                                    <span class="designation">Jugador habitual</span>
                                 </div>
                             </div>
                         </div>
@@ -72,7 +72,7 @@
                         <div class="testimonial-inner">
                             <div class="testimonial-item__content">
                                 <div class="quote-icon"><i class="fas fa-quote-left"></i></div>
-                                <p>Una plataforma que siempre está actualizada y ofrece nuevas características. ¡Mejoré mucho en mi juego desde que empecé a jugar aquí!</p>
+                                <p>Probé la plataforma en sus primeros días. Funciona bien y se nota que van mejorando cosas poco a poco.</p>
                             </div>
                             <div class="thumb-wrapper">
                                 <div class="thumb">
@@ -80,7 +80,7 @@
                                 </div>
                                 <div class="content">
                                     <h6 class="name">Ana Pérez</h6>
-                                    <span class="designation">Jugadora Experta</span>
+                                    <span class="designation">De los primeros</span>
                                 </div>
                             </div>
                         </div>

@@ -19,6 +19,7 @@ import TermsView from '../views/TermsView.vue';
 import AMLView from '../views/AMLView.vue';
 import ResponsibleGamblingView from '../views/ResponsibleGamblingView.vue';
 import ContactView from '../views/ContactView.vue';
+import FaqView from '../views/FaqView.vue';
 // import PoteView from '../views/PoteView.vue'; // Movido a lazy loading
 
 const routes = [
@@ -56,6 +57,12 @@ const routes = [
     path: '/contact',
     name: 'ContactView',
     component: ContactView,
+    meta: { public: true }
+  },
+  {
+    path: '/faq',
+    name: 'FaqView',
+    component: FaqView,
     meta: { public: true }
   },
   {
@@ -137,21 +144,30 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
-  scrollBehavior(to) {
-    // Si el destino tiene un hash (ejemplo: '/home#about')
-    if (to.hash) {
-      const element = document.querySelector(to.hash); // Selecciona el elemento por el hash
-      if (element) {
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            // Desplazamiento suave
-            element.scrollIntoView({ behavior: 'smooth' });
-            resolve({ top: element.offsetTop });
-          }, 0);
-        });
-      }
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
     }
-    return { top: 0 }; // Si no es hash, ir al inicio
+
+    if (to.hash) {
+      return new Promise((resolve) => {
+        const tryScroll = (attempts = 0) => {
+          const element = document.querySelector(to.hash)
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' })
+            resolve({ el: to.hash, behavior: 'smooth' })
+          } else if (attempts < 30) {
+            setTimeout(() => tryScroll(attempts + 1), 50)
+          } else {
+            resolve({ top: 0 })
+          }
+        }
+
+        setTimeout(() => tryScroll(), 100)
+      })
+    }
+
+    return { top: 0 }
   }
 });
 

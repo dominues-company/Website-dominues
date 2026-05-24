@@ -6,8 +6,12 @@
               <div class="footer-wrapper d-flex flex-wrap align-items-center justify-content-md-between justify-content-center">
                   <div class="logo mb-3 mb-md-0"><router-link to="/"><img :src="getImageUrl('img_31.png')" alt="Dominues"></router-link></div>
                   <ul class="footer-links d-flex flex-wrap justify-content-center">
-                      <li><router-link class="nav-link" :class="{ active: $route.path === '/' }" to="#games">Juegos</router-link></li>
-                      <li><router-link class="nav-link" :class="{ active: $route.path === '/' }" to="#faq">Preguntas Frecuentes</router-link></li>
+                      <li>
+                        <router-link class="nav-link" :to="gamesLink" @click="handleSectionClick('games', $event)">Juegos</router-link>
+                      </li>
+                      <li>
+                        <router-link class="nav-link" :class="{ active: $route.path === '/faq' }" :to="faqLink" @click="handleSectionClick('faq', $event)">Preguntas Frecuentes</router-link>
+                      </li>
                       <li><router-link class="nav-link" :class="{ active: $route.path === '/privacy' }" to="/privacy">Privacidad</router-link></li>
                       <li><router-link class="nav-link" :class="{ active: $route.path === '/terms' }" to="/terms">Términos y Condiciones</router-link></li>
                       <li><router-link class="nav-link" :class="{ active: $route.path === '/responsible-gambling' }" to="/responsible-gambling">Juego Responsable</router-link></li>
@@ -32,17 +36,30 @@
 </template>
 
 <script>
- 
+import { mapGetters } from 'vuex'
+import { getGamesLink, getFaqLink, navigateToSection } from '@/utils/sectionNavigation'
+
 export default {
   name: 'FooterComponent',
   computed: {
+    ...mapGetters('auth', ['isAuthenticated']),
     currentYear() {
       return new Date().getFullYear()
+    },
+    gamesLink() {
+      return getGamesLink(this.isAuthenticated)
+    },
+    faqLink() {
+      return getFaqLink()
     }
   },
   methods: {
     getImageUrl(name) {
       return require(`@/assets/img/${name}`)
+    },
+    async handleSectionClick(section, event) {
+      event.preventDefault()
+      await navigateToSection(this.$router, section, this.isAuthenticated)
     }
   }
 }

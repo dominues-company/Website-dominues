@@ -17,13 +17,13 @@
                 <router-link class="nav-link" :class="{ active: $route.path === '/' }" to="/">Inicio</router-link>
               </li>
               <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/' }" to="#about">Acerca de</router-link>
+                <router-link class="nav-link" :class="{ active: $route.path === '/' }" :to="aboutLink" @click="handleSectionClick('about', $event)">Acerca de</router-link>
               </li>
               <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/' }" to="#games">Juegos <span class="badge badge--sm badge--base text-dark">NUEVO</span></router-link>
+                <router-link class="nav-link" :class="{ active: $route.path === '/' || $route.path === '/dashboard' }" :to="gamesLink" @click="handleSectionClick('games', $event)">Juegos <span class="badge badge--sm badge--base text-dark">NUEVO</span></router-link>
               </li>
               <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/' }" to="#faq">Preguntas Frecuentes</router-link>
+                <router-link class="nav-link" :class="{ active: $route.path === '/faq' }" :to="faqLink" @click="handleSectionClick('faq', $event)">Preguntas Frecuentes</router-link>
               </li>
               
               <!-- <li>
@@ -36,11 +36,14 @@
               <li>
                 <router-link class="nav-link" :class="{ active: $route.path === '/register' }" to="/register">Registro</router-link>
               </li>
+              <li class="mobile-only guest-menu-cta">
+                <router-link to="/register" class="cmn--btn active btn--md w-100" @click="handleMenuItemClick">Regístrate</router-link>
+              </li>
             </template>
             
             <!-- Menú para usuarios autenticados -->
             <template v-else>
-              <!-- Saldo con botón de refrescar (solo visible en desktop) -->
+              <!-- Saldo (desktop) -->
               <li class="nav-item balance-container desktop-only" v-if="currentUser">
                 <div class="balance-wrapper">
                   <div class="balance-badge">
@@ -58,37 +61,58 @@
                 </div>
               </li>
 
-              <li class="menu-item-has-children" :class="{ active: isMenuOpen }">
+              <!-- Móvil: mismo menú full-screen que invitados -->
+              <li class="auth-mobile-balance mobile-only" v-if="currentUser">
+                <div class="auth-balance-row">
+                  <span class="auth-balance-label"><i class="fas fa-coins"></i> {{ currentUser.balance }}</span>
+                  <button
+                    type="button"
+                    class="auth-balance-refresh"
+                    @click.stop="refreshBalance"
+                    :disabled="isRefreshing"
+                    aria-label="Refrescar saldo"
+                  >
+                    <i class="fas fa-sync-alt" :class="{ 'fa-spin': isRefreshing }"></i>
+                  </button>
+                </div>
+              </li>
+              <li class="auth-mobile-user mobile-only">
+                <span class="auth-user-name">{{ userName }}</span>
+              </li>
+              <li class="mobile-only">
+                <router-link to="/dashboard" class="nav-link" @click="handleMenuItemClick">Juegos</router-link>
+              </li>
+              <li class="mobile-only">
+                <router-link to="/profile" class="nav-link" @click="handleMenuItemClick">Mi Perfil</router-link>
+              </li>
+              <li class="mobile-only">
+                <router-link to="/recharge" class="nav-link" @click="handleMenuItemClick">Recargas</router-link>
+              </li>
+              <li class="mobile-only">
+                <router-link to="/withdraw" class="nav-link" @click="handleMenuItemClick">Retiros</router-link>
+              </li>
+              <li class="mobile-only">
+                <router-link to="/transactions" class="nav-link" @click="handleMenuItemClick">Transacciones</router-link>
+              </li>
+              <li class="mobile-only">
+                <router-link to="/pote" class="nav-link" @click="handleMenuItemClick">Pote - Estadísticas</router-link>
+              </li>
+              <li class="mobile-only">
+                <router-link to="/history" class="nav-link" @click="handleMenuItemClick">Mis Partidas</router-link>
+              </li>
+              <li class="mobile-only">
+                <a href="#" class="nav-link" @click.prevent="handleLogout">Cerrar Sesión</a>
+              </li>
+              <li class="mobile-only auth-menu-cta">
+                <router-link to="/dashboard" class="cmn--btn active btn--md w-100" @click="handleMenuItemClick">Jugar ahora</router-link>
+              </li>
+
+              <!-- Desktop: dropdown del usuario -->
+              <li class="menu-item-has-children desktop-only" :class="{ active: isMenuOpen }">
                 <a href="#" class="nav-link" @click.prevent="toggleMenu">
-                  <span class="user-name desktop-only">{{ userName }}</span>
-                  <i class="fas fa-user-circle mobile-only d-lg-none"></i>
+                  <span class="user-name">{{ userName }}</span>
                 </a>
                 <ul class="submenu" @click.stop="handleMenuItemClick">
-                  <!-- Saldo con botón de refrescar dentro del submenu (solo visible en móvil) -->
-                  <li class="submenu-balance-container mobile-only" v-if="currentUser">
-                    <div class="balance-wrapper">
-                      <div class="balance-badge">
-                        <i class="fas fa-coins"></i> {{ currentUser.balance }}
-                      </div>
-                      <button 
-                        class="btn-refresh" 
-                        @click.stop="refreshBalance" 
-                        :disabled="isRefreshing"
-                        aria-label="Refrescar saldo"
-                        :title="isRefreshing ? 'Actualizando...' : 'Actualizar saldo'"
-                      >
-                        <i class="fas fa-sync-alt" :class="{'fa-spin': isRefreshing}"></i>
-                      </button>
-                    </div>
-                  </li>
-                  
-                  <!-- Nombre del usuario dentro del submenu (solo visible en móvil) -->
-                  <li class="submenu-user-name mobile-only">
-                    <span class="user-name-display">{{ userName }}</span>
-                  </li>
-                  
-                  <li class="submenu-divider mobile-only"></li>
-                  
                   <li>
                     <router-link to="/profile" class="dropdown-item">
                       <i class="fas fa-user me-2"></i> Mi Perfil
@@ -120,7 +144,7 @@
                     </router-link>
                   </li>
                   <li>
-                    <a href="#"  class="dropdown-item" @click.prevent="handleLogout">
+                    <a href="#" class="dropdown-item" @click.prevent="handleLogout">
                       <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
                     </a>
                   </li>
@@ -150,6 +174,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import api from '@/services/api'
+import { getGamesLink, getAboutLink, getFaqLink, navigateToSection } from '@/utils/sectionNavigation'
 
 export default {
   name: 'NavbarComponent',
@@ -166,6 +191,15 @@ export default {
       if (this.currentUser?.name) return this.currentUser.name;
       if (this.currentUser?.email) return this.currentUser.email.split('@')[0];
       return 'Usuario';
+    },
+    aboutLink() {
+      return getAboutLink()
+    },
+    gamesLink() {
+      return getGamesLink(this.isAuthenticated)
+    },
+    faqLink() {
+      return getFaqLink()
     }
   },
   watch: {
@@ -236,6 +270,10 @@ export default {
   methods: {
     getImageUrl(name) {
       return require(`@/assets/img/${name}`);
+    },
+    async handleSectionClick(section, event) {
+      event.preventDefault()
+      await navigateToSection(this.$router, section, this.isAuthenticated)
     },
     ...mapActions('auth', ['logout', 'updateUserData']),
     formatBalance(balance) {
@@ -310,22 +348,9 @@ export default {
           // También cerrar el submenu del usuario
           this.isMenuOpen = false;
         } else {
-          // Abrir el menú - AGREGAR clase active
           menuElement.classList.add('active');
           if (headerTrigger) {
             headerTrigger.classList.add('active');
-          }
-          // Abrir también el submenu del usuario automáticamente si está autenticado
-          // Esto hace que el submenu esté visible siempre que el menú principal esté abierto
-          if (this.isAuthenticated) {
-            this.isMenuOpen = true;
-            // Asegurar que el submenu esté visible
-            this.$nextTick(() => {
-              const menuItem = this.$el?.querySelector('.menu-item-has-children');
-              if (menuItem) {
-                menuItem.classList.add('active');
-              }
-            });
           }
         }
       }
@@ -391,21 +416,17 @@ export default {
       this.closeMenu();
     },
     handleClickOutside(event) {
-      // Cerrar el menú si se hace clic fuera de él
-      if (!this.isMenuOpen) return;
-      
-      const menuElement = this.$el?.querySelector('.menu-item-has-children');
-      const submenuElement = this.$el?.querySelector('.submenu');
-      
+      if (!this.isMenuOpen || window.innerWidth <= 991) return;
+
+      const menuElement = this.$el?.querySelector('.menu-item-has-children.desktop-only');
+      const submenuElement = menuElement?.querySelector('.submenu');
+
       if (menuElement && submenuElement && event.target) {
         const isClickInsideMenu = menuElement.contains(event.target);
-        const isClickInsideSubmenu = submenuElement.contains(event.target);
-        
-        // También verificar si el clic es en el botón toggle
         const toggleButton = menuElement.querySelector('.nav-link');
         const isClickOnToggle = toggleButton && toggleButton.contains(event.target);
-        
-        if (!isClickInsideMenu && !isClickInsideSubmenu && !isClickOnToggle) {
+
+        if (!isClickInsideMenu && !isClickOnToggle) {
           this.closeMenu();
         }
       }
@@ -413,7 +434,7 @@ export default {
     async handleLogout() {
       if (this.isLoggingOut) return;
       this.isLoggingOut = true;
-      this.closeMenu(); // Cerrar menú antes de cerrar sesión
+      this.closeMobileMenu();
       try {
         await this.logout();
         this.$router.push('/login');
@@ -431,7 +452,70 @@ export default {
 <style scoped>
 /* Estilos existentes */
 
-/* Estilos para el menú desplegable */
+/* Estilos móvil autenticado (misma línea visual que invitados) */
+.auth-mobile-balance {
+  padding: 10px 10px 14px;
+}
+
+.auth-balance-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-balance-label {
+  color: #ffc827;
+  font-weight: 700;
+  font-size: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-balance-refresh {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.auth-balance-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-mobile-user {
+  padding: 0 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.auth-user-name {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.auth-menu-cta,
+.guest-menu-cta {
+  border-bottom: none !important;
+  padding-top: 18px;
+  margin-top: 8px;
+}
+
+.auth-menu-cta .cmn--btn,
+.guest-menu-cta .cmn--btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+/* Estilos para el menú desplegable desktop */
 .menu-item-has-children {
   position: relative;
 }
@@ -569,69 +653,33 @@ export default {
   list-style: none;
 }
 
-/* En móvil, ajustar posición */
+/* En móvil, ajustar posición del dropdown solo en desktop */
 @media (max-width: 991px) {
-  /* Ocultar elementos de desktop y mostrar elementos de móvil */
   .desktop-only {
     display: none !important;
   }
-  
+
   .mobile-only {
     display: block !important;
   }
-  
+
   .submenu {
-    position: fixed !important;
-    top: 75px !important; /* Ahora puede estar más arriba porque el nombre está dentro */
-    bottom: auto !important;
-    right: 10px !important;
-    left: auto !important;
-    width: calc(100vw - 20px);
-    max-width: 300px;
-    max-height: calc(100vh - 90px) !important;
-    overflow-y: auto;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    z-index: 10000 !important;
-    opacity: 0;
-    visibility: hidden;
+    display: none !important;
   }
-  
-  /* Cuando el menú principal tiene active, el submenu debe estar visible */
-  .menu.active .menu-item-has-children .submenu {
-    transform: translateX(0) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+
+  .auth-mobile-balance.mobile-only,
+  .auth-mobile-user.mobile-only {
+    display: block !important;
   }
-  
-  .menu-item-has-children:hover .submenu,
-  .menu-item-has-children.active .submenu {
-    transform: translateX(0);
-    opacity: 1;
-    visibility: visible;
+}
+
+@media (min-width: 992px) {
+  .mobile-only {
+    display: none !important;
   }
-  
-  /* Asegurar que el menú se oculte cuando el menú principal no está activo */
-  .menu:not(.active) .menu-item-has-children .submenu {
-    transform: translateX(100%) !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-  }
-  
-  /* Estilos para elementos dentro del submenu en móvil */
-  .submenu-balance-container {
-    padding: 12px 15px;
-  }
-  
-  .submenu-balance-container .balance-badge {
-    font-size: 1rem;
-  }
-  
-  .submenu-user-name {
-    padding: 10px 15px;
-  }
-  
+}
+
+@media (max-width: 991px) {
   .balance-container {
     margin-right: 10px;
   }

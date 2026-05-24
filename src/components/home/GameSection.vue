@@ -1,6 +1,17 @@
 <template>
    <section class="game-section padding-top padding-bottom bg_img" :style="{ background: `url(${getAssetImageUrl('bg3.jpg')}) center` }" id="games">
         <div class="container">
+            <div v-if="loading" class="row gy-4 justify-content-center">
+                <div class="col-12 text-center">
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando juegos...</p>
+                    </div>
+                </div>
+            </div>
+            <template v-else>
             <div class="row justify-content-center">
                 <div class="col-lg-8 col-xl-6">
                     <div class="section-header text-center">
@@ -42,15 +53,7 @@
             </div>-->
             
             <div class="row gy-4 justify-content-center">
-                <div v-if="loading" class="col-12 text-center">
-                    <div class="loading-spinner">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                        <p class="mt-2">Cargando juegos...</p>
-                    </div>
-                </div>
-                <div v-else-if="availableGames.length === 0" class="col-12 text-center">
+                <div v-if="availableGames.length === 0" class="col-12 text-center">
                     <div class="no-games-message">
                         <i class="fas fa-gamepad"></i>
                         <p>No hay juegos disponibles en este momento.</p>
@@ -83,6 +86,7 @@
                     </div>
                 </div>
             </div>
+            </template>
         </div>
     </section>
 </template>
@@ -95,6 +99,7 @@ export default {
   name: 'GameSection',
   data() {
     return {
+      gamesReady: false
     }
   },
   computed: {
@@ -119,31 +124,31 @@ export default {
     },
     
     loading() {
-      return this.$store.state.games.loading
+      return !this.gamesReady
     }
   },
   async mounted() {
-    console.log('GameSection mounted');
-    if (this.isAuthenticated) {
-      console.log('Usuario autenticado, inicializando conexión y cargando juegos');
-      await this.initSocketConnection();
-    } else {
-      console.log('Usuario no autenticado, cargando juegos sin conexión');
-      await this.fetchGames();
-    }
-    // Forzar la carga del saldo siempre
-    await this.$store.dispatch('games/fetchUserBalance');
-    // Cargar juegos del dashboard usando fetchGames
-    await this.$store.dispatch('games/fetchGames');
+    this.$store.commit('games/SET_GAMES', [])
 
-    // Suscribirse al canal de Pusher para actualizaciones en tiempo real
+    if (this.isAuthenticated) {
+      await this.initSocketConnection()
+    }
+
+    try {
+      await Promise.all([
+        this.$store.dispatch('games/fetchGames'),
+        this.$store.dispatch('games/fetchUserBalance')
+      ])
+    } finally {
+      this.gamesReady = true
+    }
+
     if (window.Echo) {
       this.pusherChannel = window.Echo.channel('tables')
         .listen('UserJoinedTable', () => {
-          this.fetchGames();
-        });
-      // Marca como conectado en tiempo real
-      this.$store.commit('games/SET_SOCKET_CONNECTED', true);
+          this.fetchGames()
+        })
+      this.$store.commit('games/SET_SOCKET_CONNECTED', true)
     }
   },
   beforeUnmount() {
@@ -280,6 +285,8 @@ export default {
   watch: {
     availableGames: {
       handler(newGames) {
+        if (this.loading) return
+
         const userId = this.currentUser?.id;
         if (userId) {
           const juegoInscrito = newGames.find(
@@ -290,7 +297,6 @@ export default {
           }
         }
       },
-      immediate: true,
       deep: true
     }
   }
