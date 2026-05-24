@@ -99,9 +99,9 @@ export default {
           }
         },
         {
-          name: 'Andrés Rangel',
+          name: 'Pedro Hernandez',
           amount: '120 Dcoins',
-          avatarSeed: 'andres-rangel-activo-lentes',
+          avatarSeed: 'pedro-hernandez-activo-lentes',
           gender: 'male',
           avatarOverrides: {
             hair: 'mrClean,mrT',
