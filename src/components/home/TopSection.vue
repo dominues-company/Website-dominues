@@ -69,14 +69,14 @@ export default {
   data() {
     return {
       recentPlayers: [
-        { name: 'Carlos Rodríguez', amount: '200 Dcoins', avatarSeed: 'carlos-rodriguez', gender: 'male' },
-        { name: 'Luis Mendoza', amount: '120 Dcoins', avatarSeed: 'luis-mendoza', gender: 'male' },
-        { name: 'Valentina Pérez', amount: '50 Dcoins', avatarSeed: 'valentina-perez', gender: 'female' }
+        { name: 'José Gregorio Márquez', amount: '200 Dcoins', avatarSeed: 'jose-gregorio-marquez', gender: 'male' },
+        { name: 'Andrés Rangel', amount: '120 Dcoins', avatarSeed: 'andres-rangel', gender: 'male' },
+        { name: 'Valentina Soto', amount: '50 Dcoins', avatarSeed: 'valentina-soto', gender: 'female' }
       ],
       activePlayers: [
-        { name: 'Valentina Pérez', amount: '50 Dcoins', avatarSeed: 'valentina-perez-activa', gender: 'female' },
-        { name: 'Carlos Rodríguez', amount: '200 Dcoins', avatarSeed: 'carlos-rodriguez-activo', gender: 'male' },
-        { name: 'Luis Mendoza', amount: '120 Dcoins', avatarSeed: 'luis-mendoza-activo', gender: 'male' }
+        { name: 'Valentina Soto', amount: '50 Dcoins', avatarSeed: 'valentina-soto-activa', gender: 'female' },
+        { name: 'José Gregorio Márquez', amount: '200 Dcoins', avatarSeed: 'jose-gregorio-marquez-activo', gender: 'male' },
+        { name: 'Andrés Rangel', amount: '120 Dcoins', avatarSeed: 'andres-rangel-activo', gender: 'male' }
       ]
     };
   },

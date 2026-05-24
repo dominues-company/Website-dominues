@@ -55,31 +55,31 @@ export default {
     return {
       testimonials: [
         {
-          name: 'Carlos Rodríguez',
+          name: 'Miguel Ángel Paredes',
           designation: 'Jugador reciente',
           quote: 'La encontré buscando dominó online. Es sencilla: entras, eliges mesa y juegas. Sin complicaciones.',
-          avatarSeed: 'carlos-rodriguez-testimonio',
+          avatarSeed: 'miguel-angel-paredes',
           gender: 'male'
         },
         {
-          name: 'María González',
+          name: 'Luisana Pereira',
           designation: 'Usuario nuevo',
           quote: 'Llevo pocos días jugando. Me gusta que puedo entrar rápido a una mesa y retar a alguien al momento.',
-          avatarSeed: 'maria-gonzalez-testimonio',
+          avatarSeed: 'luisana-pereira',
           gender: 'female'
         },
         {
-          name: 'José Martínez',
+          name: 'Ricardo Villanueva',
           designation: 'Jugador habitual',
           quote: 'Plataforma recién lanzada, pero el juego va fluido. Ojalá se una más gente para tener más rivales.',
-          avatarSeed: 'jose-martinez-testimonio',
+          avatarSeed: 'ricardo-villanueva',
           gender: 'male'
         },
         {
-          name: 'Ana Pérez',
+          name: 'Ana Gabriela Briceño',
           designation: 'De los primeros',
           quote: 'Probé la plataforma en sus primeros días. Funciona bien y se nota que van mejorando cosas poco a poco.',
-          avatarSeed: 'ana-perez-testimonio',
+          avatarSeed: 'ana-gabriela-briceno',
           gender: 'female'
         }
       ]
