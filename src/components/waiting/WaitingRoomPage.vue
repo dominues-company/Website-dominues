@@ -35,6 +35,7 @@
 <script>
 import WaitingRoom from './WaitingRoom.vue'
 import { mapGetters } from 'vuex'
+import { closeMobileNavigation } from '@/utils/mobileNavigation'
 
 export default {
   name: 'WaitingRoomPage',
@@ -138,10 +139,12 @@ export default {
     },
     
     goHome() {
+      closeMobileNavigation()
       this.$router.push('/dashboard')
     },
     
     goToDashboard() {
+      closeMobileNavigation()
       this.$router.push('/dashboard')
     }
   }

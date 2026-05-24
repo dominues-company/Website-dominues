@@ -26,12 +26,7 @@ export function initGlobalJqueryPlugins() {
     }
     });
 
-    // Responsive Menu
-    var headerTrigger = $('.header-trigger');
-    headerTrigger.on('click', function(){
-        $('.menu').toggleClass('active')
-        $('.overlay').toggleClass('active')
-    });
+    // Responsive Menu: lo gestiona NavbarComponent.vue (evita doble toggle al remontar el navbar)
 
     var headerTrigger2 = $('.top-bar-trigger');
     headerTrigger2.on('click', function(){

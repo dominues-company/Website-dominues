@@ -175,6 +175,7 @@
 import { mapGetters, mapActions } from 'vuex'
 import api from '@/services/api'
 import { getGamesLink, getAboutLink, getFaqLink, navigateToSection } from '@/utils/sectionNavigation'
+import { closeMobileNavigation } from '@/utils/mobileNavigation'
 
 export default {
   name: 'NavbarComponent',
@@ -205,62 +206,16 @@ export default {
   watch: {
     // Cerrar el menú cuando cambia la ruta (navegación)
     '$route'() {
-      // Remover clase active inmediatamente
-      const menuElement = this.$el?.querySelector('.menu');
-      if (menuElement) {
-        menuElement.classList.remove('active');
-      }
-      const headerTrigger = document.querySelector('.header-trigger');
-      if (headerTrigger) {
-        headerTrigger.classList.remove('active');
-      }
+      this.closeMobileMenu();
       this.closeMenu();
     }
   },
   mounted() {
-    // Asegurar que el menú esté cerrado al cargar la página
     this.isMenuOpen = false;
-    this.$nextTick(() => {
-      const menuElement = this.$el?.querySelector('.menu');
-      const headerTrigger = document.querySelector('.header-trigger');
-      if (menuElement) {
-        menuElement.classList.remove('active');
-      }
-      if (headerTrigger) {
-        headerTrigger.classList.remove('active');
-      }
-    });
-    
-    // Cerrar menú al hacer clic fuera de él
+    closeMobileNavigation();
+
     document.addEventListener('click', this.handleClickOutside);
-    
-    // Listener para cambios de tamaño de ventana
     window.addEventListener('resize', this.handleResize);
-    
-    // Agregar listener directo al header-trigger para evitar conflictos con scripts externos
-    this.$nextTick(() => {
-      const headerTrigger = document.querySelector('.header-trigger');
-      if (headerTrigger) {
-        // Remover listeners anteriores si existen
-        headerTrigger.removeEventListener('click', this.toggleMobileMenu);
-        // Agregar nuestro listener
-        headerTrigger.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.toggleMobileMenu(e);
-        });
-      }
-      
-      // También para el botón de cerrar
-      const closeButton = this.$el?.querySelector('.btn-close');
-      if (closeButton) {
-        closeButton.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.closeMobileMenu();
-        });
-      }
-    });
   },
   beforeUnmount() {
     // Limpiar los listeners al desmontar el componente
@@ -326,48 +281,31 @@ export default {
       }
     },
     toggleMobileMenu(event) {
-      // Prevenir el comportamiento por defecto y la propagación
       if (event) {
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
       }
-      
-      // Toggle del menú móvil principal (el que se abre con el botón hamburguesa)
+
       const menuElement = this.$el?.querySelector('.menu');
-      const headerTrigger = document.querySelector('.header-trigger');
-      
-      if (menuElement) {
-        const isActive = menuElement.classList.contains('active');
-        
-        if (isActive) {
-          // Cerrar el menú
-          menuElement.classList.remove('active');
-          if (headerTrigger) {
-            headerTrigger.classList.remove('active');
-          }
-          // También cerrar el submenu del usuario
-          this.isMenuOpen = false;
-        } else {
-          menuElement.classList.add('active');
-          if (headerTrigger) {
-            headerTrigger.classList.add('active');
-          }
-        }
+      const headerTrigger = this.$el?.querySelector('.header-trigger');
+      if (!menuElement) return;
+
+      const willOpen = !menuElement.classList.contains('active');
+      if (willOpen) {
+        menuElement.classList.add('active');
+        headerTrigger?.classList.add('active');
+      } else {
+        this.closeMobileMenu();
       }
     },
     closeMobileMenu() {
-      // Cerrar el menú móvil principal
       const menuElement = this.$el?.querySelector('.menu');
-      const headerTrigger = document.querySelector('.header-trigger');
-      
-      if (menuElement) {
-        menuElement.classList.remove('active');
-      }
-      if (headerTrigger) {
-        headerTrigger.classList.remove('active');
-      }
-      // También cerrar el submenu del usuario
+      const headerTrigger = this.$el?.querySelector('.header-trigger');
+
+      menuElement?.classList.remove('active');
+      headerTrigger?.classList.remove('active');
       this.isMenuOpen = false;
+      closeMobileNavigation();
     },
     syncMenuActiveState() {
       // Sincronizar el estado del menú con la clase active del elemento .menu
@@ -402,17 +340,7 @@ export default {
       });
     },
     handleMenuItemClick() {
-      // Cerrar el menú cuando se hace clic en cualquier elemento
-      // Remover clase active inmediatamente
-      const menuElement = this.$el?.querySelector('.menu');
-      if (menuElement) {
-        menuElement.classList.remove('active');
-      }
-      const headerTrigger = document.querySelector('.header-trigger');
-      if (headerTrigger) {
-        headerTrigger.classList.remove('active');
-      }
-      // Cerrar el menú
+      this.closeMobileMenu();
       this.closeMenu();
     },
     handleClickOutside(event) {
