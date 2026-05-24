@@ -536,6 +536,9 @@ export default {
       
       // Flag para evitar envío duplicado de resultados
       resultSent: false,
+
+      // Interceptar botón "Atrás" del navegador/móvil durante la partida
+      backGuardEnabled: false,
       
       // 🔧 FIX: Interval para actualizar mensaje de matchmaking
       matchmakingMessageInterval: null,
@@ -1801,6 +1804,7 @@ export default {
       const savedPlayerName = preservePlayerName ? this.playerName : '';
       
       // === RESET DE ESTADO DE JUEGO ===
+      this.disableBackButtonGuard();
       this.gameStarted = false;
       this.isConnecting = false;
       this.gameMode = null;
@@ -3587,6 +3591,52 @@ export default {
       this.$emit('exit');
     },
 
+    isActiveGameSession() {
+      return (
+        this.gameStarted &&
+        this.isGameReady &&
+        !this.resultSent &&
+        !this.isSurrendering
+      );
+    },
+
+    getBackSurrenderConfirmMessage() {
+      return '¿Quieres rendirte y salir de la partida?\n\nSi aceptas, contará como una derrota.';
+    },
+
+    enableBackButtonGuard() {
+      if (this.backGuardEnabled || typeof window === 'undefined') return;
+
+      this.backGuardEnabled = true;
+      window.addEventListener('popstate', this.handleBrowserBack);
+      history.pushState({ dominuesWaitingRoomBackGuard: true }, '', window.location.href);
+      console.log('🔙 [WAITING-ROOM] Guardia del botón Atrás activada');
+    },
+
+    disableBackButtonGuard() {
+      if (!this.backGuardEnabled || typeof window === 'undefined') return;
+
+      this.backGuardEnabled = false;
+      window.removeEventListener('popstate', this.handleBrowserBack);
+      console.log('🔙 [WAITING-ROOM] Guardia del botón Atrás desactivada');
+    },
+
+    handleBrowserBack() {
+      if (!this.isActiveGameSession()) {
+        this.disableBackButtonGuard();
+        return;
+      }
+
+      // Cancelar el "go back" y quedarse en la partida
+      history.pushState({ dominuesWaitingRoomBackGuard: true }, '', window.location.href);
+
+      const confirmed = confirm(this.getBackSurrenderConfirmMessage());
+      if (confirmed) {
+        this.disableBackButtonGuard();
+        this.handleSurrender({ skipConfirm: true, reason: 'back_button' });
+      }
+    },
+
     async handleSurrender(options = {}) {
       const {
         skipConfirm = false,
@@ -3975,6 +4025,16 @@ export default {
       }
     }
   },
+
+  watch: {
+    gameStarted(isActive) {
+      if (isActive) {
+        this.$nextTick(() => this.enableBackButtonGuard());
+      } else {
+        this.disableBackButtonGuard();
+      }
+    }
+  },
   
   created() {
     const savedMuted = localStorage.getItem('dominues_game_muted');
@@ -4022,6 +4082,7 @@ export default {
     
     window.removeEventListener('message', this.handleGameMessage);
     window.removeEventListener('balance-updated', this.handleBalanceUpdate);
+    this.disableBackButtonGuard();
     window.dispatchEvent(new CustomEvent('resume-background-music'));
   }
 }

@@ -85,15 +85,28 @@ export default {
       ],
       activePlayers: [
         { name: 'Valentina Soto', amount: '50 Dcoins', avatarSeed: 'valentina-soto-activa', gender: 'female' },
-        { name: 'José Gregorio Márquez', amount: '200 Dcoins', avatarSeed: 'jose-gregorio-marquez-activo', gender: 'male' },
+        {
+          name: 'Luis Herrera',
+          amount: '200 Dcoins',
+          avatarSeed: 'luis-herrera-activo',
+          gender: 'male',
+          avatarOverrides: {
+            hair: 'fonze,dannyPhantom,dougFunny',
+            facialHair: 'beard',
+            facialHairProbability: '60',
+            glassesProbability: '35',
+            earringsProbability: '0'
+          }
+        },
         {
           name: 'Andrés Rangel',
           amount: '120 Dcoins',
-          avatarSeed: 'andres-rangel-activo-sin-arete',
+          avatarSeed: 'andres-rangel-activo-lentes',
           gender: 'male',
           avatarOverrides: {
-            hair: 'mrClean,mrT,fonze',
-            facialHairProbability: '40',
+            hair: 'mrClean,mrT',
+            facialHairProbability: '25',
+            glassesProbability: '100',
             earringsProbability: '0'
           }
         }

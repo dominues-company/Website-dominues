@@ -28,7 +28,12 @@
     </div>
 
     <!-- 🎮 SALA DE ESPERA -->
-    <WaitingRoom v-else-if="game && user" :gameName="game.name" @exit="goToDashboard" />
+    <WaitingRoom
+      v-else-if="game && user"
+      ref="waitingRoom"
+      :gameName="game.name"
+      @exit="goToDashboard"
+    />
   </div>
 </template>
 
@@ -60,6 +65,22 @@ export default {
       return this.currentUser
     }
   },
+  beforeRouteLeave(to, from, next) {
+    const room = this.$refs.waitingRoom;
+    if (room?.isActiveGameSession?.()) {
+      const confirmed = confirm(room.getBackSurrenderConfirmMessage());
+      if (!confirmed) {
+        next(false);
+        return;
+      }
+      room.disableBackButtonGuard();
+      room.handleSurrender({ skipConfirm: true, reason: 'route_leave' });
+      next(false);
+      return;
+    }
+    next();
+  },
+
   async mounted() {
     console.log('🚀 [WAITING-PAGE] Componente montado')
     console.log('🚀 [WAITING-PAGE] Ruta actual:', this.$route)
