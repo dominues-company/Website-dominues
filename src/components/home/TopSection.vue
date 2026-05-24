@@ -73,9 +73,13 @@ export default {
         {
           name: 'Andrés Rangel',
           amount: '120 Dcoins',
-          avatarSeed: 'andres-rangel-corto',
+          avatarSeed: 'andres-rangel-sin-arete',
           gender: 'male',
-          avatarOverrides: { hair: 'mrClean,mrT,fonze', facialHairProbability: '40' }
+          avatarOverrides: {
+            hair: 'mrClean,mrT,fonze',
+            facialHairProbability: '40',
+            earringsProbability: '0'
+          }
         },
         { name: 'Valentina Soto', amount: '50 Dcoins', avatarSeed: 'valentina-soto', gender: 'female' }
       ],
@@ -85,9 +89,13 @@ export default {
         {
           name: 'Andrés Rangel',
           amount: '120 Dcoins',
-          avatarSeed: 'andres-rangel-activo-corto',
+          avatarSeed: 'andres-rangel-activo-sin-arete',
           gender: 'male',
-          avatarOverrides: { hair: 'mrClean,mrT,fonze', facialHairProbability: '40' }
+          avatarOverrides: {
+            hair: 'mrClean,mrT,fonze',
+            facialHairProbability: '40',
+            earringsProbability: '0'
+          }
         }
       ]
     };
