@@ -19,12 +19,13 @@
       @input="onVolumeInput"
     />
   </div>
-  <audio ref="audioPlayer" loop preload="auto">
+  <audio v-show="false" ref="audioPlayer" loop preload="auto">
     <source src="/assets/sounds/music_game.mp3" type="audio/mpeg">
   </audio>
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import AuthService from '@/services/auth.service';
 
 const STORAGE_VOLUME = 'dominues_bg_music_volume';
@@ -38,15 +39,22 @@ export default {
       isPlaying: false,
       userInteracted: false,
       volume: DEFAULT_VOLUME,
-      isMuted: false
+      isMuted: false,
+      pausedByVisibility: false,
+      soundEnabledByUser: false
     };
   },
   computed: {
+    ...mapGetters('auth', ['isAuthenticated']),
     showControl() {
-      return !this.$route.matched.some(record => record.meta.hideLayout);
+      return this.isAuthenticated
+        && !this.$route.matched.some(record => record.meta.hideLayout);
     },
     volumePercent() {
       return Math.round(this.volume * 100);
+    },
+    isMobile() {
+      return window.matchMedia('(max-width: 991px)').matches;
     }
   },
   mounted() {
@@ -59,6 +67,9 @@ export default {
     window.addEventListener('resume-background-music', this.resumeMusic);
     window.addEventListener('click', this.handleUserInteraction);
     window.addEventListener('keydown', this.handleUserInteraction);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    window.addEventListener('pagehide', this.handlePageHide);
+    window.addEventListener('blur', this.handleWindowBlur);
 
     this.checkInitialState();
   },
@@ -69,6 +80,9 @@ export default {
     window.removeEventListener('resume-background-music', this.resumeMusic);
     window.removeEventListener('click', this.handleUserInteraction);
     window.removeEventListener('keydown', this.handleUserInteraction);
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    window.removeEventListener('pagehide', this.handlePageHide);
+    window.removeEventListener('blur', this.handleWindowBlur);
     this.stopMusic();
   },
   methods: {
@@ -81,6 +95,52 @@ export default {
       const savedMuted = localStorage.getItem(STORAGE_MUTED);
       if (savedMuted === 'true') {
         this.isMuted = true;
+      } else if (savedMuted === 'false') {
+        this.isMuted = false;
+        this.soundEnabledByUser = true;
+      } else if (this.isMobile) {
+        // En móvil: sin sonido hasta que el usuario lo active explícitamente
+        this.isMuted = true;
+      }
+    },
+    isPageVisible() {
+      return document.visibilityState === 'visible';
+    },
+    canPlay() {
+      if (!this.isAuthenticated || this.isMuted || !this.isPageVisible()) {
+        return false;
+      }
+      if (this.isMobile && !this.soundEnabledByUser) {
+        return false;
+      }
+      return true;
+    },
+    markSoundEnabledByUser() {
+      this.soundEnabledByUser = true;
+      this.isMuted = false;
+    },
+    handleVisibilityChange() {
+      if (document.visibilityState === 'hidden') {
+        if (this.isPlaying) {
+          this.pausedByVisibility = true;
+        }
+        this.pauseMusic();
+        return;
+      }
+
+      if (this.pausedByVisibility && this.canPlay()) {
+        this.pausedByVisibility = false;
+        this.attemptPlay();
+      }
+    },
+    handlePageHide() {
+      this.pausedByVisibility = this.isPlaying;
+      this.pauseMusic();
+    },
+    handleWindowBlur() {
+      // Respaldo en iOS/Android al cambiar a otra app (p. ej. WhatsApp)
+      if (!this.isPageVisible()) {
+        this.handleVisibilityChange();
       }
     },
     savePreferences() {
@@ -94,33 +154,41 @@ export default {
       }
     },
     toggleMute() {
-      this.isMuted = !this.isMuted;
+      if (this.isMuted) {
+        this.markSoundEnabledByUser();
+      } else {
+        this.isMuted = true;
+      }
       this.applyVolumeToAudio();
       this.savePreferences();
 
       if (this.isMuted) {
         this.pauseMusic();
-      } else if (AuthService.isAuthenticated()) {
+      } else {
         this.attemptPlay();
       }
     },
     onVolumeInput(event) {
       this.volume = Math.min(100, Math.max(0, Number(event.target.value))) / 100;
-      this.isMuted = this.volume === 0;
+      if (this.volume === 0) {
+        this.isMuted = true;
+      } else {
+        this.markSoundEnabledByUser();
+      }
       this.applyVolumeToAudio();
       this.savePreferences();
 
-      if (!this.isMuted && AuthService.isAuthenticated() && !this.isPlaying) {
+      if (!this.isMuted && !this.isPlaying) {
         this.attemptPlay();
       }
     },
     checkInitialState() {
-      if (AuthService.isAuthenticated() && !this.isMuted) {
+      if (this.canPlay()) {
         this.attemptPlay();
       }
     },
     handleValidSession() {
-      if (!this.isMuted) {
+      if (this.canPlay()) {
         this.attemptPlay();
       }
     },
@@ -129,7 +197,8 @@ export default {
     },
     handleUserInteraction() {
       this.userInteracted = true;
-      if (AuthService.isAuthenticated() && !this.isPlaying && !this.isMuted) {
+      // En móvil no autoplay con taps genéricos; solo con el control de volumen
+      if (!this.isMobile && this.canPlay() && !this.isPlaying) {
         this.attemptPlay();
       }
 
@@ -140,31 +209,33 @@ export default {
     },
     async attemptPlay() {
       const audio = this.$refs.audioPlayer;
-      if (!audio || this.isMuted) return;
+      if (!audio || !this.canPlay()) return;
 
       try {
         this.applyVolumeToAudio();
         await audio.play();
         this.isPlaying = true;
+        this.pausedByVisibility = false;
       } catch (error) {
         console.warn('Autoplay bloqueado o falló:', error);
       }
     },
     pauseMusic() {
       const audio = this.$refs.audioPlayer;
-      if (audio && this.isPlaying) {
+      if (audio) {
         audio.pause();
         this.isPlaying = false;
       }
     },
     resumeMusic() {
-      if (this.isMuted) return;
+      if (!this.canPlay()) return;
 
       const audio = this.$refs.audioPlayer;
-      if (audio && !this.isPlaying && AuthService.isAuthenticated()) {
+      if (audio && !this.isPlaying) {
         this.applyVolumeToAudio();
         audio.play().then(() => {
           this.isPlaying = true;
+          this.pausedByVisibility = false;
         }).catch(error => {
           console.warn('No se pudo reanudar la música:', error);
         });
@@ -176,6 +247,23 @@ export default {
         audio.pause();
         audio.currentTime = 0;
         this.isPlaying = false;
+      }
+    }
+  },
+  watch: {
+    isAuthenticated(authenticated) {
+      if (!authenticated) {
+        this.stopMusic();
+        this.soundEnabledByUser = false;
+      } else if (this.canPlay()) {
+        this.attemptPlay();
+      }
+    },
+    showControl(visible) {
+      if (!visible) {
+        this.pauseMusic();
+      } else if (this.canPlay()) {
+        this.attemptPlay();
       }
     }
   }
