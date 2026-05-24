@@ -38,7 +38,7 @@
           <div class="password-label-wrapper">
             <label for="password">Contraseña</label>
           </div>
-          <div class="input-group">
+          <div class="input-group has-password-toggle">
             <span class="input-icon"><i class="fas fa-lock"></i></span>
             <input 
               :type="showPassword ? 'text' : 'password'" 
@@ -50,9 +50,14 @@
               :disabled="isLoading"
               :class="{'is-invalid': errors.password}"
             >
-            <span class="password-toggle" @click="togglePassword">
+            <button
+              type="button"
+              class="password-toggle"
+              :title="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              @click="togglePassword"
+            >
               <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-            </span>
+            </button>
           </div>
           <div v-if="errors.password" class="error-message">
             <i class="fas fa-exclamation-circle"></i> {{ Array.isArray(errors.password) ? errors.password[0] : errors.password }}
@@ -174,9 +179,29 @@ label {
 
 .password-toggle {
   position: absolute;
-  right: 15px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: #7f8c8d;
   cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: #e67e22;
+}
+
+.input-group.has-password-toggle .form-control {
+  padding-left: 45px;
+  padding-right: 48px;
 }
 
 .password-label-wrapper {
@@ -340,21 +365,6 @@ label {
 
 .is-invalid:focus {
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 15px;
-  color: #7f8c8d;
-  cursor: pointer;
-  z-index: 5; /* Asegura que está por encima del input */
-  padding: 10px; /* Área de click más grande */
-  margin-right: -5px; /* Ajuste fino de posición */
-}
-
-/* Asegura que el ícono no se desplaza cuando hay validación */
-.is-invalid ~ .password-toggle {
-  right: 40px; /* Ajustar si el input tiene un ícono de validación */
 }
 
 /* Animación para errores */

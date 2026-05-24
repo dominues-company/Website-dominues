@@ -203,22 +203,25 @@
         </div>
         </div>
 
-      <!-- Controles del Juego (Solo visible cuando hay juego) -->
-      <div v-if="gameStarted && !isConnecting" class="game-controls" style="position: absolute; top: 20px; right: 20px; z-index: 100;">
-        <button @click="toggleGameSound" class="control-btn" :class="{ 'active': !isGameMuted }" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 50px; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">
-          <i class="fas" :class="isGameMuted ? 'fa-volume-mute' : 'fa-volume-up'"></i>
-        </button>
-      </div>
-
-      <!-- Estado de conexión -->
-      <!-- Overlay de loading básico - solo se muestra cuando NO hay juego iniciado -->
+      <!-- Estado de conexión (antes de cargar el iframe) -->
       <div v-if="isConnecting && !gameStarted" class="connecting-state">
         <div class="loading-spinner"></div>
         <p class="connecting-text">{{ connectingMessage }}</p>
-    </div>
+      </div>
 
       <!-- Contenedor del juego -->
       <div v-if="gameStarted" class="game-container">
+      <div class="game-controls">
+        <button
+          type="button"
+          @click="toggleGameSound"
+          class="control-btn"
+          :class="{ active: !isGameMuted }"
+          :title="isGameMuted ? 'Activar sonido del juego' : 'Silenciar sonido del juego'"
+        >
+          <i class="fas" :class="isGameMuted ? 'fa-volume-mute' : 'fa-volume-up'"></i>
+        </button>
+      </div>
       <iframe
           ref="gameFrame"
         :src="gameUrl"
@@ -612,14 +615,17 @@ export default {
   methods: {
     toggleGameSound() {
       this.isGameMuted = !this.isGameMuted;
-      
+      localStorage.setItem('dominues_game_muted', String(this.isGameMuted));
+      this.applyIframeMute();
+    },
+
+    applyIframeMute() {
       const iframe = this.$refs.gameFrame;
       if (iframe && iframe.contentWindow) {
         iframe.contentWindow.postMessage({
           type: 'TOGGLE_SOUND',
           data: { mute: this.isGameMuted }
         }, '*');
-        console.log(`🔊 [WAITING-ROOM] Sonido de juego ${this.isGameMuted ? 'silenciado' : 'activado'}`);
       }
     },
 
@@ -1649,7 +1655,7 @@ export default {
         // 🔧 FIX: Agregar sessionId para aislar cada partida
         sessionId: sessionId,
         // 🔧 FIX: Silenciar juego por defecto para gestión externa
-        mute: 'true'
+        mute: this.isGameMuted ? 'true' : 'false'
       });
       
       // 🔧 OPTIMIZATION: Solo agregar cache buster si es una nueva sesión
@@ -1765,6 +1771,7 @@ export default {
               data: gameData
             }, '*');
             console.log('✅ [WAITING-ROOM] GAME_INIT enviado correctamente');
+            this.applyIframeMute();
           } else {
             console.error('❌ [WAITING-ROOM] No se pudo enviar GAME_INIT - iframe no disponible');
           }
@@ -3969,7 +3976,15 @@ export default {
     }
   },
   
+  created() {
+    const savedMuted = localStorage.getItem('dominues_game_muted');
+    if (savedMuted !== null) {
+      this.isGameMuted = savedMuted === 'true';
+    }
+  },
+
   async mounted() {
+    window.dispatchEvent(new CustomEvent('pause-background-music'));
     // 🔧 CACHE CONTROL: El router ya maneja la limpieza de caché
     // Este componente se monta solo después de que el router forzó la recarga
     console.log('🔧 [WAITING-ROOM] Componente montado con cache buster activo');
@@ -4007,6 +4022,7 @@ export default {
     
     window.removeEventListener('message', this.handleGameMessage);
     window.removeEventListener('balance-updated', this.handleBalanceUpdate);
+    window.dispatchEvent(new CustomEvent('resume-background-music'));
   }
 }
 </script>
@@ -4569,6 +4585,36 @@ export default {
   overflow: hidden;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
   border: 2px solid rgba(255, 165, 0, 0.2);
+}
+
+.game-controls {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 120;
+}
+
+.control-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.control-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.control-btn.active {
+  border-color: #ffc827;
+  color: #ffc827;
 }
 
 .game-iframe {

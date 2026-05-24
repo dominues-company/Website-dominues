@@ -124,7 +124,7 @@ const routes = [
     name: 'WaitingRoomPage',
     component: () => import('@/components/waiting/WaitingRoomPage.vue'),
     props: true,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, hideLayout: true }
   },
   {
     path: '/pote',

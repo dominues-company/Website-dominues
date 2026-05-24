@@ -1,8 +1,8 @@
 <template>
-  <div id="app">
-    <NavbarComponent />
+  <div id="app" :class="{ 'app--game-focus': hideLayout }">
+    <NavbarComponent v-if="!hideLayout" />
     <router-view />
-    <FooterComponent />
+    <FooterComponent v-if="!hideLayout" />
     <NotificationToast />
     <BackgroundMusic />
     <WhatsAppButton v-if="$route.name === 'RechargeView'" />
@@ -48,6 +48,11 @@ export default {
       sessionAlertMessage: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
       showSessionConflictAlert: false,
       sessionConflictMessage: 'Tu sesión ha sido cerrada porque iniciaste sesión en otro dispositivo.'
+    }
+  },
+  computed: {
+    hideLayout() {
+      return this.$route.matched.some(record => record.meta.hideLayout)
     }
   },
   created() {
@@ -100,6 +105,11 @@ export default {
 </script>
 
 <style>
+#app.app--game-focus {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 .session-expired-alert,
 .session-conflict-alert {
   position: fixed;

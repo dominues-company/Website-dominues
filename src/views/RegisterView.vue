@@ -142,7 +142,7 @@
         
         <div class="form-group">
           <label for="registerPassword">Contraseña</label>
-          <div class="input-group">
+          <div class="input-group has-password-toggle">
             <span class="input-icon"><i class="fas fa-lock"></i></span>
             <input 
               :type="showPassword ? 'text' : 'password'" 
@@ -155,9 +155,14 @@
               :class="{'is-invalid': errors.password}"
               @input="validatePassword"
             >
-            <span class="password-toggle" @click="togglePassword">
+            <button
+              type="button"
+              class="password-toggle"
+              :title="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              @click="togglePassword"
+            >
               <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-            </span>
+            </button>
           </div>
 
           <div v-if="errors.password" class="error-message">
@@ -180,7 +185,7 @@
         
         <div class="form-group">
           <label for="confirmPassword">Confirmar Contraseña</label>
-          <div class="input-group">
+          <div class="input-group has-password-toggle">
             <span class="input-icon"><i class="fas fa-lock"></i></span>
             <input 
               :type="showConfirmPassword ? 'text' : 'password'" 
@@ -193,9 +198,14 @@
               :class="{'is-invalid': errors.password_confirmation}"
               @input="validatePasswordConfirmation"
             >
-            <span class="password-toggle" @click="toggleConfirmPassword">
+            <button
+              type="button"
+              class="password-toggle"
+              :title="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              @click="toggleConfirmPassword"
+            >
               <i :class="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-            </span>
+            </button>
           </div>
 
           <div v-if="errors.password_confirmation" class="error-message">
@@ -431,9 +441,29 @@ select.form-control {
 
 .password-toggle {
   position: absolute;
-  right: 15px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: #7f8c8d;
   cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: #e67e22;
+}
+
+.input-group.has-password-toggle .form-control {
+  padding-left: 45px;
+  padding-right: 48px;
 }
 
 .strength-meter {
@@ -698,6 +728,7 @@ export default {
         terms: false
       },
       showPassword: false,
+      showConfirmPassword: false,
       isLoading: false,
       errorMessage: '',
       errors: {},
@@ -707,6 +738,18 @@ export default {
     };
   },
   computed: {
+    password() {
+      return this.form.password;
+    },
+
+    confirmPassword() {
+      return this.form.password_confirmation;
+    },
+
+    passwordsMatch() {
+      return this.form.password === this.form.password_confirmation;
+    },
+
     passwordStrength() {
       const password = this.form.password;
       if (!password) {
@@ -766,6 +809,10 @@ export default {
     
     togglePassword() {
       this.showPassword = !this.showPassword;
+    },
+
+    toggleConfirmPassword() {
+      this.showConfirmPassword = !this.showConfirmPassword;
     },
     
     // Validar email (incluyendo disponibilidad)
