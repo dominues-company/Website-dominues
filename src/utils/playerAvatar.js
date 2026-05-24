@@ -22,8 +22,8 @@ const GENDER_OPTIONS = {
   }
 };
 
-export function getPlayerAvatarUrl(seed, gender = 'male') {
-  const options = GENDER_OPTIONS[gender] || GENDER_OPTIONS.male;
+export function getPlayerAvatarUrl(seed, gender = 'male', overrides = {}) {
+  const options = { ...(GENDER_OPTIONS[gender] || GENDER_OPTIONS.male), ...overrides };
   const params = new URLSearchParams({
     seed,
     ...AVATAR_BASE,

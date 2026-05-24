@@ -70,13 +70,25 @@ export default {
     return {
       recentPlayers: [
         { name: 'José Gregorio Márquez', amount: '200 Dcoins', avatarSeed: 'jose-gregorio-marquez', gender: 'male' },
-        { name: 'Andrés Rangel', amount: '120 Dcoins', avatarSeed: 'andres-rangel', gender: 'male' },
+        {
+          name: 'Andrés Rangel',
+          amount: '120 Dcoins',
+          avatarSeed: 'andres-rangel-corto',
+          gender: 'male',
+          avatarOverrides: { hair: 'mrClean,mrT,fonze', facialHairProbability: '40' }
+        },
         { name: 'Valentina Soto', amount: '50 Dcoins', avatarSeed: 'valentina-soto', gender: 'female' }
       ],
       activePlayers: [
         { name: 'Valentina Soto', amount: '50 Dcoins', avatarSeed: 'valentina-soto-activa', gender: 'female' },
         { name: 'José Gregorio Márquez', amount: '200 Dcoins', avatarSeed: 'jose-gregorio-marquez-activo', gender: 'male' },
-        { name: 'Andrés Rangel', amount: '120 Dcoins', avatarSeed: 'andres-rangel-activo', gender: 'male' }
+        {
+          name: 'Andrés Rangel',
+          amount: '120 Dcoins',
+          avatarSeed: 'andres-rangel-activo-corto',
+          gender: 'male',
+          avatarOverrides: { hair: 'mrClean,mrT,fonze', facialHairProbability: '40' }
+        }
       ]
     };
   },
@@ -90,7 +102,7 @@ export default {
       return require(`@/assets/img/${name}`);
     },
     getAvatarUrl(player) {
-      return getPlayerAvatarUrl(player.avatarSeed, player.gender);
+      return getPlayerAvatarUrl(player.avatarSeed, player.gender, player.avatarOverrides);
     }
   }
 };
