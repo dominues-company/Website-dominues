@@ -460,7 +460,14 @@
 </template>
 
 <script>
-import { GAME_CONFIG, calculateBetAmounts, getUserData, getTableId } from './gameConfig.js'
+import {
+  GAME_CONFIG,
+  calculateBetAmounts,
+  getUserData,
+  getTableId,
+  sleep,
+  shouldRetryGameResultSave
+} from './gameConfig.js'
 
 export default {
   name: 'WaitingRoom',
@@ -2662,54 +2669,217 @@ export default {
         }
         
         console.log('Enviando resultado al backend:', resultData);
-        
-        // Enviar al backend de Laravel
-        const response = await fetch(`${GAME_CONFIG.API_BASE_URL}/game/result`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${user.token || ''}`
-          },
-          body: JSON.stringify(resultData)
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          console.log('Resultado guardado exitosamente:', result);
-          
-          // Mostrar mensaje de resultado
-          this.showGameResultMessage(gameData);
-          
-          // Redirigir al dashboard después de un delay
-          setTimeout(() => {
-            window.location.href = GAME_CONFIG.DASHBOARD_URL;
-          }, GAME_CONFIG.REDIRECT_DELAY);
-          
-        } else if (response.status === 401) {
-          console.error('Error 401: No autorizado. Token de autenticación inválido o faltante.');
-          throw new Error('Error de autenticación: Token inválido o faltante');
-        } else {
-          const errorText = await response.text();
-          console.error('Error del servidor:', response.status, errorText);
-          throw new Error(`Error del servidor: ${response.status} - ${errorText}`);
+
+        this.savePendingGameResult(resultData, gameData);
+
+        const maxAttempts = GAME_CONFIG.RESULT_SAVE_MAX_ATTEMPTS;
+        let lastError = null;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          this.showGameResultSaveProgress(attempt, maxAttempts);
+
+          try {
+            const { ok, result, error, httpStatus } = await this.postGameResultOnce(
+              resultData,
+              user.token || ''
+            );
+
+            if (ok) {
+              this.hideGameResultSaveProgress();
+              this.clearPendingGameResult();
+              console.log('Resultado guardado exitosamente:', result);
+
+              this.showGameResultMessage(gameData);
+              setTimeout(() => {
+                window.location.href = GAME_CONFIG.DASHBOARD_URL;
+              }, GAME_CONFIG.REDIRECT_DELAY);
+              return;
+            }
+
+            lastError = error;
+            const retryable = shouldRetryGameResultSave(httpStatus);
+            console.warn(
+              `⚠️ [WAITING-ROOM] Intento ${attempt}/${maxAttempts} falló:`,
+              error?.message,
+              retryable ? '(se reintentará)' : '(sin más reintentos)'
+            );
+
+            if (!retryable || attempt >= maxAttempts) {
+              break;
+            }
+          } catch (networkError) {
+            lastError = networkError;
+            console.warn(
+              `⚠️ [WAITING-ROOM] Intento ${attempt}/${maxAttempts} — error de red:`,
+              networkError?.message
+            );
+            if (attempt >= maxAttempts) break;
+          }
+
+          const delay =
+            GAME_CONFIG.RESULT_SAVE_RETRY_BASE_DELAY_MS * attempt;
+          await sleep(delay);
         }
-        
+
+        this.hideGameResultSaveProgress();
+        this.resultSent = false;
+
+        const finalError =
+          lastError instanceof Error
+            ? lastError
+            : new Error(lastError?.message || GAME_CONFIG.MESSAGES.ERROR);
+
+        this.showGameResultSaveError(finalError, gameData, resultData);
+        this.$emit('game-error', {
+          message: GAME_CONFIG.MESSAGES.ERROR,
+          detail: finalError.message,
+          gameData,
+          resultData,
+          error: finalError
+        });
       } catch (error) {
-        console.error('Error enviando resultado al backend:', error);
-        
-        // 🔧 FIX: Aunque falle el backend, mostrar el resultado al usuario
-        console.log('⚠️ [WAITING-ROOM] Mostrando resultado a pesar del error del backend');
-        this.showGameResultMessage(gameData);
-        
-        // Redirigir al dashboard de todas formas
-        setTimeout(() => {
-          console.log('🏠 [WAITING-ROOM] Redirigiendo al dashboard a pesar del error');
-          window.location.href = GAME_CONFIG.DASHBOARD_URL;
-        }, GAME_CONFIG.REDIRECT_DELAY);
-        
-        this.$emit('game-error', { message: GAME_CONFIG.MESSAGES.ERROR, error });
+        console.error('Error preparando resultado para el backend:', error);
+        this.hideGameResultSaveProgress();
+        this.resultSent = false;
+
+        this.showGameResultSaveError(error, gameData);
+        this.$emit('game-error', {
+          message: GAME_CONFIG.MESSAGES.ERROR,
+          detail: error?.message,
+          gameData,
+          error
+        });
       }
+    },
+
+    async postGameResultOnce(resultData, token) {
+      const response = await fetch(`${GAME_CONFIG.API_BASE_URL}/game/result`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(resultData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return { ok: true, result, httpStatus: response.status };
+      }
+
+      const raw = await response.text();
+      let serverMessage = `Error del servidor (${response.status})`;
+      try {
+        const body = JSON.parse(raw);
+        if (body.message) serverMessage = body.message;
+      } catch {
+        if (raw) serverMessage = raw.slice(0, 300);
+      }
+
+      return {
+        ok: false,
+        httpStatus: response.status,
+        error: new Error(serverMessage)
+      };
+    },
+
+    savePendingGameResult(resultData, gameData) {
+      try {
+        sessionStorage.setItem(
+          GAME_CONFIG.RESULT_SAVE_PENDING_KEY,
+          JSON.stringify({
+            resultData,
+            gameData: {
+              isWinner: gameData.isWinner,
+              playerName: gameData.playerName,
+              opponentName: gameData.opponentName,
+              winner: gameData.winner,
+              playerScore: gameData.playerScore,
+              opponentScore: gameData.opponentScore,
+              roomCode: gameData.roomCode,
+              gameData: gameData.gameData
+            },
+            savedAt: new Date().toISOString()
+          })
+        );
+      } catch (e) {
+        console.warn('No se pudo guardar resultado pendiente en sessionStorage:', e);
+      }
+    },
+
+    clearPendingGameResult() {
+      try {
+        sessionStorage.removeItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY);
+      } catch (e) {
+        /* ignore */
+      }
+    },
+
+    showGameResultSaveProgress(attempt, maxAttempts) {
+      this.hideGameResultSaveProgress();
+
+      const modal = document.createElement('div');
+      modal.id = 'dominues-result-save-progress';
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100001;
+        font-family: system-ui, -apple-system, sans-serif;
+      `;
+
+      const retryLabel =
+        attempt > 1
+          ? `${GAME_CONFIG.MESSAGES.RESULT_SAVE_RETRY_ATTEMPT} (${attempt}/${maxAttempts})...`
+          : '';
+
+      modal.innerHTML = `
+        <div style="
+          background: #1a1a2e;
+          color: #fff;
+          padding: 28px 24px;
+          border-radius: 16px;
+          max-width: 360px;
+          width: 90%;
+          text-align: center;
+          border: 2px solid #4CAF50;
+        ">
+          <div style="
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(76, 175, 80, 0.3);
+            border-top-color: #4CAF50;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            animation: dominues-spin 0.8s linear infinite;
+          "></div>
+          <p style="margin: 0 0 8px; font-size: 16px; font-weight: 600;">
+            ${GAME_CONFIG.MESSAGES.RESULT_SAVE_RETRYING}
+          </p>
+          <p style="margin: 0; font-size: 13px; color: #9e9e9e;">
+            ${retryLabel || `Intento ${attempt} de ${maxAttempts}`}
+          </p>
+        </div>
+        <style>
+          @keyframes dominues-spin {
+            to { transform: rotate(360deg); }
+          }
+        </style>
+      `;
+
+      document.body.appendChild(modal);
+    },
+
+    hideGameResultSaveProgress() {
+      const el = document.getElementById('dominues-result-save-progress');
+      if (el) el.remove();
     },
     
     getUserData() {
@@ -2765,6 +2935,111 @@ export default {
       return urlParams.get('tableId') || 1; // Fallback a mesa 1
     },
     
+    showGameResultSaveError(error, gameData, resultData = null) {
+      const detail = error?.message || GAME_CONFIG.MESSAGES.ERROR;
+      const isWinner = Boolean(gameData?.isWinner);
+      const bodyText = isWinner
+        ? GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_WIN
+        : GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_LOSE;
+
+      const winnerLabel =
+        gameData?.winner ||
+        gameData?.playerName ||
+        resultData?.gameData?.winner ||
+        '—';
+      const opponentLabel =
+        gameData?.opponentName ||
+        resultData?.opponentName ||
+        '—';
+      const scoreHint =
+        gameData?.playerScore != null && gameData?.opponentScore != null
+          ? `Marcador: ${gameData.playerScore} - ${gameData.opponentScore}`
+          : '';
+      const roomHint = gameData?.roomCode
+        ? `Sala: ${gameData.roomCode}`
+        : resultData?.roomCode
+          ? `Sala: ${resultData.roomCode}`
+          : '';
+
+      console.warn('⚠️ [WAITING-ROOM] Error al guardar resultado — mostrando aviso al usuario:', detail);
+
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100000;
+        font-family: system-ui, -apple-system, sans-serif;
+      `;
+
+      modal.innerHTML = `
+        <div style="
+          background: #1a1a2e;
+          color: #fff;
+          padding: 32px 28px;
+          border-radius: 16px;
+          max-width: 420px;
+          width: 90%;
+          text-align: center;
+          border: 2px solid #ff9800;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        ">
+          <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+          <h2 style="color: #ff9800; margin: 0 0 12px; font-size: 22px;">
+            ${GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_TITLE}
+          </h2>
+          <p style="font-size: 15px; line-height: 1.5; margin: 0 0 12px; color: #e0e0e0;">
+            ${bodyText}
+          </p>
+          <p style="
+            font-size: 13px;
+            line-height: 1.4;
+            margin: 0 0 16px;
+            color: #ffb74d;
+            background: rgba(255, 152, 0, 0.12);
+            padding: 10px;
+            border-radius: 8px;
+            word-break: break-word;
+          ">${detail}</p>
+          <p style="
+            font-size: 13px;
+            line-height: 1.45;
+            margin: 0 0 12px;
+            color: #bdbdbd;
+            text-align: left;
+            background: rgba(255,255,255,0.06);
+            padding: 10px;
+            border-radius: 8px;
+          ">
+            <strong>Ganador en juego:</strong> ${winnerLabel}<br>
+            <strong>Oponente:</strong> ${opponentLabel}<br>
+            ${scoreHint ? `${scoreHint}<br>` : ''}
+            ${roomHint ? `${roomHint}<br>` : ''}
+            <strong>Resultado:</strong> ${isWinner ? 'Victoria (tú)' : 'Derrota'}
+          </p>
+          <p style="font-size: 13px; color: #9e9e9e; margin: 0 0 20px;">
+            ${GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_HINT}
+            Se guardó una copia local por si necesitas reportarlo a soporte.
+          </p>
+          <p style="font-size: 12px; color: #757575; margin: 0;">
+            ${GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_REDIRECT}
+          </p>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      setTimeout(() => {
+        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+      }, 8000);
+    },
+
     showGameResultMessage(gameData) {
       console.log('🎮 [WAITING-ROOM] Mostrando mensaje de resultado:', {
         gameData: gameData,

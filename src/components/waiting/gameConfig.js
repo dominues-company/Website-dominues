@@ -20,6 +20,11 @@ export const GAME_CONFIG = {
   // Configuración de redirección
   REDIRECT_DELAY: 3000, // 3 segundos por defecto
   REDIRECT_DELAY_WIN: 8000, // 8 segundos para ganadores (5 segundos extra con confeti)
+
+  // Reintentos al guardar resultado en el API
+  RESULT_SAVE_MAX_ATTEMPTS: 5,
+  RESULT_SAVE_RETRY_BASE_DELAY_MS: 1500,
+  RESULT_SAVE_PENDING_KEY: 'dominues_pending_game_result',
   
   // Mensajes
   MESSAGES: {
@@ -29,9 +34,26 @@ export const GAME_CONFIG = {
     LOSE_SUBTITLE: 'La revancha te espera. ¿Otra partida?',
     REDIRECTING: 'Redirigiendo al dashboard en 3 segundos...',
     REDIRECTING_WIN: 'Redirigiendo al dashboard en 8 segundos...',
-    ERROR: 'Error al procesar resultado del juego'
+    ERROR: 'Error al procesar resultado del juego',
+    RESULT_SAVE_ERROR_TITLE: 'No se pudo guardar el resultado',
+    RESULT_SAVE_ERROR_WIN: 'Ganaste en la mesa, pero el servidor no registró la partida. Tu premio e historial pueden no haberse actualizado.',
+    RESULT_SAVE_ERROR_LOSE: 'No pudimos registrar el resultado de la partida en el servidor.',
+    RESULT_SAVE_ERROR_HINT: 'Si crees que esto es un error, contacta soporte indicando la hora de la partida.',
+    RESULT_SAVE_ERROR_REDIRECT: 'Volviendo al dashboard en unos segundos...',
+    RESULT_SAVE_RETRYING: 'Guardando resultado en el servidor...',
+    RESULT_SAVE_RETRY_ATTEMPT: 'Reintentando'
   }
 };
+
+export function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** No reintentar errores de autenticación (no se arreglan solos). */
+export function shouldRetryGameResultSave(httpStatus) {
+  if (httpStatus === 401 || httpStatus === 403) return false;
+  return true;
+}
 
 // Función para calcular montos de apuesta
 export function calculateBetAmounts(betAmount, isWinner, winnerPayout = null) {
