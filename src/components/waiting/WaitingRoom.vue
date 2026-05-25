@@ -1309,8 +1309,7 @@ export default {
       // Solo mostrar popup después del segundo intento fallido
       if (this.iframeLoadRetries < this.maxIframeLoadRetries) {
         const shouldRetry = confirm(
-          `El juego está tardando en cargar.\n\n` +
-          `¿Deseas reintentar? (Intento ${this.iframeLoadRetries}/${this.maxIframeLoadRetries})`
+          'El juego está tardando en cargar.\n\n¿Quieres volver a intentarlo?'
         );
         
         if (shouldRetry) {
@@ -1337,7 +1336,7 @@ export default {
       // Limpiar estado
       this.gameStarted = false;
       this.isConnecting = true;
-      this.connectingMessage = 'Reintentando conexión...';
+      this.connectingMessage = 'Volviendo a conectar...';
       
       // Esperar un momento antes de reintentar
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1386,7 +1385,7 @@ export default {
           }
           
           if (!this.matchmakingStatus.currentPlayers || this.matchmakingStatus.currentPlayers === 0) {
-            return 'Conectando al servidor de juego...';
+            return 'Preparando la mesa...';
           }
           
           // 🔧 FIX: Mensajes diferentes para modo INVITACIÓN vs modo ONLINE normal
@@ -2291,6 +2290,35 @@ export default {
         
         return; // ← IMPORTANTE: Salir sin enviar resultado
       }
+
+      const isOnlineMode =
+        this.gameMode === 'online' ||
+        data.gameMode === 'online' ||
+        (this.selectedTable && this.selectedTable.type !== 'cpu');
+
+      // Online 1v1: solo el ganador registra en el API (el backend crea la derrota del rival)
+      if (isOnlineMode && isLoser) {
+        console.log('⏭️ [WAITING-ROOM] Perdedor online — NO enviar al API (lo registra el ganador)');
+
+        this.resultSent = true;
+        this.isSurrendering = false;
+
+        this.showGameResultMessage({
+          playerName: data.playerName,
+          opponentName: data.opponentName || data.winner,
+          playerScore: data.playerScore ?? 0,
+          opponentScore: data.opponentScore ?? 0,
+          isWinner: false,
+          winner: data.winner,
+          gameData: data.gameData || data
+        });
+
+        setTimeout(() => {
+          window.location.href = GAME_CONFIG.DASHBOARD_URL;
+        }, GAME_CONFIG.REDIRECT_DELAY);
+
+        return;
+      }
       
       // 🔧 FIX: Construir gameData completo con toda la información del juego
       // Asegurar que roomCode esté disponible (del estado local o de los datos recibidos)
@@ -2676,8 +2704,6 @@ export default {
         let lastError = null;
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-          this.showGameResultSaveProgress(attempt, maxAttempts);
-
           try {
             const { ok, result, error, httpStatus } = await this.postGameResultOnce(
               resultData,
@@ -2688,6 +2714,10 @@ export default {
               this.hideGameResultSaveProgress();
               this.clearPendingGameResult();
               console.log('Resultado guardado exitosamente:', result);
+
+              if (result?.data?.already_registered) {
+                console.log('ℹ️ [WAITING-ROOM] Partida ya estaba registrada en el servidor');
+              }
 
               this.showGameResultMessage(gameData);
               setTimeout(() => {
@@ -2816,65 +2846,9 @@ export default {
       }
     },
 
-    showGameResultSaveProgress(attempt, maxAttempts) {
+    /** Reintentos al guardar resultado: sin overlay (el jugador no ve mensajes técnicos). */
+    showGameResultSaveProgress() {
       this.hideGameResultSaveProgress();
-
-      const modal = document.createElement('div');
-      modal.id = 'dominues-result-save-progress';
-      modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.75);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 100001;
-        font-family: system-ui, -apple-system, sans-serif;
-      `;
-
-      const retryLabel =
-        attempt > 1
-          ? `${GAME_CONFIG.MESSAGES.RESULT_SAVE_RETRY_ATTEMPT} (${attempt}/${maxAttempts})...`
-          : '';
-
-      modal.innerHTML = `
-        <div style="
-          background: #1a1a2e;
-          color: #fff;
-          padding: 28px 24px;
-          border-radius: 16px;
-          max-width: 360px;
-          width: 90%;
-          text-align: center;
-          border: 2px solid #4CAF50;
-        ">
-          <div style="
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(76, 175, 80, 0.3);
-            border-top-color: #4CAF50;
-            border-radius: 50%;
-            margin: 0 auto 16px;
-            animation: dominues-spin 0.8s linear infinite;
-          "></div>
-          <p style="margin: 0 0 8px; font-size: 16px; font-weight: 600;">
-            ${GAME_CONFIG.MESSAGES.RESULT_SAVE_RETRYING}
-          </p>
-          <p style="margin: 0; font-size: 13px; color: #9e9e9e;">
-            ${retryLabel || `Intento ${attempt} de ${maxAttempts}`}
-          </p>
-        </div>
-        <style>
-          @keyframes dominues-spin {
-            to { transform: rotate(360deg); }
-          }
-        </style>
-      `;
-
-      document.body.appendChild(modal);
     },
 
     hideGameResultSaveProgress() {
@@ -2936,7 +2910,7 @@ export default {
     },
     
     showGameResultSaveError(error, gameData, resultData = null) {
-      const detail = error?.message || GAME_CONFIG.MESSAGES.ERROR;
+      console.warn('⚠️ [WAITING-ROOM] Error al guardar resultado:', error?.message);
       const isWinner = Boolean(gameData?.isWinner);
       const bodyText = isWinner
         ? GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_WIN
@@ -2960,8 +2934,6 @@ export default {
         : resultData?.roomCode
           ? `Sala: ${resultData.roomCode}`
           : '';
-
-      console.warn('⚠️ [WAITING-ROOM] Error al guardar resultado — mostrando aviso al usuario:', detail);
 
       const modal = document.createElement('div');
       modal.style.cssText = `
@@ -2994,19 +2966,9 @@ export default {
           <h2 style="color: #ff9800; margin: 0 0 12px; font-size: 22px;">
             ${GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_TITLE}
           </h2>
-          <p style="font-size: 15px; line-height: 1.5; margin: 0 0 12px; color: #e0e0e0;">
+          <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px; color: #e0e0e0;">
             ${bodyText}
           </p>
-          <p style="
-            font-size: 13px;
-            line-height: 1.4;
-            margin: 0 0 16px;
-            color: #ffb74d;
-            background: rgba(255, 152, 0, 0.12);
-            padding: 10px;
-            border-radius: 8px;
-            word-break: break-word;
-          ">${detail}</p>
           <p style="
             font-size: 13px;
             line-height: 1.45;
@@ -3025,7 +2987,6 @@ export default {
           </p>
           <p style="font-size: 13px; color: #9e9e9e; margin: 0 0 20px;">
             ${GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_HINT}
-            Se guardó una copia local por si necesitas reportarlo a soporte.
           </p>
           <p style="font-size: 12px; color: #757575; margin: 0;">
             ${GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_REDIRECT}

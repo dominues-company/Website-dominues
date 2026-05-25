@@ -34,14 +34,13 @@ export const GAME_CONFIG = {
     LOSE_SUBTITLE: 'La revancha te espera. ¿Otra partida?',
     REDIRECTING: 'Redirigiendo al dashboard en 3 segundos...',
     REDIRECTING_WIN: 'Redirigiendo al dashboard en 8 segundos...',
-    ERROR: 'Error al procesar resultado del juego',
-    RESULT_SAVE_ERROR_TITLE: 'No se pudo guardar el resultado',
-    RESULT_SAVE_ERROR_WIN: 'Ganaste en la mesa, pero el servidor no registró la partida. Tu premio e historial pueden no haberse actualizado.',
-    RESULT_SAVE_ERROR_LOSE: 'No pudimos registrar el resultado de la partida en el servidor.',
-    RESULT_SAVE_ERROR_HINT: 'Si crees que esto es un error, contacta soporte indicando la hora de la partida.',
-    RESULT_SAVE_ERROR_REDIRECT: 'Volviendo al dashboard en unos segundos...',
-    RESULT_SAVE_RETRYING: 'Guardando resultado en el servidor...',
-    RESULT_SAVE_RETRY_ATTEMPT: 'Reintentando'
+    ERROR: 'No pudimos completar la partida',
+    RESULT_SAVE_ERROR_TITLE: 'No pudimos confirmar la partida',
+    RESULT_SAVE_ERROR_WIN: 'Ganaste la mesa. Revisa tu saldo en unos minutos; si no ves el premio, contacta a soporte.',
+    RESULT_SAVE_ERROR_LOSE: 'Hubo un problema al cerrar la partida. Si algo no cuadra en tu saldo, contacta a soporte.',
+    RESULT_SAVE_ERROR_HINT: 'Indica la hora de la partida y el código de sala, si lo recuerdas.',
+    RESULT_SAVE_ERROR_REDIRECT: 'Te llevamos al inicio en unos segundos...',
+    RESULT_ALREADY_REGISTERED: 'La partida ya fue registrada.'
   }
 };
 

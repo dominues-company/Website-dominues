@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: May 24, 2026 at 09:51 PM
+-- Generation Time: May 24, 2026 at 10:25 PM
 -- Server version: 8.0.45-cll-lve
 -- PHP Version: 7.4.33
 
@@ -438,7 +438,8 @@ INSERT INTO `game_matchmaking` (`id`, `table_id`, `player1_id`, `player2_id`, `p
 (1842, 9, 7, 93, NULL, NULL, 'matched', 15.00, 30.00, 27.00, '0133', '2026-05-09 08:09:53', '2026-05-09 08:10:11', NULL, NULL, NULL, 0, 0),
 (1859, 10, 1, 2, NULL, NULL, 'finished', 30.00, 60.00, 54.00, NULL, '2026-05-24 17:07:28', '2026-05-24 21:07:28', '2026-05-24 21:08:29', NULL, NULL, 0, 0),
 (1863, 9, 261, 93, NULL, NULL, 'matched', 15.00, 30.00, 27.00, '7914', '2026-05-25 02:50:18', '2026-05-25 02:54:43', NULL, NULL, NULL, 0, 0),
-(1870, 10, 266, 267, NULL, NULL, 'matched', 30.00, 60.00, 54.00, NULL, '2026-05-25 00:01:51', '2026-05-25 04:01:51', NULL, NULL, NULL, 0, 0);
+(1870, 10, 266, 267, NULL, NULL, 'matched', 30.00, 60.00, 54.00, NULL, '2026-05-25 00:01:51', '2026-05-25 04:01:51', NULL, NULL, NULL, 0, 0),
+(1874, 10, 2, 4, NULL, NULL, 'finished', 30.00, 60.00, 54.00, NULL, '2026-05-25 02:22:20', '2026-05-25 06:22:20', '2026-05-25 06:22:44', 2, NULL, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -2217,7 +2218,11 @@ INSERT INTO `game_results` (`id`, `user_id`, `table_id`, `bet_amount`, `total_po
 (2793, 95, 10, 30.00, 60.00, 6.00, 0.00, 0, '\"{\\\"disconnected\\\":true,\\\"playerDisconnected\\\":true,\\\"disconnectReason\\\":\\\"Desconexi\\\\u00f3n del jugador\\\",\\\"opponentName\\\":\\\"Renny\\\",\\\"timestamp\\\":\\\"2026-05-25T00:01:18.453003Z\\\"}\"', '2026-05-25 04:01:18', '2026-05-25 04:01:18', NULL, NULL, 'processed', NULL, 0, NULL),
 (2794, 267, 10, 30.00, 60.00, 6.00, 54.00, 1, '\"{\\\"playerName\\\":\\\"Luis\\\",\\\"opponentName\\\":\\\"Pedro\\\",\\\"playerScore\\\":82,\\\"opponentScore\\\":49,\\\"isWinner\\\":true,\\\"winner\\\":\\\"Luis\\\",\\\"gameMode\\\":\\\"online\\\",\\\"timestamp\\\":\\\"2026-05-25T00:22:59.035Z\\\",\\\"opponentDisconnected\\\":false,\\\"disconnectReason\\\":null,\\\"surrendered\\\":false,\\\"opponentSurrendered\\\":false,\\\"finalScore\\\":82,\\\"opponentFinalScore\\\":49,\\\"gameType\\\":\\\"dominoes\\\",\\\"botPlayed\\\":false,\\\"botWinReason\\\":null}\"', '2026-05-25 04:22:59', '2026-05-25 04:22:59', NULL, NULL, 'processed', NULL, 0, NULL),
 (2795, 266, 10, 30.00, 60.00, 6.00, 0.00, 0, '\"{\\\"disconnected\\\":true,\\\"playerDisconnected\\\":true,\\\"disconnectReason\\\":\\\"Desconexi\\\\u00f3n del jugador\\\",\\\"opponentName\\\":\\\"Luis\\\",\\\"timestamp\\\":\\\"2026-05-25T00:22:59.858259Z\\\"}\"', '2026-05-25 04:22:59', '2026-05-25 04:22:59', NULL, NULL, 'processed', NULL, 0, NULL),
-(2796, 93, 10, 30.00, 60.00, 6.00, 0.00, 0, '\"{\\\"playerName\\\":\\\"Esthepania\\\",\\\"opponentName\\\":\\\"Renny\\\",\\\"playerScore\\\":69,\\\"opponentScore\\\":78,\\\"isWinner\\\":false,\\\"winner\\\":\\\"Renny\\\",\\\"gameMode\\\":\\\"online\\\",\\\"timestamp\\\":\\\"2026-05-25T01:37:48.873Z\\\",\\\"opponentDisconnected\\\":false,\\\"disconnectReason\\\":null,\\\"surrendered\\\":false,\\\"opponentSurrendered\\\":false,\\\"finalScore\\\":69,\\\"opponentFinalScore\\\":78,\\\"gameType\\\":\\\"dominoes\\\",\\\"botPlayed\\\":false,\\\"botWinReason\\\":null}\"', '2026-05-25 05:37:49', '2026-05-25 05:37:49', NULL, NULL, 'processed', NULL, 0, NULL);
+(2796, 93, 10, 30.00, 60.00, 6.00, 0.00, 0, '\"{\\\"playerName\\\":\\\"Esthepania\\\",\\\"opponentName\\\":\\\"Renny\\\",\\\"playerScore\\\":69,\\\"opponentScore\\\":78,\\\"isWinner\\\":false,\\\"winner\\\":\\\"Renny\\\",\\\"gameMode\\\":\\\"online\\\",\\\"timestamp\\\":\\\"2026-05-25T01:37:48.873Z\\\",\\\"opponentDisconnected\\\":false,\\\"disconnectReason\\\":null,\\\"surrendered\\\":false,\\\"opponentSurrendered\\\":false,\\\"finalScore\\\":69,\\\"opponentFinalScore\\\":78,\\\"gameType\\\":\\\"dominoes\\\",\\\"botPlayed\\\":false,\\\"botWinReason\\\":null}\"', '2026-05-25 05:37:49', '2026-05-25 05:37:49', NULL, NULL, 'processed', NULL, 0, NULL),
+(2797, 2, 10, 30.00, 60.00, 6.00, 54.00, 1, '\"{\\\"playerName\\\":\\\"Osward\\\",\\\"opponentName\\\":\\\"Marco\\\",\\\"playerScore\\\":10,\\\"opponentScore\\\":0,\\\"isWinner\\\":true,\\\"winner\\\":\\\"Osward\\\",\\\"gameMode\\\":\\\"online\\\",\\\"roomCode\\\":\\\"8438\\\",\\\"timestamp\\\":\\\"2026-05-25T02:06:14.723Z\\\",\\\"opponentDisconnected\\\":false,\\\"disconnectReason\\\":null,\\\"surrendered\\\":false,\\\"opponentSurrendered\\\":true,\\\"botPlayed\\\":false,\\\"botWinReason\\\":null}\"', '2026-05-25 06:06:15', '2026-05-25 06:06:15', NULL, NULL, 'processed', NULL, 0, NULL),
+(2798, 7, 10, 30.00, 60.00, 6.00, 0.00, 0, '\"{\\\"disconnected\\\":true,\\\"playerDisconnected\\\":true,\\\"disconnectReason\\\":\\\"Desconexi\\\\u00f3n del jugador\\\",\\\"opponentName\\\":\\\"Osward\\\",\\\"timestamp\\\":\\\"2026-05-25T02:06:15.957715Z\\\"}\"', '2026-05-25 06:06:15', '2026-05-25 06:06:15', NULL, NULL, 'processed', NULL, 0, NULL),
+(2799, 4, 10, 30.00, 60.00, 6.00, 0.00, 0, '\"{\\\"playerName\\\":\\\"Marco\\\",\\\"opponentName\\\":\\\"Osward\\\",\\\"playerScore\\\":0,\\\"opponentScore\\\":10,\\\"isWinner\\\":false,\\\"winner\\\":\\\"Osward\\\",\\\"gameMode\\\":\\\"online\\\",\\\"roomCode\\\":\\\"3866\\\",\\\"timestamp\\\":\\\"2026-05-25T02:22:44.461Z\\\",\\\"opponentDisconnected\\\":false,\\\"disconnectReason\\\":null,\\\"surrendered\\\":true,\\\"opponentSurrendered\\\":false,\\\"surrenderReason\\\":\\\"surrender\\\",\\\"botPlayed\\\":false,\\\"botWinReason\\\":null}\"', '2026-05-25 06:22:44', '2026-05-25 06:22:44', 1874, 5055, 'processed', '2026-05-25 06:22:44', 0, NULL),
+(2800, 2, 10, 30.00, 60.00, 6.00, 54.00, 1, '\"{\\\"playerName\\\":\\\"Osward\\\",\\\"opponentName\\\":\\\"Marco\\\",\\\"playerScore\\\":10,\\\"opponentScore\\\":0,\\\"isWinner\\\":true,\\\"winner\\\":\\\"Osward\\\",\\\"gameMode\\\":\\\"online\\\",\\\"roomCode\\\":\\\"3866\\\",\\\"timestamp\\\":\\\"2026-05-25T02:22:44.074Z\\\",\\\"opponentDisconnected\\\":false,\\\"disconnectReason\\\":null,\\\"surrendered\\\":false,\\\"opponentSurrendered\\\":true,\\\"botPlayed\\\":false,\\\"botWinReason\\\":null}\"', '2026-05-25 06:22:44', '2026-05-25 06:22:44', 1874, 5054, 'processed', '2026-05-25 06:22:44', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -6938,7 +6943,13 @@ INSERT INTO `game_transactions` (`id`, `user_id`, `table_id`, `matchmaking_id`, 
 (7890, 93, 10, NULL, 'entry_fee', -30.00, 1941.00, 1911.00, 'Entrada a mesa: Mesa Intermedia', 'ENTRY_1779672758_93', '2026-05-25 01:32:38'),
 (7891, 7, 10, NULL, 'entry_fee', -30.00, 4703.00, 4673.00, 'Entrada a mesa: Mesa Intermedia', 'ENTRY_1779672758_7', '2026-05-25 01:32:38'),
 (7892, 93, 10, NULL, 'entry_fee', -30.00, 1911.00, 1881.00, 'Entrada a mesa: Mesa Intermedia', 'ENTRY_1779673081_93', '2026-05-25 01:38:01'),
-(7893, 7, 10, NULL, 'entry_fee', -30.00, 4673.00, 4643.00, 'Entrada a mesa: Mesa Intermedia', 'ENTRY_1779673081_7', '2026-05-25 01:38:01');
+(7893, 7, 10, NULL, 'entry_fee', -30.00, 4673.00, 4643.00, 'Entrada a mesa: Mesa Intermedia', 'ENTRY_1779673081_7', '2026-05-25 01:38:01'),
+(7894, 2, 10, NULL, 'entry_fee', -30.00, 22181.00, 22151.00, 'Entrada a mesa: Mesa Intermedia', 'ENTRY_1779674666_2', '2026-05-25 02:04:26'),
+(7895, 4, 10, NULL, 'entry_fee', -30.00, 13304.00, 13274.00, 'Entrada a mesa: Mesa Intermedia', 'ENTRY_1779674668_4', '2026-05-25 02:04:28'),
+(7896, 2, 10, NULL, 'win_payment', 54.00, 22151.00, 22205.00, 'Pago de ganancia - Mesa: Mesa Intermedia', 'WIN_1779674775_2', '2026-05-25 06:06:15'),
+(7897, 2, 10, NULL, 'entry_fee', -30.00, 22205.00, 22175.00, 'Entrada a mesa: Mesa Intermedia', 'ENTRY_1779675736_2', '2026-05-25 02:22:16'),
+(7898, 4, 10, NULL, 'entry_fee', -30.00, 13274.00, 13244.00, 'Entrada a mesa: Mesa Intermedia', 'ENTRY_1779675740_4', '2026-05-25 02:22:20'),
+(7899, 2, 10, 1874, 'win_payment', 54.00, 22175.00, 22229.00, 'Pago de ganancia - Mesa: Mesa Intermedia', 'WIN_1779675764_2', '2026-05-25 06:22:44');
 
 -- --------------------------------------------------------
 
@@ -8843,7 +8854,8 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (1756, 'App\\Models\\User', 263, 'api_token', 'e3ebb53dff9040031e4f0276f063203ecc575586f110f67f54af5415e21d3a89', '[\"*\"]', '2026-05-25 04:23:04', NULL, '2026-05-25 04:01:49', '2026-05-25 04:23:04'),
 (1758, 'App\\Models\\User', 93, 'api_token', '931cea6bbf2307a94c986e0b667707cd4facd0c9420a37085290fe1b77ea66b1', '[\"*\"]', '2026-05-25 05:38:01', NULL, '2026-05-25 05:32:25', '2026-05-25 05:38:01'),
 (1759, 'App\\Models\\User', 7, 'api_token', '26bd85ee8e04c1c0eb19ef4d5d4798f8103f7129b122591cd2bb382fdf6126d6', '[\"*\"]', '2026-05-25 05:42:55', NULL, '2026-05-25 05:32:29', '2026-05-25 05:42:55'),
-(1761, 'App\\Models\\User', 2, 'api_token', '4ddff9d4aa74f42a1520c20aaddca9f6b3ee0917347c29c46cf16c0b9e626897', '[\"*\"]', '2026-05-25 05:49:31', NULL, '2026-05-25 05:34:29', '2026-05-25 05:49:31');
+(1761, 'App\\Models\\User', 2, 'api_token', '4ddff9d4aa74f42a1520c20aaddca9f6b3ee0917347c29c46cf16c0b9e626897', '[\"*\"]', '2026-05-25 06:22:49', NULL, '2026-05-25 05:34:29', '2026-05-25 06:22:49'),
+(1762, 'App\\Models\\User', 4, 'api_token', '896be1931e646ca4c1e74256d14dd083ca1e0cf5e2f447b465ff92784ea97723', '[\"*\"]', '2026-05-25 06:22:49', NULL, '2026-05-25 06:04:21', '2026-05-25 06:22:49');
 
 -- --------------------------------------------------------
 
@@ -8866,7 +8878,9 @@ CREATE TABLE `sessions` (
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
 ('2LjFFcxInSMuBe6oy9sOvd8707ET316eHB1IcWM2', NULL, '66.249.83.98', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36 (compatible; Google-Read-Aloud; +https://support.google.com/webmasters/answer/1061943)', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoieHcxc2FSamQwaUlwdjJkOVZxb1QxN29rSkpaYllrb2xUak5YMHlacyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzQ6Imh0dHBzOi8veHBhbmVseC5kb21pbnVlcy5jb20vbG9naW4iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1779667567),
-('6QMN4TJ9BXHTDMSpTLcml67887Xf5kOJzFMm7Mc1', 2, '186.14.156.48', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Mobile Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiYU9YQXJNbFhvQVgxSmx3UEtTOFE5enJwRjIySDBTdUpHTktmTTJOdCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDI6Imh0dHBzOi8veHBhbmVseC5kb21pbnVlcy5jb20vY29uZmlndXJhY2lvbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjI7czo0OiJhdXRoIjthOjE6e3M6MjE6InBhc3N3b3JkX2NvbmZpcm1lZF9hdCI7aToxNzc5NjY3NTYxO319', 1779668340),
+('6QMN4TJ9BXHTDMSpTLcml67887Xf5kOJzFMm7Mc1', 2, '186.14.156.48', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Mobile Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiYU9YQXJNbFhvQVgxSmx3UEtTOFE5enJwRjIySDBTdUpHTktmTTJOdCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDI6Imh0dHBzOi8veHBhbmVseC5kb21pbnVlcy5jb20vY29uZmlndXJhY2lvbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjI7czo0OiJhdXRoIjthOjE6e3M6MjE6InBhc3N3b3JkX2NvbmZpcm1lZF9hdCI7aToxNzc5NjY3NTYxO319', 1779674655),
+('DjhAx72lMlUfIF17MvEr76Tc1qESp43dYJPvqkVl', NULL, '66.249.83.3', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36 (compatible; Google-Read-Aloud; +https://support.google.com/webmasters/answer/1061943)', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiUHJRcmw1OUlKVUd5TDZkMkZlZkZ0a2VUbUk4U0ZFcFY3VVcwV2trYyI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0MjoiaHR0cHM6Ly94cGFuZWx4LmRvbWludWVzLmNvbS9jb25maWd1cmFjaW9uIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzQ6Imh0dHBzOi8veHBhbmVseC5kb21pbnVlcy5jb20vbG9naW4iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1779674657),
+('Fgdb9RkZFvRu5xMXeFGwSfCAFP9sjFlFxBjea16R', NULL, '66.249.83.130', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36 (compatible; Google-Read-Aloud; +https://support.google.com/webmasters/answer/1061943)', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQUp1bXlSeXdaNUZFTGYxYnFvSTdmWUVRcFdzZXRxaFNMUEMyeHlrViI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0MjoiaHR0cHM6Ly94cGFuZWx4LmRvbWludWVzLmNvbS9jb25maWd1cmFjaW9uIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzQ6Imh0dHBzOi8veHBhbmVseC5kb21pbnVlcy5jb20vbG9naW4iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1779674657),
 ('PUEgOefSW0lDjkFHPRxdudelHSqgmgg1Lx2OVBpb', NULL, '66.249.83.3', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36 (compatible; Google-Read-Aloud; +https://support.google.com/webmasters/answer/1061943)', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiYUdKSWFPRlJpa0FnUDRvTDB2QUZYNVJHVTNKekJSOVk2R2Y5SFdIdCI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0MjoiaHR0cHM6Ly94cGFuZWx4LmRvbWludWVzLmNvbS9jb25maWd1cmFjaW9uIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDI6Imh0dHBzOi8veHBhbmVseC5kb21pbnVlcy5jb20vY29uZmlndXJhY2lvbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1779667567),
 ('RamWioL9GG7tjfJ3c4o1XLBnTWALgpTGSTL8YrGN', NULL, '200.8.13.52', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoidWFhMXQ1QWhDUVVHQWhPRUZYVWJCcmVxU3ZjUm5aTlR0MG1xblJoSyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzQ6Imh0dHBzOi8veHBhbmVseC5kb21pbnVlcy5jb20vbG9naW4iO319', 1779672094),
 ('xVenYV8m0d74gQ6XzUe6n6WKWibYu2ilewoFo5Aj', NULL, '186.14.156.48', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiTndSaXJ2ZzBrelFJZWxKcVNTa1MxN0xrdFB4bk5XTnVUNUtGWHk0byI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzQ6Imh0dHBzOi8veHBhbmVseC5kb21pbnVlcy5jb20vbG9naW4iO319', 1779672820);
@@ -9048,7 +9062,7 @@ INSERT INTO `table_user` (`id`, `user_id`, `table_id`, `matchmaking_id`, `entry_
 (5046, 267, 10, NULL, 30.00, 'finished', '2026-05-25 04:01:51', '2026-05-25 04:01:51', '2026-05-25 04:22:59', '2026-05-25 04:01:51', '2026-05-25 04:22:59', NULL, 'normal'),
 (5047, 263, 10, NULL, 30.00, 'matched', '2026-05-25 04:02:00', '2026-05-25 05:32:38', NULL, '2026-05-25 04:02:00', '2026-05-25 05:32:38', NULL, 'normal'),
 (5050, 93, 10, NULL, 30.00, 'matched', '2026-05-25 05:38:01', '2026-05-25 05:38:01', NULL, '2026-05-25 05:38:01', '2026-05-25 05:38:01', NULL, 'normal'),
-(5051, 7, 10, NULL, 30.00, 'waiting', '2026-05-25 05:38:01', NULL, NULL, '2026-05-25 05:38:01', '2026-05-25 05:38:01', NULL, 'normal');
+(5051, 7, 10, NULL, 30.00, 'finished', '2026-05-25 05:38:01', '2026-05-25 06:04:26', '2026-05-25 06:06:15', '2026-05-25 05:38:01', '2026-05-25 06:06:15', NULL, 'disconnect');
 
 -- --------------------------------------------------------
 
@@ -9139,9 +9153,9 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `name`, `email`, `type_identification`, `n_identification`, `email_verified_at`, `password`, `rol`, `phone`, `image`, `balance`, `points`, `status`, `remember_token`, `created_at`, `updated_at`) VALUES
 (1, 'Leoncio Requena', 'leonciorequena1995@gmail.com', NULL, NULL, NULL, '$2y$12$VeiNIaWytgbw26J8HnmJhuUJnx9F71I9D1BWMrBg3SDUMm8R8N1Vy', 'admin', NULL, NULL, 10841.00, 0.00, 'activo', NULL, '2025-06-17 20:10:42', '2026-05-24 21:08:29'),
-(2, 'Osward', 'ojpr15@gmail.com', 'V', '20989357', NULL, '$2y$12$VeiNIaWytgbw26J8HnmJhuUJnx9F71I9D1BWMrBg3SDUMm8R8N1Vy', 'admin', '04243513322', 'imagenes/perfil/1761115514_Osward.jpg', 22181.00, 0.00, 'activo', 'ebo88OmhrwK4iQb9dpOIuw9mPkjusjHfgG5AxLymlbshETJppSgubopkcvAT', '2025-06-18 06:40:19', '2026-05-25 05:11:02'),
+(2, 'Osward', 'ojpr15@gmail.com', 'V', '20989357', NULL, '$2y$12$VeiNIaWytgbw26J8HnmJhuUJnx9F71I9D1BWMrBg3SDUMm8R8N1Vy', 'admin', '04243513322', 'imagenes/perfil/1761115514_Osward.jpg', 22229.00, 0.00, 'activo', 'ebo88OmhrwK4iQb9dpOIuw9mPkjusjHfgG5AxLymlbshETJppSgubopkcvAT', '2025-06-18 06:40:19', '2026-05-25 06:22:44'),
 (3, 'Orianny Luna', 'oriannylunax@gmail.com', 'V', '25527121', NULL, '$2y$12$vLBkLqguJOcypLJd8D7jJu6q.8T9adS5DwmHjd1Mf/Qtaj24zJaba', 'client', '04123355454', NULL, 23620.00, 0.00, 'activo', NULL, '2025-09-14 19:50:46', '2025-10-14 23:59:25'),
-(4, 'Marco', 'unpeloladillaos@gmail.com', 'V', '26735381', NULL, '$2y$12$VeiNIaWytgbw26J8HnmJhuUJnx9F71I9D1BWMrBg3SDUMm8R8N1Vy', 'client', '04129210988', NULL, 13304.00, 0.00, 'activo', NULL, '2025-09-28 08:30:26', '2026-05-09 08:43:45'),
+(4, 'Marco', 'unpeloladillaos@gmail.com', 'V', '26735381', NULL, '$2y$12$VeiNIaWytgbw26J8HnmJhuUJnx9F71I9D1BWMrBg3SDUMm8R8N1Vy', 'client', '04129210988', NULL, 13244.00, 0.00, 'activo', NULL, '2025-09-28 08:30:26', '2026-05-25 06:22:20'),
 (5, 'Marco', 'ememiusekkstreamer@gmail.com', 'V', '25855655', NULL, '$2y$12$VeiNIaWytgbw26J8HnmJhuUJnx9F71I9D1BWMrBg3SDUMm8R8N1Vy', 'client', '04143066682', NULL, 22000.00, 0.00, 'activo', NULL, '2025-09-28 21:16:19', '2025-12-07 03:29:14'),
 (6, 'Alessandra', 'alessandraivohee@gmail.com', 'V', '25305701', NULL, '$2y$12$fJc2T9CkMuZA.Wrpp4LpGunLqpNFgN1vjMZ1VH.McT80.L0mtH/I6', 'client', '04122673190', NULL, 23000.00, 0.00, 'activo', NULL, '2025-10-13 03:01:35', '2025-10-13 03:01:35'),
 (7, 'Renny Pernia', 'rennypernia5@gmail.com', 'V', '23783307', NULL, '$2y$12$VeiNIaWytgbw26J8HnmJhuUJnx9F71I9D1BWMrBg3SDUMm8R8N1Vy', 'admin', '04128316750', NULL, 4643.00, 0.00, 'activo', NULL, '2025-10-19 06:39:41', '2026-05-25 05:38:01'),
@@ -9678,19 +9692,19 @@ ALTER TABLE `games`
 -- AUTO_INCREMENT for table `game_matchmaking`
 --
 ALTER TABLE `game_matchmaking`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1873;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1875;
 
 --
 -- AUTO_INCREMENT for table `game_results`
 --
 ALTER TABLE `game_results`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2797;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2801;
 
 --
 -- AUTO_INCREMENT for table `game_transactions`
 --
 ALTER TABLE `game_transactions`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7894;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7900;
 
 --
 -- AUTO_INCREMENT for table `jobs`
@@ -9720,7 +9734,7 @@ ALTER TABLE `monthly_pots`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1762;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1763;
 
 --
 -- AUTO_INCREMENT for table `tables`
@@ -9732,7 +9746,7 @@ ALTER TABLE `tables`
 -- AUTO_INCREMENT for table `table_user`
 --
 ALTER TABLE `table_user`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5052;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5056;
 
 --
 -- AUTO_INCREMENT for table `transactions`
