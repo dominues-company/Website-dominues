@@ -4445,11 +4445,11 @@ export default {
 
 /* Contenedor principal */
 .waiting-container {
-  background: rgba(255, 255, 255, 0.95);
+  background: hsl(0deg 34.42% 19.56% / 95%);
   backdrop-filter: blur(20px);
   border-radius: 25px;
   padding: 25px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px hsla(0, 0%, 100%, 0.2);
   max-width: 1280px;
   width: 100%;
   text-align: center;
@@ -4489,15 +4489,15 @@ export default {
 
 .player-details h2 {
   margin: 0;
-  color: #2d1b69;
+  color: #ffffff;
   font-size: 1.8rem;
   font-weight: 800;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 .game-subtitle {
   margin: 5px 0 0 0;
-  color: #666;
+  color: rgba(255, 255, 255, 0.75);
   font-size: 1rem;
   font-weight: 500;
 }
@@ -4538,15 +4538,15 @@ export default {
 
 /* Títulos de modos */
 .modes-title {
-  color: #2d1b69;
+  color: #ffffff;
   margin-bottom: 10px;
   font-size: 2.2rem;
   font-weight: 800;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 165, 0, 0.15);
 }
 
 .modes-subtitle {
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
   margin-bottom: 40px;
   font-size: 1.1rem;
   font-weight: 500;
@@ -4831,11 +4831,11 @@ export default {
 .global-online-indicator {
   margin: 20px 0 30px 0;
   padding: 18px 30px;
-  background: linear-gradient(135deg, rgba(52, 152, 219, 0.25) 0%, rgba(41, 128, 185, 0.25) 100%);
-  border: 3px solid rgba(52, 152, 219, 0.6);
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(41, 128, 185, 0.15) 100%);
+  border: 2px solid rgba(100, 180, 255, 0.45);
   border-radius: 18px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   text-align: center;
   position: relative;
   z-index: 10;
@@ -4846,29 +4846,29 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: #2980b9;
+  color: #7ec8f0;
   font-size: 1.2rem;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .online-icon {
   font-size: 1.5rem;
-  color: #3498db;
+  color: #7ec8f0;
 }
 
 .players-number {
   font-size: 1.8rem;
   font-weight: 900;
-  color: #2980b9;
-  text-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(100, 180, 255, 0.5);
   margin-right: 8px;
 }
 
 .players-label {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #34495e;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .online-dot {
@@ -4879,14 +4879,14 @@ export default {
 
 .online-text {
   font-weight: 500;
-  color: #3498db;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .online-text strong {
   font-size: 1.5rem;
   font-weight: 900;
-  color: #2980b9;
-  text-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(100, 180, 255, 0.5);
   margin-right: 5px;
 }
 
@@ -4988,7 +4988,7 @@ export default {
 }
 
 .connecting-text {
-  color: #2d1b69;
+  color: rgba(255, 255, 255, 0.95);
   font-size: 1.2rem;
   font-weight: 600;
 }
