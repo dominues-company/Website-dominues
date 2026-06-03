@@ -303,11 +303,10 @@ export default {
         
         // Solo mostrar notificación si la respuesta es exitosa (200)
         if (response.status === 200) {
-          // Mostrar notificación de éxito
           EventBus.emit('show-notification', {
             type: 'success',
-            message: 'Se han enviado las instrucciones de recuperación a tu correo electrónico',
-            duration: 5000
+            message: response.data?.message || 'Revisa tu correo: te enviamos una contraseña temporal. Cámbiala al iniciar sesión.',
+            duration: 6000
           });
           
           // Redirigir al login después de un breve delay
@@ -333,6 +332,9 @@ export default {
       else if (error.response && error.response.status === 404) {
         // Manejar el error específico del backend
         this.errorMessage = error.response.data?.message || 'No se encontró una cuenta con este correo electrónico.';
+      }
+      else if (error.response && error.response.status === 503) {
+        this.errorMessage = error.response.data?.message || 'No pudimos enviar el correo. Intenta más tarde.';
       }
       else if (error.response && error.response.status === 429) {
         this.errorMessage = 'Has intentado recuperar tu contraseña demasiadas veces. Por favor espera unos minutos antes de intentar nuevamente.';

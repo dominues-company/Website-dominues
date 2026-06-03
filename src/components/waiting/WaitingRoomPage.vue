@@ -81,6 +81,10 @@ export default {
     next();
   },
 
+  beforeUnmount() {
+    this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', false);
+  },
+
   async mounted() {
     console.log('🚀 [WAITING-PAGE] Componente montado')
     console.log('🚀 [WAITING-PAGE] Ruta actual:', this.$route)

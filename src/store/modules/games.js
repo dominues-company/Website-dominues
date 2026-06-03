@@ -80,7 +80,8 @@ export default {
     games: [],
     userBalance: 0,
     loading: false,
-    socketConnected: false
+    socketConnected: false,
+    waitingRoomGameActive: false
   },
   mutations: {
     SET_GAMES(state, games) {
@@ -102,6 +103,9 @@ export default {
     },
     SET_SOCKET_CONNECTED(state, connected) {
       state.socketConnected = connected
+    },
+    SET_WAITING_ROOM_GAME_ACTIVE(state, active) {
+      state.waitingRoomGameActive = active
     }
   },
   actions: {
@@ -318,6 +322,7 @@ export default {
       return state.userBalance >= entryFee
     },
     isSocketConnected: state => state.socketConnected,
-    userBalance: state => state.userBalance
+    userBalance: state => state.userBalance,
+    waitingRoomGameActive: state => state.waitingRoomGameActive
   }
-} 
+}

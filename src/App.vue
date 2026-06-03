@@ -52,7 +52,14 @@ export default {
   },
   computed: {
     hideLayout() {
-      return this.$route.matched.some(record => record.meta.hideLayout)
+      const routeHidesLayout = this.$route.matched.some(record => record.meta.hideLayout);
+      if (!routeHidesLayout) return false;
+
+      if (this.$route.name === 'WaitingRoomPage') {
+        return this.$store.getters['games/waitingRoomGameActive'];
+      }
+
+      return true;
     }
   },
   created() {

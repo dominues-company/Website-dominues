@@ -1,5 +1,5 @@
 <template>
-  <div class="waiting-room">
+  <div class="waiting-room" :class="{ 'with-nav': !gameStarted }" :style="roomBackgroundStyle">
     <!-- Elementos decorativos de fondo -->
     <div class="background-elements">
       <div class="casino-chip chip-1">💰</div>
@@ -189,6 +189,20 @@
               </div>
               <div class="mode-action">
                 <i class="fas fa-share-alt"></i>
+              </div>
+            </div>
+
+            <!-- Panel vinotinto decorativo (espacio vacío del grid) -->
+            <div class="mode-accent-panel" aria-hidden="true">
+              <div class="accent-content">
+                <span class="accent-logo">DOMINUES</span>
+                <p class="accent-tagline">Juega. Gana. Domina.</p>
+                <div class="accent-decor">
+                  <span>♠</span>
+                  <span>♥</span>
+                  <span>♣</span>
+                  <span>♦</span>
+                </div>
               </div>
             </div>
           </div>
@@ -456,10 +470,13 @@
           <span>{{ balanceNotificationMessage }}</span>
         </div>
       </div>
+
+    <FloatingRechargeButton :show="!gameStarted" />
   </div>
 </template>
 
 <script>
+import FloatingRechargeButton from '@/components/common/FloatingRechargeButton.vue';
 import {
   GAME_CONFIG,
   calculateBetAmounts,
@@ -471,6 +488,9 @@ import {
 
 export default {
   name: 'WaitingRoom',
+  components: {
+    FloatingRechargeButton
+  },
   props: {
     userName: {
       type: String,
@@ -583,6 +603,17 @@ export default {
     }
   },
   computed: {
+    roomBackgroundStyle() {
+      try {
+        const bg = require('@/assets/img/bg3.jpg');
+        return {
+          backgroundImage: `url(${bg})`
+        };
+      } catch {
+        return {};
+      }
+    },
+
     // 🔧 Total de jugadores en línea - Sumar waiting_players de las mesas
     totalOnlinePlayers() {
       if (!this.gameTables || this.gameTables.length === 0) return 0;
@@ -4264,6 +4295,8 @@ export default {
 
   watch: {
     gameStarted(isActive) {
+      this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', isActive);
+
       if (isActive) {
         this.$nextTick(() => this.enableBackButtonGuard());
       } else {
@@ -4280,6 +4313,7 @@ export default {
   },
 
   async mounted() {
+    this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', false);
     window.dispatchEvent(new CustomEvent('pause-background-music'));
     // 🔧 CACHE CONTROL: El router ya maneja la limpieza de caché
     // Este componente se monta solo después de que el router forzó la recarga
@@ -4302,6 +4336,7 @@ export default {
   },
   
   beforeUnmount() {
+    this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', false);
     // 🔧 FIX: Detener actualizador de mensaje de matchmaking
     this.stopMatchmakingMessageUpdater();
     // 🔧 FIX MOBILE: Detener watchdog
@@ -4329,13 +4364,36 @@ export default {
 .waiting-room {
   min-height: 100vh;
   min-height: 100dvh;
-  background: linear-gradient(135deg, #2d1b69 0%, #4a2c7a 50%, #6b46c1 100%);
+  background-color: #2e0327;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   position: relative;
   overflow: hidden;
+}
+
+.waiting-room::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(46, 3, 39, 0.88);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.waiting-room.with-nav {
+  padding-top: 100px;
+  align-items: flex-start;
+}
+
+@media (max-width: 991px) {
+  .waiting-room.with-nav {
+    padding-top: 88px;
+  }
 }
 
 /* Elementos decorativos de fondo */
@@ -4501,6 +4559,68 @@ export default {
   gap: 25px;
   margin-bottom: 40px;
 }
+
+.mode-accent-panel {
+  grid-column: span 2;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  min-height: 200px;
+  background: linear-gradient(135deg, #6b1a3d 0%, #4a1229 45%, #2e0327 100%);
+  border: 2px solid rgba(255, 165, 0, 0.25);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mode-accent-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 107, 53, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.1) 0%, transparent 45%);
+  pointer-events: none;
+}
+
+.accent-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 24px;
+}
+
+.accent-logo {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 165, 0, 0.25);
+  margin-bottom: 8px;
+}
+
+.accent-tagline {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 1px;
+}
+
+.accent-decor {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  font-size: 1.6rem;
+  opacity: 0.35;
+}
+
+.accent-decor span:nth-child(1) { color: #fff; }
+.accent-decor span:nth-child(2) { color: #ef4444; }
+.accent-decor span:nth-child(3) { color: #fff; }
+.accent-decor span:nth-child(4) { color: #ef4444; }
 
 .mode-card {
   position: relative;
@@ -5104,6 +5224,10 @@ export default {
     grid-template-columns: repeat(2, 1fr);
     gap: 22px;
   }
+
+  .mode-accent-panel {
+    grid-column: span 1;
+  }
 }
 
 @media (max-width: 768px) {
@@ -5129,6 +5253,10 @@ export default {
   .mode-options {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .mode-accent-panel {
+    display: none;
   }
   
   .player-header {

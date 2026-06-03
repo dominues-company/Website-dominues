@@ -16,31 +16,10 @@
       </div>
 
 
-      <!-- INFORMACIÓN BANCARIA -->
-      <div class="bank-info-section">
-        <div class="section-header">
-          <h3>INFORMACIÓN BANCARIA</h3>
-        </div>
-        
-        <div class="important-notice">
-          <div class="notice-text blue-text">
-            Los retiros solicitados a CUENTAS DE PENSIONADOS TIENEN LIMITACIONES BANCARIAS PARA RECIBIR DINERO y pueden ser devueltas por los bancos. SE RECOMIENDA USAR CUENTAS NORMALES PARA TALES FINES.
-          </div>
-          <div class="notice-text blue-text">
-            El monto mínimo por retiro es de <strong>Bs 500,00</strong>
-          </div>
-          <div class="notice-text blue-text">
-            La cuenta de destino debe pertenecer al mismo titular y cédula registrados en Dominues. No se permiten retiros a terceros.
-          </div>
-          <div class="notice-text blue-text">
-            Las solicitudes se verifican manualmente y pueden tardar hasta <strong>48 horas hábiles</strong>. Tope diario equivalente a <strong>$50 USD</strong> por usuario.
-          </div>
-        </div>
-
-        <!--<button type="button" class="btn-add-account" @click="showAddAccountModal = true">
-          AGREGAR CUENTA BANCARIA
-        </button>-->
-      </div>
+      <!-- Nota de titularidad -->
+      <p class="withdrawal-note">
+        La cuenta de destino debe pertenecer al titular registrado en dominues! No se permiten registros a terceros
+      </p>
 
       <!-- FORMULARIO DE RETIRO -->
       <form @submit.prevent="handleWithdrawal" class="withdrawal-form">
@@ -119,6 +98,17 @@
 
     </div>
 
+    <IdentityVerificationModal
+      :show="showIdentityModal"
+      @close="showIdentityModal = false"
+      @uploaded="onIdentityUploaded"
+    />
+
+    <IdentityPendingModal
+      :show="showPendingModal"
+      @close="onPendingModalClose"
+    />
+
   </div>
 </template>
 
@@ -158,6 +148,16 @@
   font-size: 2.5rem;
   margin: 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.withdrawal-note {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #007bff;
+  font-weight: 600;
+  margin-bottom: 20px;
+  line-height: 1.4;
+  padding: 0 10px;
 }
 
 .client-data-section,
@@ -528,9 +528,15 @@
 <script>
 import api from '@/services/api';
 import EventBus from '@/EventBus';
+import IdentityVerificationModal from '@/components/modals/IdentityVerificationModal.vue';
+import IdentityPendingModal from '@/components/modals/IdentityPendingModal.vue';
 
 export default {
   name: 'WithdrawalView',
+  components: {
+    IdentityVerificationModal,
+    IdentityPendingModal
+  },
   data() {
     return {
       form: {
@@ -549,6 +555,9 @@ export default {
       successMessage: '',
       errors: {},
       showAddAccountModal: false,
+      showIdentityModal: false,
+      showPendingModal: false,
+      identityVerificationStatus: 'none',
       clientData: {
         name: '',
         typeIdentification: '',
@@ -591,16 +600,19 @@ export default {
         });
         
         this.clientData = {
-          name: response.data.name,
-          typeIdentification: response.data.type_identification,
-          nIdentification: response.data.n_identification,
-          email: response.data.email,
-          username: response.data.username,
-          phone: response.data.phone,
-          balance: response.data.user.balance
+          name: response.data.name || response.data.user?.name,
+          typeIdentification: response.data.type_identification || response.data.user?.type_identification,
+          nIdentification: response.data.n_identification || response.data.user?.n_identification,
+          email: response.data.email || response.data.user?.email,
+          username: response.data.username || response.data.user?.email,
+          phone: response.data.phone || response.data.user?.phone,
+          balance: response.data.user?.balance
         };
         
-        this.availableBalance = response.data.user.balance || 0;
+        this.availableBalance = response.data.user?.balance || 0;
+        this.identityVerificationStatus = response.data.identity_verification_status
+          || response.data.user?.identity_verification_status
+          || 'none';
       } catch (error) {
         console.error('Error al cargar datos del cliente:', error);
         this.errorMessage = 'Error al cargar los datos del cliente.';
@@ -681,9 +693,7 @@ export default {
     // Manejar retiro
     async handleWithdrawal() {
       try {
-        // Validar formulario
         this.errors = {};
-        
         this.validateWithdrawalAmount();
         this.validateBankName();
         
@@ -691,55 +701,83 @@ export default {
           this.errorMessage = 'Por favor, corrige los errores en el formulario';
           return;
         }
-        
+
+        const status = this.identityVerificationStatus;
+
+        if (status === 'approved') {
+          await this.submitWithdrawal();
+          return;
+        }
+
+        if (status === 'pending') {
+          await this.submitWithdrawal();
+          this.showPendingModal = true;
+          return;
+        }
+
+        this.showIdentityModal = true;
+      } catch (error) {
+        console.error('Error general durante el retiro:', error);
+        this.errorMessage = 'Ocurrió un error inesperado. Por favor, intenta de nuevo más tarde.';
+      }
+    },
+
+    async onIdentityUploaded() {
+      this.showIdentityModal = false;
+      this.identityVerificationStatus = 'pending';
+
+      try {
+        await this.submitWithdrawal();
+        this.showPendingModal = true;
+      } catch (error) {
+        this.showPendingModal = true;
+      }
+    },
+
+    onPendingModalClose() {
+      this.showPendingModal = false;
+      this.$router.push('/dashboard');
+    },
+
+    async submitWithdrawal() {
+      try {
         this.isLoading = true;
         this.errorMessage = '';
         this.successMessage = '';
         
-        // Crear objeto de retiro
         const withdrawalData = {
           amount: parseFloat(this.form.withdrawalAmount),
           bank_account: this.form.bankName
         };
         
-        console.log('Enviando datos de retiro:', withdrawalData);
+        await api.post('/api/withdraw_api', withdrawalData, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
         
-        try {
-          // Llamar al endpoint de retiro
-          await api.post('/api/withdraw_api', withdrawalData, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            }
-          });
-          
-          // Mostrar toast de éxito
-          EventBus.emit('show-notification', {
-            type: 'success',
-            message: 'Solicitud de retiro enviada exitosamente. Será verificada y procesada en un plazo de hasta 48 horas hábiles.',
-            duration: 3000
-          });
-          
-          // Limpiar formulario
-          this.form = {
-            withdrawalAmount: '',
-            bankName: ''
-          };
-          
-          // Actualizar saldo
-          await this.loadClientData();
-          
-          // Redirigir al dashboard después de 3 segundos
+        EventBus.emit('show-notification', {
+          type: 'success',
+          message: 'Solicitud de retiro enviada exitosamente. Será verificada y procesada en un plazo de hasta 48 horas hábiles.',
+          duration: 3000
+        });
+        
+        this.form = {
+          withdrawalAmount: '',
+          bankName: ''
+        };
+        
+        await this.loadClientData();
+
+        if (this.identityVerificationStatus !== 'pending') {
           setTimeout(() => {
             this.$router.push('/dashboard');
           }, 3000);
-          
-        } catch (error) {
-          console.error('Error durante el retiro:', error);
-          this.handleWithdrawalError(error);
         }
       } catch (error) {
-        console.error('Error general durante el retiro:', error);
-        this.errorMessage = 'Ocurrió un error inesperado. Por favor, intenta de nuevo más tarde.';
+        console.error('Error durante el retiro:', error);
+        this.handleWithdrawalError(error);
+        throw error;
       } finally {
         this.isLoading = false;
       }
@@ -755,9 +793,12 @@ export default {
         this.errors = validationErrors;
         errorMessage = 'Por favor corrige los errores en el formulario.';
       } else if (error.response) {
-        // Otros errores del servidor
         errorMessage = error.response.data?.message || 
                       `Error del servidor: ${error.response.status} ${error.response.statusText}`;
+
+        if (error.response.data?.requires_identity_verification) {
+          this.showIdentityModal = true;
+        }
       } else {
         // Errores de red u otros
         errorMessage = error.message || 'No se pudo conectar con el servidor. Verifica tu conexión.';
