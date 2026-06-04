@@ -1,3 +1,4 @@
+const path = require('path')
 const { defineConfig } = require('@vue/cli-service')
 const CompressionPlugin = require('compression-webpack-plugin')
 
@@ -28,7 +29,11 @@ module.exports = defineConfig({
     port: 8080,         // Puerto específico
     hot: true,          // Habilita Hot Module Replacement
     liveReload: true,    // Habilita Live Reload
-    watchFiles: ['src/**/*', 'public/**/*'], // Archivos a observar
+    watchFiles: ['src/**/*', 'public/**/*', 'content/**/*'],
+    static: {
+      directory: path.join(__dirname, 'content'),
+      publicPath: '/content'
+    },
     client: {
       overlay: {
         warnings: false, // Oculta warnings en el navegador
@@ -53,6 +58,16 @@ module.exports = defineConfig({
       d.__VUE_PROD_DEVTOOLS__ = JSON.stringify(false)
       d.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ = JSON.stringify(false)
       return definitions
+    })
+
+    // Copiar carpeta content/ al build (editable en GitHub sin tocar código Vue)
+    config.plugin('copy').tap(args => {
+      args[0].patterns.push({
+        from: path.resolve(__dirname, 'content'),
+        to: 'content',
+        toType: 'dir'
+      })
+      return args
     })
 
     // Título del sitio (para pestaña del navegador y aprobación Cryptomus)

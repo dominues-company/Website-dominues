@@ -1,0 +1,18 @@
+{
+  "privacy": {
+    "title": "Política de Privacidad",
+    "file": "privacy.html"
+  },
+  "terms": {
+    "title": "Política de Privacidad y Términos de Uso – Dominues",
+    "file": "terms.html"
+  },
+  "aml": {
+    "title": "Política AML (Anti-Lavado de Dinero)",
+    "file": "aml.html"
+  },
+  "responsible-gambling": {
+    "title": "Juego Responsable",
+    "file": "responsible-gambling.html"
+  }
+}

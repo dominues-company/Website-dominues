@@ -67,17 +67,31 @@ export default {
   },
   beforeRouteLeave(to, from, next) {
     const room = this.$refs.waitingRoom;
-    if (room?.isActiveGameSession?.()) {
-      const confirmed = confirm(room.getBackSurrenderConfirmMessage());
-      if (!confirmed) {
+
+    if (room?.isNavigationLocked) {
+      if (room.isSearchingForMatch?.()) {
+        alert(room.getRefreshBlockedMessage());
         next(false);
         return;
       }
-      room.disableBackButtonGuard();
-      room.handleSurrender({ skipConfirm: true, reason: 'route_leave' });
+
+      if (room.isActiveGameSession?.()) {
+        const confirmed = confirm(room.getBackSurrenderConfirmMessage());
+        if (!confirmed) {
+          next(false);
+          return;
+        }
+        room.disableSessionNavigationGuard();
+        room.handleSurrender({ skipConfirm: true, reason: 'route_leave' });
+        next(false);
+        return;
+      }
+
+      alert(room.getRefreshBlockedMessage());
       next(false);
       return;
     }
+
     next();
   },
 

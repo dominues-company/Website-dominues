@@ -1,14 +1,3 @@
-<template>
-  <LegalPageLayout
-    title="Política de Privacidad y Términos de Uso – Dominues"
-    :content="termsContent"
-  />
-</template>
-
-<script>
-import LegalPageLayout from '@/components/legal/LegalPageLayout.vue';
-
-const termsContent = `
 <h2>1. Aceptación de términos</h2>
 <p>El acceso y uso de Dominues implica la aceptación total de estos términos. Si no estás de acuerdo, debes abandonar la plataforma de inmediato.</p>
 
@@ -108,19 +97,8 @@ const termsContent = `
 <p><strong>30.2 Plazos de procesamiento.</strong> Una vez introducida la solicitud de retiro a través de los canales oficiales de la plataforma, el sistema y los administradores disponen de un plazo de hasta cuarenta y ocho (48) horas hábiles para verificar el historial de jugadas del usuario, validar el origen lícito de los fondos y proceder con la liberación del pago. El usuario acepta que este período es necesario para mitigar riesgos de seguridad bancaria y de red.</p>
 <p><strong>30.3 Límites diarios de retiro (cap de liquidez).</strong> Para preservar la estabilidad financiera y el flujo de caja operativo de la plataforma, se establece un límite máximo de retiro equivalente a cincuenta dólares estadounidenses ($50.00 USD) diarios por usuario (o su equivalente en moneda local a la tasa interna de la plataforma). Cualquier ganancia acumulada que exceda dicho monto diario permanecerá segura en el balance del jugador y deberá ser solicitada en montos subsecuentes en los días calendario siguientes, respetando el mismo tope diario establecido.</p>
 <p><strong>30.4 Retención por abuso de promociones.</strong> Si durante el período de verificación de 48 horas se constata que el usuario no ha cumplido con el requisito de apuesta obligatoria (apostar el 100% de su depósito inicial) o se detectan patrones de abuso con el «Bono de Inauguración» (como la creación de cuentas múltiples o colusión en mesas), Dominues se reserva el derecho de retener el pago, anular las ganancias derivadas de la promoción y suspender la cuenta de manera definitiva.</p>
-
 <p><strong>30.5 Cuentas de pensionados.</strong> Los retiros solicitados a cuentas de pensionados tienen limitaciones bancarias para recibir dinero y pueden ser devueltas por los bancos. Se recomienda usar cuentas normales para tales fines.</p>
 
 <h2>31. Política de identidad bancaria (mismo banco, mismo titular)</h2>
 <p><strong>Titularidad única y verificación de fondos:</strong> Para proceder con cualquier retiro de saldo o ganancias en Dominues, es condición obligatoria e indispensable que la cuenta de destino (cuenta bancaria, Pago Móvil o wallet de criptoactivos) pertenezca única y exclusivamente al mismo titular y número de identificación (cédula/ID) registrado en la cuenta de usuario de la plataforma.</p>
 <p>Queda terminantemente prohibido el retiro de fondos hacia cuentas de terceros, familiares o amigos. Dominues se reserva el derecho de congelar los fondos y suspender de forma permanente cualquier cuenta que intente triangular pagos o retirar dinero hacia un titular distinto al registrado originariamente, como medida estricta de prevención contra el fraude de identidad y la legitimación de capitales.</p>
-`;
-
-export default {
-  name: 'TermsView',
-  components: { LegalPageLayout },
-  data() {
-    return { termsContent };
-  }
-};
-</script>

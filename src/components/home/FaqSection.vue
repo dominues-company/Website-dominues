@@ -4,8 +4,8 @@
       <div class="row justify-content-center">
         <div class="col-lg-7 col-xl-6">
           <div class="section-header text-center">
-            <h2 class="section-header__title">Preguntas Frecuentes</h2>
-            <p>Todo lo que necesitas saber sobre Dominues. Si tienes otra duda, contáctanos.</p>
+            <h2 class="section-header__title">{{ faqData.sectionTitle }}</h2>
+            <p>{{ faqData.sectionSubtitle }}</p>
           </div>
         </div>
       </div>
@@ -41,48 +41,17 @@
 </template>
 
 <script>
+import faqData from '../../../content/faq.json';
+
 export default {
   name: 'FaqSection',
   data() {
     return {
+      faqData,
       openLeft: null,
       openRight: null,
-      faqLeft: [
-        {
-          q: '¿Qué es Dominues?',
-          a: 'Es la plataforma definitiva para jugar dominó online con personas reales. Aquí no juegas contra la computadora, juegas contra otros apasionados del dominó y pones a prueba tu estrategia.'
-        },
-        {
-          q: '¿Qué son los "Dcoins"?',
-          a: 'Es nuestra moneda interna. Para que todo sea más fácil, te diremos cuánto vale. Así siempre sabes exactamente cuánto tienes y cuánto ganas.'
-        },
-        {
-          q: '¿Cómo cargo saldo en mi cuenta?',
-          a: '¡Es muy fácil! Tienes dos opciones:<br><strong>Si estás en Venezuela:</strong> Elige "Pago Móvil", dale al botón de WhatsApp y envíanos tu comprobante. ¡Te cargamos en minutos!<br><strong>Si estás en Chile o el resto del mundo:</strong> Elige "Pago Automático" y usa Cryptomus. Se acredita al instante sin hablar con nadie.'
-        },
-        {
-          q: '¿Cómo retiro mis ganancias?',
-          a: 'Ve a la sección de Retiros, elige tu método (Banco o Cripto) y solicita el monto. La cuenta de destino debe ser tuya (mismo titular y cédula registrados). Verificamos tu historial de juego y el origen de los fondos; el proceso puede tardar hasta <strong>48 horas hábiles</strong>. Hay un tope diario de retiro equivalente a <strong>$50 USD</strong> por usuario. Más detalle en <a href="/terms" style="color:#FFC827;">Términos y Condiciones</a>.'
-        }
-      ],
-      faqRight: [
-        {
-          q: '¿Es seguro jugar aquí?',
-          a: 'Totalmente. Usamos servidores de alta velocidad (Render) para que no haya lag y tecnología de encriptación para proteger tus datos. Además, nuestro equipo supervisa las mesas para asegurar que el juego sea siempre limpio.'
-        },
-        {
-          q: '¿Qué pasa si se me cae el internet en plena partida?',
-          a: 'El sistema de reconexión y el bot automático ayudan a no trancar la mesa, pero son herramientas de cortesía: Dominues <strong>no se hace responsable</strong> por pérdidas por cortes de luz, fallas de tu operador o mala señal, y <strong>no generan derecho a reembolso</strong>. Juega siempre con buena conexión.'
-        },
-        {
-          q: '¿Puedo jugar desde mi teléfono?',
-          a: '¡Claro! No necesitas descargar nada pesado. Solo entra a nuestra web desde el navegador de tu celular, inicia sesión y ¡listo para la acción!'
-        },
-        {
-          q: '¿Tengo un problema, quién me ayuda?',
-          a: '¡Estamos contigo! Dale clic al botón de Soporte (WhatsApp o Telegram) y un agente real te ayudará a resolver cualquier duda en tiempo récord.'
-        }
-      ]
+      faqLeft: faqData.left,
+      faqRight: faqData.right
     };
   },
   methods: {

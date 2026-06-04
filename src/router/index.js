@@ -14,10 +14,7 @@ import Recharge from '../views/RechargeView.vue';
 import Withdrawal from '../views/WithdrawalView.vue';
 import Transactions from '../views/TransactionsView.vue';
 import Profile from '../views/ProfileView.vue';
-import PrivacyView from '../views/PrivacyView.vue';
-import TermsView from '../views/TermsView.vue';
-import AMLView from '../views/AMLView.vue';
-import ResponsibleGamblingView from '../views/ResponsibleGamblingView.vue';
+import LegalContentView from '../views/LegalContentView.vue';
 import ContactView from '../views/ContactView.vue';
 import FaqView from '../views/FaqView.vue';
 // import PoteView from '../views/PoteView.vue'; // Movido a lazy loading
@@ -32,26 +29,26 @@ const routes = [
   {
     path: '/privacy',
     name: 'PrivacyView',
-    component: PrivacyView,
-    meta: { public: true }
+    component: LegalContentView,
+    meta: { public: true, contentKey: 'privacy' }
   },
   {
     path: '/terms',
     name: 'TermsView',
-    component: TermsView,
-    meta: { public: true }
+    component: LegalContentView,
+    meta: { public: true, contentKey: 'terms' }
   },
   {
     path: '/aml',
     name: 'AMLView',
-    component: AMLView,
-    meta: { public: true }
+    component: LegalContentView,
+    meta: { public: true, contentKey: 'aml' }
   },
   {
     path: '/responsible-gambling',
     name: 'ResponsibleGamblingView',
-    component: ResponsibleGamblingView,
-    meta: { public: true }
+    component: LegalContentView,
+    meta: { public: true, contentKey: 'responsible-gambling' }
   },
   {
     path: '/contact',

@@ -1,5 +1,5 @@
 <template>
-  <div class="waiting-room" :class="{ 'with-nav': !gameStarted }" :style="roomBackgroundStyle">
+  <div class="waiting-room" :class="{ 'with-nav': !gameStarted, 'navigation-locked': isNavigationLocked }" :style="roomBackgroundStyle">
     <!-- Elementos decorativos de fondo -->
     <div class="background-elements">
       <div class="casino-chip chip-1">💰</div>
@@ -584,6 +584,7 @@ export default {
 
       // Interceptar botón "Atrás" del navegador/móvil durante la partida
       backGuardEnabled: false,
+      navigationGuardEnabled: false,
       
       // 🔧 FIX: Interval para actualizar mensaje de matchmaking
       matchmakingMessageInterval: null,
@@ -668,6 +669,14 @@ export default {
              !this.gameStarted && 
              !this.isConnecting &&
              !this.isJoiningTable;
+    },
+
+    isNavigationLocked() {
+      if (this.resultSent || this.isSurrendering || this.isCancelling) {
+        return false;
+      }
+
+      return this.gameStarted;
     },
     
   },
@@ -1935,7 +1944,7 @@ export default {
       const savedPlayerName = preservePlayerName ? this.playerName : '';
       
       // === RESET DE ESTADO DE JUEGO ===
-      this.disableBackButtonGuard();
+      this.disableSessionNavigationGuard();
       this.gameStarted = false;
       this.isConnecting = false;
       this.gameMode = null;
@@ -3961,17 +3970,79 @@ export default {
       );
     },
 
+    isSearchingForMatch() {
+      return this.gameStarted && (this.isConnecting || this.showLoadingOverlay);
+    },
+
+    getRefreshBlockedMessage() {
+      if (this.isSearchingForMatch()) {
+        return 'No puedes recargar la página mientras buscas partida. Usa el botón Cancelar.';
+      }
+      return 'No puedes recargar la página durante la partida. Usa el botón Rendirse.';
+    },
+
+    notifyRefreshBlocked() {
+      alert(this.getRefreshBlockedMessage());
+    },
+
+    handleBeforeUnload(event) {
+      if (!this.isNavigationLocked) return;
+
+      event.preventDefault();
+      event.returnValue = this.getRefreshBlockedMessage();
+      return event.returnValue;
+    },
+
+    handleRefreshKeydown(event) {
+      if (!this.isNavigationLocked) return;
+
+      const key = event.key?.toLowerCase();
+      const isRefreshKey =
+        key === 'f5' ||
+        ((event.ctrlKey || event.metaKey) && key === 'r');
+
+      if (!isRefreshKey) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this.notifyRefreshBlocked();
+    },
+
+    enableSessionNavigationGuard() {
+      if (this.navigationGuardEnabled || typeof window === 'undefined') return;
+
+      this.navigationGuardEnabled = true;
+      window.addEventListener('beforeunload', this.handleBeforeUnload);
+      window.addEventListener('keydown', this.handleRefreshKeydown, true);
+
+      if (!this.backGuardEnabled) {
+        this.backGuardEnabled = true;
+        window.addEventListener('popstate', this.handleBrowserBack);
+        history.pushState({ dominuesWaitingRoomBackGuard: true }, '', window.location.href);
+      }
+
+      console.log('🔒 [WAITING-ROOM] Guardia de navegación activada (refresh/atras)');
+    },
+
+    disableSessionNavigationGuard() {
+      if (typeof window === 'undefined') return;
+
+      if (this.navigationGuardEnabled) {
+        this.navigationGuardEnabled = false;
+        window.removeEventListener('beforeunload', this.handleBeforeUnload);
+        window.removeEventListener('keydown', this.handleRefreshKeydown, true);
+      }
+
+      this.disableBackButtonGuard();
+      console.log('🔓 [WAITING-ROOM] Guardia de navegación desactivada');
+    },
+
     getBackSurrenderConfirmMessage() {
       return '¿Quieres rendirte y salir de la partida?\n\nSi aceptas, contará como una derrota.';
     },
 
     enableBackButtonGuard() {
-      if (this.backGuardEnabled || typeof window === 'undefined') return;
-
-      this.backGuardEnabled = true;
-      window.addEventListener('popstate', this.handleBrowserBack);
-      history.pushState({ dominuesWaitingRoomBackGuard: true }, '', window.location.href);
-      console.log('🔙 [WAITING-ROOM] Guardia del botón Atrás activada');
+      this.enableSessionNavigationGuard();
     },
 
     disableBackButtonGuard() {
@@ -3983,17 +4054,26 @@ export default {
     },
 
     handleBrowserBack() {
-      if (!this.isActiveGameSession()) {
-        this.disableBackButtonGuard();
+      if (!this.isNavigationLocked) {
+        this.disableSessionNavigationGuard();
         return;
       }
 
-      // Cancelar el "go back" y quedarse en la partida
       history.pushState({ dominuesWaitingRoomBackGuard: true }, '', window.location.href);
+
+      if (this.isSearchingForMatch()) {
+        alert(this.getRefreshBlockedMessage());
+        return;
+      }
+
+      if (!this.isActiveGameSession()) {
+        alert(this.getRefreshBlockedMessage());
+        return;
+      }
 
       const confirmed = confirm(this.getBackSurrenderConfirmMessage());
       if (confirmed) {
-        this.disableBackButtonGuard();
+        this.disableSessionNavigationGuard();
         this.handleSurrender({ skipConfirm: true, reason: 'back_button' });
       }
     },
@@ -4392,9 +4472,23 @@ export default {
       this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', isActive);
 
       if (isActive) {
-        this.$nextTick(() => this.enableBackButtonGuard());
+        this.$nextTick(() => this.enableSessionNavigationGuard());
       } else {
-        this.disableBackButtonGuard();
+        this.disableSessionNavigationGuard();
+      }
+    },
+
+    isNavigationLocked(isLocked) {
+      if (isLocked) {
+        this.$nextTick(() => this.enableSessionNavigationGuard());
+      } else {
+        this.disableSessionNavigationGuard();
+      }
+    },
+
+    resultSent(sent) {
+      if (sent) {
+        this.disableSessionNavigationGuard();
       }
     }
   },
@@ -4447,7 +4541,7 @@ export default {
     
     window.removeEventListener('message', this.handleGameMessage);
     window.removeEventListener('balance-updated', this.handleBalanceUpdate);
-    this.disableBackButtonGuard();
+    this.disableSessionNavigationGuard();
     window.dispatchEvent(new CustomEvent('resume-background-music'));
   }
 }
@@ -4468,6 +4562,11 @@ export default {
   padding: 20px;
   position: relative;
   overflow: hidden;
+}
+
+.waiting-room.navigation-locked {
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 .waiting-room::before {
