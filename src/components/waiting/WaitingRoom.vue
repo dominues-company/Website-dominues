@@ -4445,17 +4445,17 @@ export default {
 
 /* Contenedor principal */
 .waiting-container {
-  background: hsl(0deg 34.42% 19.56% / 95%);
+  background: rgba(33, 11, 23, 0.95); /* #210b17 — alternativa: #21191C */
   backdrop-filter: blur(20px);
   border-radius: 25px;
   padding: 25px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px hsla(0, 0%, 100%, 0.2);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px hsla(0, 0%, 100%, 0.08);
   max-width: 1280px;
   width: 100%;
   text-align: center;
   position: relative;
   z-index: 2;
-  border: 2px solid rgba(255, 165, 0, 0.2);
+  border: 2px solid rgba(255, 165, 0, 0.15);
 }
 
 /* Header del jugador */
@@ -4489,10 +4489,10 @@ export default {
 
 .player-details h2 {
   margin: 0;
-  color: #ffffff;
+  color: #f5f5f7;
   font-size: 1.8rem;
   font-weight: 800;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .game-subtitle {
@@ -4538,15 +4538,15 @@ export default {
 
 /* Títulos de modos */
 .modes-title {
-  color: #ffffff;
+  color: #f5f5f7;
   margin-bottom: 10px;
   font-size: 2.2rem;
   font-weight: 800;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 165, 0, 0.15);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .modes-subtitle {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(245, 245, 247, 0.72);
   margin-bottom: 40px;
   font-size: 1.1rem;
   font-weight: 500;
@@ -4988,7 +4988,7 @@ export default {
 }
 
 .connecting-text {
-  color: rgba(255, 255, 255, 0.95);
+  color: #f5f5f7;
   font-size: 1.2rem;
   font-weight: 600;
 }
