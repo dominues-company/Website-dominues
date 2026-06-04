@@ -3901,6 +3901,13 @@ window.addEventListener('message', function(event) {
       break;
     }
 
+    case 'RESIZE_GAME': {
+      if (typeof resizeGameFunc === 'function') {
+        resizeGameFunc();
+      }
+      break;
+    }
+
     case 'PLAYER_SURRENDER': {
       console.log('🏳️ [IFRAME] PLAYER_SURRENDER recibido - Jugador se rinde:', data);
       

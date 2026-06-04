@@ -1,5 +1,13 @@
 <template>
-  <div class="waiting-room" :class="{ 'with-nav': !gameStarted, 'navigation-locked': isNavigationLocked }" :style="roomBackgroundStyle">
+  <div
+    class="waiting-room"
+    :class="{
+      'with-nav': !gameStarted,
+      'navigation-locked': isNavigationLocked,
+      'game-playing': isGameViewportActive
+    }"
+    :style="roomBackgroundStyle"
+  >
     <!-- Elementos decorativos de fondo -->
     <div class="background-elements">
       <div class="casino-chip chip-1">💰</div>
@@ -15,8 +23,8 @@
     </div>
 
     <div class="waiting-container" :class="{ 'game-active': gameStarted }">
-      <!-- Header con información del jugador -->
-      <div class="player-header">
+      <!-- Header con información del jugador (oculto en partida para dar espacio al tablero) -->
+      <div v-if="!gameStarted" class="player-header">
         <div class="player-info">
           <div class="player-avatar">
             <i class="fas fa-user"></i>
@@ -238,7 +246,7 @@
       </div>
 
       <!-- Contenedor del juego -->
-      <div v-if="gameStarted" class="game-container">
+      <div v-if="gameStarted" ref="gameContainer" class="game-container">
       <div class="game-controls">
         <button
           type="button"
@@ -485,6 +493,36 @@
         </div>
       </div>
 
+    <!-- Aviso personalizado antes de salir (cancelar / rendirse) -->
+    <div v-if="sessionExitModal.visible" class="session-exit-modal" role="dialog" aria-modal="true">
+      <div class="session-exit-backdrop" @click="dismissSessionExitModal"></div>
+      <div class="session-exit-card">
+        <div class="session-exit-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3>¿Estás a punto de salir?</h3>
+        <p v-if="sessionExitModal.mode === 'cancel'">
+          Si cancelas ahora, se te devolverá el monto pagado y saldrás de la búsqueda.
+        </p>
+        <p v-else>
+          Si te rindes, contará como una derrota y saldrás de la partida.
+        </p>
+        <div class="session-exit-actions">
+          <button type="button" class="session-exit-btn stay-btn" @click="dismissSessionExitModal">
+            Seguir jugando
+          </button>
+          <button
+            type="button"
+            class="session-exit-btn leave-btn"
+            :class="{ 'cancel-leave': sessionExitModal.mode === 'cancel' }"
+            @click="confirmSessionExitModal"
+          >
+            {{ sessionExitModal.mode === 'cancel' ? 'Sí, cancelar' : 'Sí, rendirme' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <FloatingRechargeButton :show="!gameStarted" />
   </div>
 </template>
@@ -585,6 +623,14 @@ export default {
       // Interceptar botón "Atrás" del navegador/móvil durante la partida
       backGuardEnabled: false,
       navigationGuardEnabled: false,
+      touchPullStartY: null,
+      touchExitPromptShown: false,
+      sessionExitPromptOpen: false,
+      sessionExitModal: {
+        visible: false,
+        mode: 'cancel',
+        resolve: null
+      },
       
       // 🔧 FIX: Interval para actualizar mensaje de matchmaking
       matchmakingMessageInterval: null,
@@ -677,6 +723,10 @@ export default {
       }
 
       return this.gameStarted;
+    },
+
+    isGameViewportActive() {
+      return this.gameStarted && !this.isConnecting && !this.showLoadingOverlay;
     },
     
   },
@@ -3948,6 +3998,13 @@ export default {
       
       console.log('✅ [WAITING-ROOM] Overlay ocultado - isConnecting ahora es:', this.isConnecting);
       console.log('🎮 [WAITING-ROOM] Juego visible y jugando');
+
+      // Recalcular tamaño del iframe cuando el overlay desaparece (fichas completas)
+      this.$nextTick(() => {
+        this.notifyIframeResize();
+        setTimeout(() => this.notifyIframeResize(), 150);
+        setTimeout(() => this.notifyIframeResize(), 500);
+      });
     },
     
     handleGameError(data) {
@@ -3981,8 +4038,144 @@ export default {
       return 'No puedes recargar la página durante la partida. Usa el botón Rendirse.';
     },
 
-    notifyRefreshBlocked() {
-      alert(this.getRefreshBlockedMessage());
+    getCancelConfirmMessage() {
+      return '¿Seguro que quieres cancelar? Se te devolverá el monto pagado.';
+    },
+
+    askSessionExitConfirmation(mode) {
+      return new Promise((resolve) => {
+        this.sessionExitModal = {
+          visible: true,
+          mode,
+          resolve
+        };
+      });
+    },
+
+    dismissSessionExitModal() {
+      if (this.sessionExitModal.resolve) {
+        this.sessionExitModal.resolve(false);
+      }
+      this.sessionExitModal = {
+        visible: false,
+        mode: 'cancel',
+        resolve: null
+      };
+    },
+
+    confirmSessionExitModal() {
+      if (this.sessionExitModal.resolve) {
+        this.sessionExitModal.resolve(true);
+      }
+      this.sessionExitModal = {
+        visible: false,
+        mode: 'cancel',
+        resolve: null
+      };
+    },
+
+    notifyIframeResize() {
+      const iframe = this.$refs.gameFrame;
+      if (!iframe) return;
+
+      try {
+        iframe.contentWindow?.postMessage({ type: 'RESIZE_GAME' }, '*');
+      } catch (_) {
+        // Cross-origin: el nudge de altura abajo suele bastar
+      }
+
+      const container = iframe.parentElement;
+      if (!container) return;
+
+      const height = Math.round(container.getBoundingClientRect().height);
+      if (height <= 0) return;
+
+      iframe.style.height = `${Math.max(1, height - 1)}px`;
+      requestAnimationFrame(() => {
+        iframe.style.height = '100%';
+        try {
+          iframe.contentWindow?.dispatchEvent(new Event('resize'));
+        } catch (_) {
+          // Ignorar si el iframe es cross-origin
+        }
+      });
+    },
+
+    setupGameContainerResizeObserver() {
+      if (typeof ResizeObserver === 'undefined') return;
+
+      this.teardownGameContainerResizeObserver();
+
+      this.$nextTick(() => {
+        const container = this.$refs.gameContainer;
+        if (!container) return;
+
+        this._gameContainerResizeObserver = new ResizeObserver(() => {
+          this.notifyIframeResize();
+        });
+        this._gameContainerResizeObserver.observe(container);
+      });
+    },
+
+    teardownGameContainerResizeObserver() {
+      if (this._gameContainerResizeObserver) {
+        this._gameContainerResizeObserver.disconnect();
+        this._gameContainerResizeObserver = null;
+      }
+    },
+
+    bindGameWindowResize() {
+      if (this._gameWindowResizeHandler || typeof window === 'undefined') return;
+
+      this._gameWindowResizeHandler = () => {
+        if (this.gameStarted) {
+          this.notifyIframeResize();
+        }
+      };
+      window.addEventListener('resize', this._gameWindowResizeHandler);
+      window.addEventListener('orientationchange', this._gameWindowResizeHandler);
+    },
+
+    unbindGameWindowResize() {
+      if (!this._gameWindowResizeHandler || typeof window === 'undefined') return;
+
+      window.removeEventListener('resize', this._gameWindowResizeHandler);
+      window.removeEventListener('orientationchange', this._gameWindowResizeHandler);
+      this._gameWindowResizeHandler = null;
+    },
+
+    async promptSessionExit(source = 'unknown') {
+      if (!this.isNavigationLocked || this.sessionExitPromptOpen) {
+        return false;
+      }
+
+      this.sessionExitPromptOpen = true;
+
+      try {
+        if (this.isSearchingForMatch()) {
+          const confirmed = await this.askSessionExitConfirmation('cancel');
+          if (confirmed) {
+            await this.handleCancelSearch({ skipConfirm: true });
+            return true;
+          }
+          return false;
+        }
+
+        if (this.isActiveGameSession()) {
+          const confirmed = await this.askSessionExitConfirmation('surrender');
+          if (confirmed) {
+            this.disableSessionNavigationGuard();
+            await this.handleSurrender({ skipConfirm: true, reason: source });
+            return true;
+          }
+          return false;
+        }
+
+        alert(this.getRefreshBlockedMessage());
+        return false;
+      } finally {
+        this.sessionExitPromptOpen = false;
+      }
     },
 
     handleBeforeUnload(event) {
@@ -4005,7 +4198,38 @@ export default {
 
       event.preventDefault();
       event.stopImmediatePropagation();
-      this.notifyRefreshBlocked();
+      this.promptSessionExit('keyboard_refresh');
+    },
+
+    handleTouchStart(event) {
+      if (!this.isNavigationLocked) return;
+      this.touchPullStartY = event.touches[0]?.clientY ?? null;
+      this.touchExitPromptShown = false;
+    },
+
+    handleTouchMove(event) {
+      if (!this.isNavigationLocked || this.touchExitPromptShown || this.touchPullStartY === null) {
+        return;
+      }
+
+      const currentY = event.touches[0]?.clientY;
+      if (currentY === undefined) return;
+
+      const pullDistance = currentY - this.touchPullStartY;
+      const atTop = window.scrollY <= 5 && document.documentElement.scrollTop <= 5;
+
+      if (atTop && pullDistance > 55) {
+        event.preventDefault();
+        this.touchExitPromptShown = true;
+        this.promptSessionExit('pull_refresh');
+      }
+    },
+
+    handleTouchEnd() {
+      this.touchPullStartY = null;
+      setTimeout(() => {
+        this.touchExitPromptShown = false;
+      }, 400);
     },
 
     enableSessionNavigationGuard() {
@@ -4014,6 +4238,10 @@ export default {
       this.navigationGuardEnabled = true;
       window.addEventListener('beforeunload', this.handleBeforeUnload);
       window.addEventListener('keydown', this.handleRefreshKeydown, true);
+      document.addEventListener('touchstart', this.handleTouchStart, { passive: true });
+      document.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+      document.addEventListener('touchend', this.handleTouchEnd, { passive: true });
+      document.body.classList.add('dominues-navigation-locked');
 
       if (!this.backGuardEnabled) {
         this.backGuardEnabled = true;
@@ -4021,7 +4249,7 @@ export default {
         history.pushState({ dominuesWaitingRoomBackGuard: true }, '', window.location.href);
       }
 
-      console.log('🔒 [WAITING-ROOM] Guardia de navegación activada (refresh/atras)');
+      console.log('🔒 [WAITING-ROOM] Guardia de navegación activada (refresh/atras/pull)');
     },
 
     disableSessionNavigationGuard() {
@@ -4031,6 +4259,12 @@ export default {
         this.navigationGuardEnabled = false;
         window.removeEventListener('beforeunload', this.handleBeforeUnload);
         window.removeEventListener('keydown', this.handleRefreshKeydown, true);
+        document.removeEventListener('touchstart', this.handleTouchStart);
+        document.removeEventListener('touchmove', this.handleTouchMove);
+        document.removeEventListener('touchend', this.handleTouchEnd);
+        document.body.classList.remove('dominues-navigation-locked');
+        this.touchPullStartY = null;
+        this.touchExitPromptShown = false;
       }
 
       this.disableBackButtonGuard();
@@ -4060,22 +4294,7 @@ export default {
       }
 
       history.pushState({ dominuesWaitingRoomBackGuard: true }, '', window.location.href);
-
-      if (this.isSearchingForMatch()) {
-        alert(this.getRefreshBlockedMessage());
-        return;
-      }
-
-      if (!this.isActiveGameSession()) {
-        alert(this.getRefreshBlockedMessage());
-        return;
-      }
-
-      const confirmed = confirm(this.getBackSurrenderConfirmMessage());
-      if (confirmed) {
-        this.disableSessionNavigationGuard();
-        this.handleSurrender({ skipConfirm: true, reason: 'back_button' });
-      }
+      this.promptSessionExit('back_button');
     },
 
     async handleSurrender(options = {}) {
@@ -4093,7 +4312,7 @@ export default {
       }
 
       if (!skipConfirm) {
-        const confirmed = confirm('¿Estás seguro que deseas rendirte? Esto contará como una derrota.');
+        const confirmed = await this.askSessionExitConfirmation('surrender');
         if (!confirmed) {
           return;
         }
@@ -4362,10 +4581,14 @@ export default {
       console.log('🎉 [WAITING-ROOM] Confeti detenido');
     },
     
-    async handleCancelSearch() {
-      // Cancelar búsqueda y reembolsar
-      if (!confirm('¿Seguro que quieres cancelar? Se te devolverá el monto pagado.')) {
-        return;
+    async handleCancelSearch(options = {}) {
+      const { skipConfirm = false } = options;
+
+      if (!skipConfirm) {
+        const confirmed = await this.askSessionExitConfirmation('cancel');
+        if (!confirmed) {
+          return;
+        }
       }
       
       this.isCancelling = true;
@@ -4472,10 +4695,25 @@ export default {
       this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', isActive);
 
       if (isActive) {
-        this.$nextTick(() => this.enableSessionNavigationGuard());
+        this.$nextTick(() => {
+          this.enableSessionNavigationGuard();
+          this.setupGameContainerResizeObserver();
+          this.bindGameWindowResize();
+          this.notifyIframeResize();
+        });
       } else {
         this.disableSessionNavigationGuard();
+        this.teardownGameContainerResizeObserver();
+        this.unbindGameWindowResize();
       }
+    },
+
+    isGameViewportActive(isActive) {
+      if (!isActive) return;
+      this.$nextTick(() => {
+        this.notifyIframeResize();
+        setTimeout(() => this.notifyIframeResize(), 200);
+      });
     },
 
     isNavigationLocked(isLocked) {
@@ -4541,6 +4779,8 @@ export default {
     
     window.removeEventListener('message', this.handleGameMessage);
     window.removeEventListener('balance-updated', this.handleBalanceUpdate);
+    this.teardownGameContainerResizeObserver();
+    this.unbindGameWindowResize();
     this.disableSessionNavigationGuard();
     window.dispatchEvent(new CustomEvent('resume-background-music'));
   }
@@ -4566,7 +4806,7 @@ export default {
 
 .waiting-room.navigation-locked {
   overscroll-behavior: none;
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
 }
 
 .waiting-room::before {
@@ -5234,11 +5474,43 @@ export default {
 .game-container {
   position: relative;
   width: 100%;
-  height: 700px;
+  height: min(760px, calc(100dvh - 40px));
   border-radius: 0px;
   overflow: hidden;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
   border: 2px solid rgba(255, 165, 0, 0.2);
+}
+
+.waiting-room.game-playing {
+  padding: 0;
+  align-items: stretch;
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.waiting-room.game-playing .waiting-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  max-width: none;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #000;
+}
+
+.waiting-room.game-playing .game-container {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  max-height: 100dvh;
+  border: none;
+  box-shadow: none;
 }
 
 .game-controls {
@@ -5564,10 +5836,16 @@ export default {
   }
   
   .game-container {
-    height: calc(100vh - 140px);
+    height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     border-radius: 0;
     max-width: 100%;
     width: 100%;
+  }
+
+  .waiting-room.game-playing .game-container {
+    height: auto;
+    flex: 1;
+    min-height: 0;
   }
 
   .surrender-btn {
@@ -5615,12 +5893,18 @@ export default {
   }
   
   .game-container {
-    height: calc(100vh - 100px);
+    height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     border-radius: 0;
     border-left: none;
     border-right: none;
     max-width: 100%;
     width: 100%;
+  }
+
+  .waiting-room.game-playing .game-container {
+    height: auto;
+    flex: 1;
+    min-height: 0;
   }
 
   .surrender-btn {
@@ -6889,4 +7173,118 @@ export default {
   }
 }
 
+/* Modal: aviso antes de salir de la partida */
+.session-exit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.session-exit-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.session-exit-card {
+  position: relative;
+  z-index: 1;
+  width: min(420px, 100%);
+  background: linear-gradient(145deg, #2a1530, #1a0a14);
+  border: 2px solid rgba(255, 200, 39, 0.35);
+  border-radius: 20px;
+  padding: 28px 24px 24px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  animation: sessionExitIn 0.25s ease-out;
+}
+
+@keyframes sessionExitIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.session-exit-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 200, 39, 0.15);
+  color: #ffc827;
+  font-size: 1.5rem;
+}
+
+.session-exit-card h3 {
+  margin: 0 0 12px;
+  color: #f5f5f7;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.session-exit-card p {
+  margin: 0 0 24px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.session-exit-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.session-exit-btn {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.session-exit-btn:active {
+  transform: scale(0.98);
+}
+
+.session-exit-btn.stay-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f5f5f7;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.session-exit-btn.leave-btn {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(231, 76, 60, 0.35);
+}
+
+.session-exit-btn.leave-btn.cancel-leave {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35);
+}
+
+</style>
+
+<style>
+body.dominues-navigation-locked {
+  overflow: hidden;
+  overscroll-behavior-y: none;
+}
 </style>
