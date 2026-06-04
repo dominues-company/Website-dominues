@@ -34,7 +34,7 @@
         </div>
 
       <!-- Formulario de entrada -->
-      <div v-if="!gameStarted" class="entry-form">
+      <div v-if="!gameStarted && !serviceSuspended" class="entry-form">
         <div class="game-modes">
           <h3 class="modes-title">Elige tu Mesa de Juego</h3>
           <p class="modes-subtitle">Selecciona donde quieres jugar</p>
@@ -216,6 +216,20 @@
           </button>
         </div>
         </div>
+
+      <!-- Servicio suspendido -->
+      <div v-if="!gameStarted && serviceSuspended" class="service-suspended-state">
+        <div class="suspended-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="suspended-title">Servicio no disponible</h3>
+        <p class="suspended-message">{{ serviceSuspendedMessage }}</p>
+        <p class="suspended-note">Nuestro equipo ha sido notificado. Intenta más tarde.</p>
+        <button type="button" class="suspended-back-btn" @click="goToDashboard">
+          <i class="fas fa-arrow-left"></i>
+          Volver al Dashboard
+        </button>
+      </div>
 
       <!-- Estado de conexión (antes de cargar el iframe) -->
       <div v-if="isConnecting && !gameStarted" class="connecting-state">
@@ -477,6 +491,7 @@
 
 <script>
 import FloatingRechargeButton from '@/components/common/FloatingRechargeButton.vue';
+import api from '@/services/api';
 import {
   GAME_CONFIG,
   calculateBetAmounts,
@@ -529,6 +544,9 @@ export default {
       roomCodeValidated: false, // Indica si el código de invitado ya fue validado exitosamente en la base de datos
       // Datos de las mesas del backend
       gameTables: [],
+      serviceSuspended: false,
+      serviceSuspendedMessage: '',
+      suspensionNotified: false,
       selectedTable: null,
       groupedTables: {
         'cpu': [],
@@ -918,6 +936,11 @@ export default {
     },
 
     async loadGameTables() {
+      if (this.serviceSuspended) {
+        this.gameTables = [];
+        return;
+      }
+
       try {
         console.log('🔄 [WAITING-ROOM] Cargando mesas desde el backend...');
         
@@ -937,6 +960,62 @@ export default {
       } catch (error) {
         console.error('❌ [WAITING-ROOM] Error cargando mesas:', error);
       }
+    },
+
+    async checkGameServiceStatus() {
+      try {
+        const response = await api.get('/api/game-service/status');
+        const data = response.data || {};
+
+        if (data.suspended) {
+          await this.handleServiceSuspended(data.message || 'El servicio de juego no está disponible.');
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error('❌ [WAITING-ROOM] Error verificando servicio de juego:', error);
+        return false;
+      }
+    },
+
+    async handleServiceSuspended(message) {
+      this.serviceSuspended = true;
+      this.serviceSuspendedMessage = message || 'El servicio de juego no está disponible.';
+      this.gameTables = [];
+      this.groupedTables = {
+        cpu: [],
+        'online-2': [],
+        'online-4': [],
+        invite: []
+      };
+
+      if (this.gameStarted || this.isConnecting) {
+        this.resetFullState(true);
+      }
+
+      await this.notifyServiceSuspended(message);
+    },
+
+    async notifyServiceSuspended(message) {
+      if (this.suspensionNotified) return;
+
+      try {
+        const response = await api.post('/api/game-service/notify-suspended', {
+          message: message || this.serviceSuspendedMessage,
+          source: 'waiting-room'
+        });
+
+        if (response.data?.sent) {
+          this.suspensionNotified = true;
+        }
+      } catch (error) {
+        console.error('❌ [WAITING-ROOM] Error enviando alerta de suspensión:', error);
+      }
+    },
+
+    goToDashboard() {
+      window.location.href = GAME_CONFIG.DASHBOARD_URL;
     },
 
     getLoggedUserName() {
@@ -977,6 +1056,8 @@ export default {
     },
     
     startCPUMode(table) {
+      if (this.serviceSuspended) return;
+
       if (!this.playerName.trim()) {
         alert('Por favor ingresa tu nombre');
         return;
@@ -1006,6 +1087,8 @@ export default {
     },
     
     startOnlineModeTwoPlayers(table) {
+      if (this.serviceSuspended) return;
+
       if (!this.playerName.trim()) {
         alert('Por favor ingresa tu nombre');
         return;
@@ -1035,6 +1118,8 @@ export default {
     },
 
     startOnlineModeFourPlayers(table) {
+      if (this.serviceSuspended) return;
+
       if (!this.playerName.trim()) {
         alert('Por favor ingresa tu nombre');
         return;
@@ -1064,6 +1149,8 @@ export default {
     },
 
     startInviteFriendMode(table) {
+      if (this.serviceSuspended) return;
+
       if (!this.playerName.trim()) {
         alert('Por favor ingresa tu nombre');
         return;
@@ -1749,6 +1836,13 @@ export default {
     },
     
     onGameLoad() {
+      this.checkGameServiceStatus().then((suspended) => {
+        if (suspended) return;
+        this.continueGameLoad();
+      });
+    },
+
+    continueGameLoad() {
       // Enviar datos al juego cuando esté cargado
       // 🔧 FIX: Usar $refs.gameFrame en lugar de this.gameFrame (que nunca se asigna)
       if (this.$refs.gameFrame && this.$refs.gameFrame.contentWindow) {
@@ -4325,14 +4419,14 @@ export default {
     // Escuchar eventos de actualización de balance
     window.addEventListener('balance-updated', this.handleBalanceUpdate);
     
-    // Sincronizar balance y cargar mesas
-    await Promise.all([
-      this.syncUserBalance(true),
-      this.loadGameTables()
-    ]);
-    
-    // 🔧 Iniciar actualización periódica de jugadores en línea (cada 10 segundos)
-    this.startOnlinePlayersUpdate();
+    // Sincronizar balance y verificar servicio antes de cargar mesas
+    await this.syncUserBalance(true);
+    const isSuspended = await this.checkGameServiceStatus();
+
+    if (!isSuspended) {
+      await this.loadGameTables();
+      this.startOnlinePlayersUpdate();
+    }
   },
   
   beforeUnmount() {
@@ -4550,6 +4644,50 @@ export default {
   margin-bottom: 40px;
   font-size: 1.1rem;
   font-weight: 500;
+}
+
+.service-suspended-state {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.suspended-icon {
+  font-size: 3rem;
+  color: #ffc827;
+  margin-bottom: 16px;
+}
+
+.suspended-title {
+  color: #f5f5f7;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 0 12px;
+}
+
+.suspended-message,
+.suspended-note {
+  color: rgba(245, 245, 247, 0.8);
+  margin: 0 0 10px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.suspended-back-btn {
+  margin-top: 24px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.suspended-back-btn:hover {
+  opacity: 0.92;
 }
 
 /* Opciones de modo */

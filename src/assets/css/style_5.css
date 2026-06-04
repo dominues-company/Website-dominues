@@ -1202,6 +1202,20 @@ i {
     position: relative;
 }
 
+.header .menu li a.nav-link:hover,
+.header .menu li a.nav-link:focus,
+.header .menu li a.nav-link.router-link-active,
+.header .menu li a.nav-link.active {
+    color: #FFC827;
+}
+
+.footer-links li a.nav-link:hover,
+.footer-links li a.nav-link:focus,
+.footer-links li a.nav-link.router-link-active,
+.footer-links li a.nav-link.active {
+    color: #FFC827;
+}
+
 .menu li a .badge {
     position: absolute;
     font-weight: 600;
