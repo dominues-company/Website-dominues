@@ -1,4 +1,5 @@
 import api from '@/services/api'
+import { sanitizeApiMessage } from '@/utils/userFacingError'
 
 const SUCCESSFUL_TRANSACTION_STATUSES = ['success', 'successful', 'completed', 'approved', 'joined']
 
@@ -256,7 +257,10 @@ export default {
         console.error('❌ [STORE] Error al unirse a mesa:', error);
         return {
           success: false,
-          message: error.response?.data?.message || 'Error al unirse a la mesa'
+          message: sanitizeApiMessage(
+            error.response?.data?.message,
+            'No pudimos unirte a la mesa. Espera unos segundos e intenta de nuevo.'
+          )
         };
       }
     },

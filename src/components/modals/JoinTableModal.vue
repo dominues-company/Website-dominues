@@ -57,6 +57,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { sanitizeApiMessage } from '@/utils/userFacingError'
 
 export default {
   name: 'JoinTableModal',
@@ -115,7 +116,10 @@ export default {
       } catch (error) {
         this.$emit('show-message', {
           type: 'error',
-          message: error.message || 'Error al unirse a la mesa'
+          message: sanitizeApiMessage(
+            error.response?.data?.message || error.message,
+            'No pudimos unirte a la mesa. Espera unos segundos e intenta de nuevo.'
+          )
         })
       } finally {
         this.joining = false

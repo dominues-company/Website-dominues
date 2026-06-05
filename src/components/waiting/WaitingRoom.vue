@@ -554,6 +554,7 @@
 <script>
 import FloatingRechargeButton from '@/components/common/FloatingRechargeButton.vue';
 import api from '@/services/api';
+import { sanitizeApiMessage } from '@/utils/userFacingError';
 import {
   GAME_CONFIG,
   calculateBetAmounts,
@@ -1393,7 +1394,7 @@ export default {
         
       } catch (error) {
         console.error('❌ [WAITING-ROOM] Error al unirse a la mesa:', error);
-        alert('Error al unirse a la mesa: ' + error.message);
+        alert(sanitizeApiMessage(error.message, 'No pudimos unirte a la mesa. Espera unos segundos e intenta de nuevo.'));
         this.isJoiningTable = false;
       }
     },
@@ -2178,7 +2179,7 @@ export default {
         
       } catch (error) {
         console.error('❌ [WAITING-ROOM] HOST: Error al crear sala:', error);
-        alert('Error al crear sala: ' + error.message);
+        alert(sanitizeApiMessage(error.message, 'No pudimos crear la sala. Intenta de nuevo.'));
         return;
       }
       
@@ -2303,7 +2304,7 @@ export default {
           
           if (!response.ok) {
             const errorData = await response.json();
-            alert(`Error al unirse a la sala: ${errorData.message || 'Error desconocido'}`);
+            alert(sanitizeApiMessage(errorData.message, 'No pudimos unirte a la sala. Intenta de nuevo.'));
             console.error('❌ [WAITING-ROOM] Error al unirse con código:', errorData);
             return;
           }
@@ -2375,7 +2376,7 @@ export default {
       console.error('Error al unirse a la sala:', data);
       
       // Mostrar mensaje de error
-      alert('Error: ' + (data.error || 'No se pudo unir a la sala'));
+      alert(sanitizeApiMessage(data.error, 'No se pudo unir a la sala. Intenta de nuevo.'));
       
       // Resetear estado
       this.isConnecting = false;
@@ -4699,7 +4700,7 @@ export default {
         
       } catch (error) {
         console.error('❌ [WAITING-ROOM] Error al cancelar búsqueda:', error);
-        alert('Error al cancelar: ' + error.message);
+        alert(sanitizeApiMessage(error.message, 'No pudimos cancelar la búsqueda. Intenta de nuevo.'));
       } finally {
         this.isCancelling = false;
       }
@@ -4751,7 +4752,7 @@ export default {
         
       } catch (error) {
         console.error('❌ [WAITING-ROOM] HOST: Error al cancelar sala:', error);
-        alert('Error al cancelar sala: ' + error.message);
+        alert(sanitizeApiMessage(error.message, 'No pudimos cancelar la sala. Intenta de nuevo.'));
       } finally {
         this.isCancelling = false;
       }
