@@ -559,6 +559,7 @@ import {
   calculateBetAmounts,
   getUserData,
   getTableId,
+  buildWaitingRoomUrl,
   sleep,
   shouldRetryGameResultSave
 } from './gameConfig.js'
@@ -1118,6 +1119,26 @@ export default {
       window.location.href = GAME_CONFIG.DASHBOARD_URL;
     },
 
+    getTableIdForRedirect() {
+      const routeId = this.$route?.params?.tableId;
+      return routeId || this.selectedTable?.id || this.pendingTable?.id || getTableId();
+    },
+
+    returnToTableSelection(delay = 0) {
+      const url = buildWaitingRoomUrl(this.getTableIdForRedirect());
+      const navigate = () => {
+        console.log('🏠 [WAITING-ROOM] Regresando a selección de mesas:', url);
+        this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', false);
+        window.location.href = url;
+      };
+
+      if (delay > 0) {
+        setTimeout(navigate, delay);
+      } else {
+        navigate();
+      }
+    },
+
     getLoggedUserName() {
       // Obtener el nombre del usuario logueado desde el store de Vuex, localStorage, o props
       // Ajusta esta función según tu sistema de autenticación
@@ -1585,7 +1606,7 @@ export default {
         await this.handleCancelSearch();
       } else {
         this.resetGame();
-        this.$router.push('/dashboard');
+        this.returnToTableSelection();
       }
     },
     
@@ -2509,8 +2530,8 @@ export default {
         
         // Redirigir al dashboard
         setTimeout(() => {
-          console.log('🏠 Redirigiendo al dashboard después de derrota por desconexión...');
-          window.location.href = GAME_CONFIG.DASHBOARD_URL;
+          console.log('🏠 Regresando a selección de mesas después de derrota por desconexión...');
+          this.returnToTableSelection();
         }, 3000);
         
         return; // ← IMPORTANTE: Salir sin enviar resultado
@@ -2539,7 +2560,7 @@ export default {
         });
 
         setTimeout(() => {
-          window.location.href = GAME_CONFIG.DASHBOARD_URL;
+          this.returnToTableSelection();
         }, GAME_CONFIG.REDIRECT_DELAY);
 
         return;
@@ -2613,10 +2634,10 @@ export default {
         this.showGameResultMessage(data.gameResult);
       }
       
-      // Redirigir al dashboard después de 1 segundo
-      console.log('Redirigiendo al dashboard (clic manual)...');
+      // Regresar a selección de mesas después de 1 segundo
+      console.log('Regresando a selección de mesas (clic manual)...');
       setTimeout(() => {
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+        this.returnToTableSelection();
       }, 1000);
     },
     
@@ -2629,11 +2650,11 @@ export default {
         this.showGameResultMessage(data.gameResult);
       }
       
-      // Redirigir al dashboard inmediatamente (ya pasaron 2 segundos en el juego)
-      console.log('Auto-redirigiendo al dashboard...');
+      // Regresar a selección de mesas (ya pasaron 2 segundos en el juego)
+      console.log('Auto-regresando a selección de mesas...');
       setTimeout(() => {
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
-      }, 500); // Redirigir rápidamente
+        this.returnToTableSelection();
+      }, 500);
     },
     
     async handleDisconnectWin(data) {
@@ -2656,9 +2677,9 @@ export default {
       
       // Redirigir al dashboard después de mostrar el mensaje
       setTimeout(() => {
-        console.log('🏠 Redirigiendo al dashboard después de victoria por desconexión...');
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
-      }, 4000); // 4 segundos para mostrar el mensaje
+        console.log('🏠 Regresando a selección de mesas después de victoria por desconexión...');
+        this.returnToTableSelection();
+      }, 4000);
     },
     
     async handleDisconnectLose(data) {
@@ -2682,9 +2703,9 @@ export default {
       
       // Redirigir al dashboard después de mostrar el mensaje
       setTimeout(() => {
-        console.log('🏠 Redirigiendo al dashboard después de desconexión...');
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
-      }, 3000); // 3 segundos para mostrar el mensaje
+        console.log('🏠 Regresando a selección de mesas después de desconexión...');
+        this.returnToTableSelection();
+      }, 3000);
     },
     
     async handleReconnectFailedWin(data) {
@@ -2738,8 +2759,8 @@ export default {
       
       // Redirigir al dashboard
       setTimeout(() => {
-        console.log('🏠 Redirigiendo al dashboard después de victoria por reconexión fallida...');
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+        console.log('🏠 Regresando a selección de mesas después de victoria por reconexión fallida...');
+        this.returnToTableSelection();
       }, 4000);
     },
     
@@ -2750,8 +2771,8 @@ export default {
       // No enviar resultado - el ganador lo hará desde su lado
       // Solo redirigir al dashboard
       setTimeout(() => {
-        console.log('🏠 Redirigiendo al dashboard después de fallo de reconexión...');
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+        console.log('🏠 Regresando a selección de mesas después de fallo de reconexión...');
+        this.returnToTableSelection();
       }, 2000);
     },
     
@@ -2946,7 +2967,7 @@ export default {
 
               this.showGameResultMessage(gameData);
               setTimeout(() => {
-                window.location.href = GAME_CONFIG.DASHBOARD_URL;
+                this.returnToTableSelection();
               }, GAME_CONFIG.REDIRECT_DELAY);
               return;
             }
@@ -3222,7 +3243,7 @@ export default {
       document.body.appendChild(modal);
 
       setTimeout(() => {
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+        this.returnToTableSelection();
       }, 8000);
     },
 
@@ -3470,7 +3491,7 @@ export default {
             color: rgba(255,255,255,0.8);
             margin-bottom: 15px;
           ">
-            Redirigiendo al dashboard...
+            Redirigiendo a elegir otra mesa...
           </p>
           <div style="margin-top: 20px;">
             <div style="
@@ -3600,7 +3621,7 @@ export default {
             color: rgba(255,255,255,0.8);
             margin-bottom: 15px;
           ">
-            Redirigiendo al dashboard...
+            Redirigiendo a elegir otra mesa...
           </p>
           <div style="margin-top: 20px;">
             <div style="
@@ -4377,9 +4398,9 @@ export default {
       // - Solo sacamos a este jugador al dashboard, dejando que el socket se desconecte
       const isFourPlayerOnline = this.gameMode === 'online' && this.playersRoom === 4;
       if (isFourPlayerOnline) {
-        console.log('🏳️ [WAITING-ROOM] Rendición en modo online 4 jugadores - solo redirigir al dashboard, sin enviar datos.');
+        console.log('🏳️ [WAITING-ROOM] Rendición en modo online 4 jugadores - regresar a selección de mesas.');
         this.isSurrendering = true;
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+        this.returnToTableSelection();
         return;
       }
 
@@ -4672,9 +4693,9 @@ export default {
         // Mensaje de confirmación
         alert(`Búsqueda cancelada. Se te ha reembolsado ${safeTable.entry_price} Dcoins`);
         
-        // Resetear juego y volver al dashboard
+        // Resetear juego y volver a elegir mesa
         this.resetGame();
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+        this.returnToTableSelection();
         
       } catch (error) {
         console.error('❌ [WAITING-ROOM] Error al cancelar búsqueda:', error);
@@ -4724,9 +4745,9 @@ export default {
         // Mensaje de confirmación
         alert(`Sala cancelada. Se te ha reembolsado ${safeTable.entry_price} Dcoins`);
         
-        // Resetear juego y volver al dashboard
+        // Resetear juego y volver a elegir mesa
         this.resetGame();
-        window.location.href = GAME_CONFIG.DASHBOARD_URL;
+        this.returnToTableSelection();
         
       } catch (error) {
         console.error('❌ [WAITING-ROOM] HOST: Error al cancelar sala:', error);

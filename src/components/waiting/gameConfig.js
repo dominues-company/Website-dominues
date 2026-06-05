@@ -32,14 +32,14 @@ export const GAME_CONFIG = {
     WIN_SUBTITLE: '¿Te anotas en la siguiente?',
     LOSE: '¡Casi lo logras! 🀄',
     LOSE_SUBTITLE: 'La revancha te espera. ¿Otra partida?',
-    REDIRECTING: 'Redirigiendo al dashboard en 3 segundos...',
-    REDIRECTING_WIN: 'Redirigiendo al dashboard en 8 segundos...',
+    REDIRECTING: 'Volviendo a elegir mesa en 3 segundos...',
+    REDIRECTING_WIN: 'Volviendo a elegir mesa en 8 segundos...',
     ERROR: 'No pudimos completar la partida',
     RESULT_SAVE_ERROR_TITLE: 'No pudimos confirmar la partida',
     RESULT_SAVE_ERROR_WIN: 'Ganaste la mesa. Revisa tu saldo en unos minutos; si no ves el premio, contacta a soporte.',
     RESULT_SAVE_ERROR_LOSE: 'Hubo un problema al cerrar la partida. Si algo no cuadra en tu saldo, contacta a soporte.',
     RESULT_SAVE_ERROR_HINT: 'Indica la hora de la partida y el código de sala, si lo recuerdas.',
-    RESULT_SAVE_ERROR_REDIRECT: 'Te llevamos al inicio en unos segundos...',
+    RESULT_SAVE_ERROR_REDIRECT: 'Te llevamos a elegir otra mesa en unos segundos...',
     RESULT_ALREADY_REGISTERED: 'La partida ya fue registrada.'
   }
 };
@@ -133,4 +133,12 @@ export function getUserData(store, localStorage) {
 export function getTableId() {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get('tableId') || 1;
+}
+
+export function buildWaitingRoomUrl(tableId) {
+  const id = tableId != null && tableId !== '' ? String(tableId) : '1';
+  const origin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'https://dominues.com';
+  return `${origin}/waiting-room/${id}?_nocache=${Date.now()}`;
 }
