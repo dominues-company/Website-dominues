@@ -23,6 +23,30 @@
     </div>
 
     <div class="waiting-container" :class="{ 'game-active': gameStarted }">
+      <!-- Saldo visible al elegir mesa -->
+      <div v-if="!gameStarted" class="waiting-balance-bar">
+        <div class="waiting-balance-content">
+          <span class="waiting-balance-label">
+            <i class="fas fa-coins"></i>
+            Saldo disponible
+          </span>
+          <span class="waiting-balance-value">
+            {{ formattedUserBalance }}
+            <small>Dcoins</small>
+          </span>
+        </div>
+        <button
+          type="button"
+          class="waiting-balance-refresh"
+          :disabled="isSyncingBalance"
+          aria-label="Actualizar saldo"
+          title="Actualizar saldo"
+          @click="refreshDisplayedBalance"
+        >
+          <i class="fas fa-sync-alt" :class="{ 'fa-spin': isSyncingBalance }"></i>
+        </button>
+      </div>
+
       <!-- Header con información del jugador (oculto en partida para dar espacio al tablero) -->
       <div v-if="!gameStarted" class="player-header">
         <div class="player-info">
@@ -728,6 +752,19 @@ export default {
     isGameViewportActive() {
       return this.gameStarted && !this.isConnecting && !this.showLoadingOverlay;
     },
+
+    userBalanceAmount() {
+      const balance = this.$store.getters['games/userBalance'];
+      const parsed = parseFloat(balance);
+      return Number.isFinite(parsed) ? parsed : 0;
+    },
+
+    formattedUserBalance() {
+      return this.userBalanceAmount.toLocaleString('es-VE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    },
     
   },
   methods: {
@@ -844,6 +881,10 @@ export default {
         })
 
       return this.balanceSyncPromise
+    },
+
+    async refreshDisplayedBalance() {
+      await this.syncUserBalance(true);
     },
 
     announceBalanceChange(oldBalance, newBalance, message = null) {
@@ -4891,6 +4932,81 @@ export default {
   border: 2px solid rgba(255, 165, 0, 0.15);
 }
 
+.waiting-balance-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 200, 39, 0.18) 0%, rgba(255, 107, 53, 0.12) 100%);
+  border: 1px solid rgba(255, 200, 39, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.waiting-balance-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.waiting-balance-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.waiting-balance-label i {
+  color: #ffc827;
+}
+
+.waiting-balance-value {
+  color: #f5f5f7;
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.waiting-balance-value small {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffc827;
+  margin-left: 4px;
+}
+
+.waiting-balance-refresh {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28);
+  color: #ffc827;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.waiting-balance-refresh:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.42);
+  transform: rotate(20deg);
+}
+
+.waiting-balance-refresh:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* Header del jugador */
 .player-header {
   display: flex;
@@ -5774,6 +5890,15 @@ export default {
     text-align: center;
     margin-bottom: 20px;
   }
+
+  .waiting-balance-bar {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+  }
+
+  .waiting-balance-value {
+    font-size: 1.45rem;
+  }
   
   .player-details h2 {
     font-size: 1.3rem;
@@ -5932,6 +6057,24 @@ export default {
   .player-header {
     margin-bottom: 15px;
     gap: 8px;
+  }
+
+  .waiting-balance-bar {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+  }
+
+  .waiting-balance-label {
+    font-size: 0.78rem;
+  }
+
+  .waiting-balance-value {
+    font-size: 1.3rem;
+  }
+
+  .waiting-balance-refresh {
+    width: 36px;
+    height: 36px;
   }
   
   .player-details h2 {
