@@ -4862,6 +4862,32 @@ export default {
 .waiting-room.with-nav {
   padding-top: 100px;
   align-items: flex-start;
+  justify-content: center;
+}
+
+@media (min-width: 992px) {
+  .waiting-room.with-nav {
+    padding-top: 110px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .waiting-room.with-nav .waiting-container {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .waiting-balance-bar {
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .waiting-balance-content {
+    align-items: center;
+    text-align: center;
+    flex: 1;
+  }
 }
 
 @media (max-width: 991px) {

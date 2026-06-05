@@ -48,9 +48,7 @@
                 display: block !important;
                 visibility: visible !important;
                 opacity: 1 !important;
-                position: relative !important;
-                left: auto !important;
-                top: auto !important;
+                position: absolute !important;
                 background: transparent !important;
             }
         `;
