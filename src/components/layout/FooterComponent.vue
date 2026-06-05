@@ -7,16 +7,16 @@
                   <div class="logo mb-3 mb-md-0"><router-link to="/"><img :src="getImageUrl('img_31.png')" alt="Dominues"></router-link></div>
                   <ul class="footer-links d-flex flex-wrap justify-content-center">
                       <li>
-                        <router-link class="nav-link" :to="gamesLink" @click="handleSectionClick('games', $event)">Juegos</router-link>
+                        <router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: isGamesNavActive }" :to="gamesLink" @click="handleSectionClick('games', $event)">Juegos</router-link>
                       </li>
                       <li>
-                        <router-link class="nav-link" :class="{ active: $route.path === '/faq' }" :to="faqLink" @click="handleSectionClick('faq', $event)">Preguntas Frecuentes</router-link>
+                        <router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/faq' }" :to="faqLink" @click="handleSectionClick('faq', $event)">Preguntas Frecuentes</router-link>
                       </li>
-                      <li><router-link class="nav-link" :class="{ active: $route.path === '/privacy' }" to="/privacy">Privacidad</router-link></li>
-                      <li><router-link class="nav-link" :class="{ active: $route.path === '/terms' }" to="/terms">Términos y Condiciones</router-link></li>
-                      <li><router-link class="nav-link" :class="{ active: $route.path === '/responsible-gambling' }" to="/responsible-gambling">Juego Responsable</router-link></li>
-                      <li><router-link class="nav-link" :class="{ active: $route.path === '/aml' }" to="/aml">AML</router-link></li>
-                      <li><router-link class="nav-link" :class="{ active: $route.path === '/contact' }" to="/contact">Contacto</router-link></li>
+                      <li><router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/privacy' }" to="/privacy">Privacidad</router-link></li>
+                      <li><router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/terms' }" to="/terms">Términos y Condiciones</router-link></li>
+                      <li><router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/responsible-gambling' }" to="/responsible-gambling">Juego Responsable</router-link></li>
+                      <li><router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/aml' }" to="/aml">AML</router-link></li>
+                      <li><router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/contact' }" to="/contact">Contacto</router-link></li>
                   </ul>
               </div>
           </div>
@@ -51,6 +51,13 @@ export default {
     },
     faqLink() {
       return getFaqLink()
+    },
+    isGamesNavActive() {
+      if (this.isAuthenticated) {
+        return this.$route.path === '/dashboard'
+      }
+      const hash = this.$route.hash || ''
+      return this.$route.path === '/' && hash === '#games'
     }
   },
   methods: {

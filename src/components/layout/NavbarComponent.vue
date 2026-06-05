@@ -14,27 +14,27 @@
             <!-- Menú para usuarios no autenticados -->
             <template v-if="!isAuthenticated">
               <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/' }" to="/">Inicio</router-link>
+                <router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: isHomeNavActive }" to="/">Inicio</router-link>
               </li>
               <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/' }" :to="aboutLink" @click="handleSectionClick('about', $event)">Acerca de</router-link>
+                <router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: isAboutNavActive }" :to="aboutLink" @click="handleSectionClick('about', $event)">Acerca de</router-link>
               </li>
               <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/' || $route.path === '/dashboard' }" :to="gamesLink" @click="handleSectionClick('games', $event)">Juegos <span class="badge badge--sm badge--base text-dark">NUEVO</span></router-link>
+                <router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: isGamesNavActive }" :to="gamesLink" @click="handleSectionClick('games', $event)">Juegos <span class="badge badge--sm badge--base text-dark">NUEVO</span></router-link>
               </li>
               <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/faq' }" :to="faqLink" @click="handleSectionClick('faq', $event)">Preguntas Frecuentes</router-link>
+                <router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/faq' }" :to="faqLink" @click="handleSectionClick('faq', $event)">Preguntas Frecuentes</router-link>
               </li>
               
               <!-- <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/contact' }" to="/contact">Contacto</router-link>
+                <router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/contact' }" to="/contact">Contacto</router-link>
               </li> -->
 
               <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/login' }" to="/login">Iniciar Sesión</router-link>
+                <router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/login' }" to="/login">Iniciar Sesión</router-link>
               </li>
               <li>
-                <router-link class="nav-link" :class="{ active: $route.path === '/register' }" to="/register">Registro</router-link>
+                <router-link class="nav-link" active-class="" exact-active-class="" :class="{ active: $route.path === '/register' }" to="/register">Registro</router-link>
               </li>
               <li class="mobile-only guest-menu-cta">
                 <router-link to="/register" class="cmn--btn active btn--md w-100" @click="handleMenuItemClick">Regístrate</router-link>
@@ -201,6 +201,21 @@ export default {
     },
     faqLink() {
       return getFaqLink()
+    },
+    currentRouteHash() {
+      return this.$route.hash || ''
+    },
+    isHomeNavActive() {
+      return this.$route.path === '/' && !this.currentRouteHash
+    },
+    isAboutNavActive() {
+      return this.$route.path === '/' && this.currentRouteHash === '#about'
+    },
+    isGamesNavActive() {
+      if (this.isAuthenticated) {
+        return this.$route.path === '/dashboard'
+      }
+      return this.$route.path === '/' && this.currentRouteHash === '#games'
     }
   },
   watch: {
