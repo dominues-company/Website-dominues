@@ -271,81 +271,81 @@
 
       <!-- Contenedor del juego -->
       <div v-if="gameStarted" ref="gameContainer" class="game-container">
-      <div class="game-controls">
-        <button
-          type="button"
-          @click="toggleGameSound"
-          class="control-btn"
-          :class="{ active: !isGameMuted }"
-          :title="isGameMuted ? 'Activar sonido del juego' : 'Silenciar sonido del juego'"
-        >
-          <i class="fas" :class="isGameMuted ? 'fa-volume-mute' : 'fa-volume-up'"></i>
-        </button>
-      </div>
-      <iframe
-          ref="gameFrame"
-        :src="gameUrl"
-        frameborder="0"
-        class="game-iframe"
-        loading="eager"
-        referrerpolicy="no-referrer-when-downgrade"
-        @load="onGameLoad"
-      ></iframe>
-      
-      <!-- Loading Overlay - Oculta el juego mientras espera jugadores o está configurando -->
-      <div v-if="showLoadingOverlay || isConnecting" class="game-loading-overlay">
-        <div class="loading-overlay-content">
-          <div class="loading-spinner-large"></div>
-          <!-- 🔧 FIX: Siempre mostrar connectingMessage cuando isConnecting es true -->
-          <h2 v-if="isConnecting">{{ connectingMessage }}</h2>
-          <h2 v-else>{{ loadingOverlayMessage }}</h2>
-          
-          <!-- 🔧 FIX MOBILE: Botón de reintentar cuando hay error de conexión -->
-          <button 
-            v-if="connectionError" 
-            @click="retryConnection" 
-            class="retry-btn"
-            style="margin-top: 20px; padding: 12px 24px; background: #FF6B35; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;"
-          >
-            🔄 Reintentar Conexión
-          </button>
-          <p v-if="roomCode && !isConnecting" class="overlay-room-code">
-            Código de Sala: <strong>{{ roomCode }}</strong>
-          </p>
-          <!-- 🔧 FIX: Mostrar información adicional de matchmaking -->
-          <p v-if="shouldShowMatchmakingInfo" class="matchmaking-info">
-            Jugadores en sala: {{ matchmakingStatus.currentPlayers || 1 }}/{{ matchmakingStatus.expectedPlayers }}
-          </p>
-          <div class="waiting-dots">
-            <span></span>
-            <span></span>
-            <span></span>
+        <div ref="gameViewport" class="game-viewport">
+          <iframe
+            ref="gameFrame"
+            :src="gameUrl"
+            frameborder="0"
+            class="game-iframe"
+            loading="eager"
+            referrerpolicy="no-referrer-when-downgrade"
+            @load="onGameLoad"
+          ></iframe>
+
+          <div class="game-controls">
+            <button
+              type="button"
+              @click="toggleGameSound"
+              class="control-btn"
+              :class="{ active: !isGameMuted }"
+              :title="isGameMuted ? 'Activar sonido del juego' : 'Silenciar sonido del juego'"
+            >
+              <i class="fas" :class="isGameMuted ? 'fa-volume-mute' : 'fa-volume-up'"></i>
+            </button>
           </div>
+
+          <!-- Loading Overlay - Oculta el juego mientras espera jugadores o está configurando -->
+          <div v-if="showLoadingOverlay || isConnecting" class="game-loading-overlay">
+            <div class="loading-overlay-content">
+              <div class="loading-spinner-large"></div>
+              <h2 v-if="isConnecting">{{ connectingMessage }}</h2>
+              <h2 v-else>{{ loadingOverlayMessage }}</h2>
+
+              <button
+                v-if="connectionError"
+                @click="retryConnection"
+                class="retry-btn"
+                style="margin-top: 20px; padding: 12px 24px; background: #FF6B35; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;"
+              >
+                🔄 Reintentar Conexión
+              </button>
+              <p v-if="roomCode && !isConnecting" class="overlay-room-code">
+                Código de Sala: <strong>{{ roomCode }}</strong>
+              </p>
+              <p v-if="shouldShowMatchmakingInfo" class="matchmaking-info">
+                Jugadores en sala: {{ matchmakingStatus.currentPlayers || 1 }}/{{ matchmakingStatus.expectedPlayers }}
+              </p>
+              <div class="waiting-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón de Cancelar - Solo visible durante la carga (excepto si el código ya fue validado) -->
+          <button
+            v-if="(isConnecting || showLoadingOverlay) && !roomCodeValidated"
+            @click="handleCancelSearch"
+            class="surrender-btn cancel-btn"
+            :disabled="isCancelling"
+          >
+            <i class="fas fa-times"></i>
+            <span>{{ isCancelling ? 'Cancelando...' : 'Cancelar' }}</span>
+          </button>
+
+          <!-- Botón de Rendirse - Visible cuando el juego ya está iniciado o cuando el código ya fue validado -->
+          <button
+            v-if="(gameStarted && !isConnecting && !showLoadingOverlay) || roomCodeValidated"
+            @click="handleSurrender"
+            class="surrender-btn"
+            :disabled="isSurrendering"
+          >
+            <i class="fas fa-flag"></i>
+            <span>{{ isSurrendering ? 'Rindiéndose...' : 'Rendirse' }}</span>
+          </button>
         </div>
       </div>
-
-      <!-- Botón de Cancelar - Solo visible durante la carga (excepto si el código ya fue validado) -->
-      <button 
-        v-if="(isConnecting || showLoadingOverlay) && !roomCodeValidated"
-        @click="handleCancelSearch" 
-        class="surrender-btn cancel-btn"
-        :disabled="isCancelling"
-      >
-        <i class="fas fa-times"></i>
-        <span>{{ isCancelling ? 'Cancelando...' : 'Cancelar' }}</span>
-      </button>
-
-      <!-- Botón de Rendirse - Visible cuando el juego ya está iniciado o cuando el código ya fue validado -->
-      <button 
-        v-if="(gameStarted && !isConnecting && !showLoadingOverlay) || roomCodeValidated"
-        @click="handleSurrender" 
-        class="surrender-btn"
-        :disabled="isSurrendering"
-      >
-        <i class="fas fa-flag"></i>
-        <span>{{ isSurrendering ? 'Rindiéndose...' : 'Rendirse' }}</span>
-      </button>
-    </div>
     </div>
 
       <!-- Overlays de invitación fuera de .waiting-container: backdrop-filter del contenedor rompe position:fixed en móvil -->
@@ -4128,12 +4128,18 @@ export default {
       const container = iframe.parentElement;
       if (!container) return;
 
-      const height = Math.round(container.getBoundingClientRect().height);
+      const rect = container.getBoundingClientRect();
+      const height = Math.round(rect.height);
+      const width = Math.round(rect.width);
       if (height <= 0) return;
 
       iframe.style.height = `${Math.max(1, height - 1)}px`;
+      if (width > 0) {
+        iframe.style.width = `${Math.max(1, width - 1)}px`;
+      }
       requestAnimationFrame(() => {
         iframe.style.height = '100%';
+        iframe.style.width = '100%';
         try {
           iframe.contentWindow?.dispatchEvent(new Event('resize'));
         } catch (_) {
@@ -4148,7 +4154,7 @@ export default {
       this.teardownGameContainerResizeObserver();
 
       this.$nextTick(() => {
-        const container = this.$refs.gameContainer;
+        const container = this.$refs.gameViewport || this.$refs.gameContainer;
         if (!container) return;
 
         this._gameContainerResizeObserver = new ResizeObserver(() => {
@@ -5653,6 +5659,36 @@ export default {
   max-height: 100dvh;
   border: none;
   box-shadow: none;
+}
+
+.game-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (min-width: 992px) {
+  .waiting-room.game-playing .game-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+  }
+
+  .waiting-room.game-playing .game-viewport {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 1280 / 768;
+    margin: 0 auto;
+  }
+
+  .waiting-room.game-playing .game-iframe {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .game-controls {
