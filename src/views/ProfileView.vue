@@ -1,8 +1,14 @@
 <template>
   <div class="profile-page">
+    <div class="profile-bg" aria-hidden="true"></div>
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-lg-8">
+          <div class="profile-page-title">
+            <p>Mi cuenta</p>
+            <h1>Perfil de <span>Jugador</span></h1>
+          </div>
+
           <!-- Header del perfil -->
           <div class="profile-header">
             <div class="profile-avatar">
@@ -510,13 +516,12 @@ export default {
     },
     
     formatCurrency(amount) {
-      if (!amount) return 'Rup 0.00';
+      if (!amount) return 'DCoins 0.00';
       const formatted = new Intl.NumberFormat('es-VE', {
-        style: 'currency',
-        currency: 'USD'
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       }).format(parseFloat(amount));
-      // Reemplazar USD por Rup
-      return formatted.replace('USD', 'Rup').replace('US$', 'Rup').replace('$', 'Rup');
+      return `DCoins ${formatted}`;
     },
     
     formatDate(dateString) {
@@ -533,18 +538,87 @@ export default {
 
 <style scoped>
 .profile-page {
-  margin-top: 120px;
-  padding: 5rem 0 !important;
-  min-height: 80vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-deep: #0d0a14;
+  --bg-card: #1a1528;
+  --bg-card-soft: #211a33;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-glow: rgba(201, 168, 76, 0.28);
+  --gold: #c9a84c;
+  --gold-light: #e8c97a;
+  --gold-dim: rgba(201, 168, 76, 0.14);
+  --green: #3ecf82;
+  --green-dim: rgba(62, 207, 130, 0.14);
+  --text-primary: #f0ecff;
+  --text-muted: rgba(240, 236, 255, 0.46);
+  --text-label: rgba(240, 236, 255, 0.66);
+  --accent: #7c5cbf;
+  --accent-glow: rgba(124, 92, 191, 0.26);
+
+  position: relative;
+  margin-top: 0;
+  padding: 112px 0 56px !important;
+  min-height: 100vh;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+.profile-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% -10%, rgba(124, 92, 191, 0.2) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 110%, rgba(201, 168, 76, 0.1) 0%, transparent 55%);
+}
+
+.profile-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+.profile-page .container {
+  position: relative;
+  z-index: 1;
+}
+
+.profile-page-title {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.profile-page-title p {
+  margin: 0 0 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.profile-page-title h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 7vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.profile-page-title h1 span {
+  color: var(--gold-light);
 }
 
 .profile-header {
-  background: white;
-  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(32, 27, 52, 0.96), rgba(21, 17, 33, 0.96));
+  border: 1px solid var(--border);
+  border-radius: 24px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
   display: flex;
   align-items: center;
   gap: 2rem;
@@ -558,8 +632,8 @@ export default {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
 }
 
 .profile-avatar {
@@ -570,13 +644,13 @@ export default {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: radial-gradient(circle at 30% 25%, var(--gold-light), var(--gold) 42%, #6b4a18 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 3rem;
-  color: white;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  color: #120d1e;
+  box-shadow: 0 16px 30px rgba(201, 168, 76, 0.18);
 }
 
 .btn-edit-avatar {
@@ -586,9 +660,9 @@ export default {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #28a745;
-  border: none;
-  color: white;
+  background: var(--green);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  color: #07130c;
   cursor: pointer;
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
@@ -596,7 +670,7 @@ export default {
 
 .btn-edit-avatar:hover {
   transform: scale(1.1);
-  background: #218838;
+  background: #62e9a0;
 }
 
 .profile-info {
@@ -612,14 +686,14 @@ export default {
 
 .profile-info h1 {
   margin: 0;
-  color: #333;
+  color: var(--text-primary);
   font-size: 2.5rem;
   font-weight: 700;
   line-height: 1.2;
 }
 
 .profile-email {
-  color: #666;
+  color: var(--text-muted);
   font-size: 1.1rem;
   margin: 0.5rem 0 0;
   font-weight: 500;
@@ -637,65 +711,85 @@ export default {
   border-radius: 20px;
   font-weight: 600;
   font-size: 0.9rem;
+  border: 1px solid var(--border);
 }
 
 .badge--base {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  background: var(--gold-dim);
+  color: var(--gold-light);
+  border-color: var(--border-glow);
 }
 
 .badge--success {
-  background: #28a745;
-  color: white;
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: rgba(62, 207, 130, 0.28);
 }
 
 .profile-stats {
   margin-bottom: 2rem;
 }
 
+.profile-stats .row {
+  row-gap: 1rem;
+}
+
+.profile-stats .col-md-4 {
+  display: flex;
+}
+
 .stat-card {
-  background: white;
-  border-radius: 15px;
+  background: linear-gradient(145deg, rgba(32, 27, 52, 0.95), rgba(24, 19, 38, 0.98));
+  border: 1px solid var(--border);
+  border-radius: 18px;
   padding: 1.5rem;
   text-align: center;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 12px 28px rgba(0, 0, 0, 0.22);
+  transition: transform 0.3s ease, border-color 0.3s ease;
+  width: 100%;
+  height: 100%;
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
+  border-color: var(--border-glow);
 }
 
 .stat-icon {
   font-size: 2.5rem;
-  color: #667eea;
+  color: var(--gold-light);
   margin-bottom: 1rem;
 }
 
 .stat-content h3 {
   margin: 0;
-  color: #333;
+  color: var(--text-primary);
   font-size: 1.8rem;
   font-weight: 700;
 }
 
 .stat-content p {
   margin: 0.5rem 0 0;
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .card {
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  background: linear-gradient(145deg, rgba(32, 27, 52, 0.94), rgba(18, 14, 30, 0.98));
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
   margin-bottom: 2rem;
   overflow: hidden;
 }
 
 .card-header {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  background: rgba(201, 168, 76, 0.09);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
   padding: 1.5rem;
   display: flex;
   justify-content: space-between;
@@ -706,6 +800,7 @@ export default {
   margin: 0;
   font-size: 1.3rem;
   font-weight: 600;
+  color: var(--gold-light);
 }
 
 .card-body {
@@ -719,23 +814,25 @@ export default {
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #333;
+  color: var(--text-label);
   font-weight: 600;
 }
 
 .form-control {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e9ecef;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
 }
 
 .form-control:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--gold-light);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.12);
 }
 
 .form-control.is-invalid {
@@ -769,22 +866,23 @@ export default {
 }
 
 .btn--base {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  color: #120d1e;
 }
 
 .btn--base:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(201, 168, 76, 0.24);
 }
 
 .btn--secondary {
-  background: #6c757d;
-  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
 .btn--secondary:hover {
-  background: #5a6268;
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .btn--sm {
@@ -806,7 +904,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 0;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border);
 }
 
 .info-row:last-child {
@@ -817,24 +915,24 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #666;
+  color: var(--text-label);
   font-weight: 600;
 }
 
 .info-value {
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .action-btn {
   width: 100%;
   padding: 1.5rem;
-  background: white;
-  border: 2px solid #e9ecef;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--border);
   border-radius: 15px;
   text-align: center;
   text-decoration: none;
-  color: #333;
+  color: var(--text-primary);
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -843,10 +941,10 @@ export default {
 }
 
 .action-btn:hover {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: var(--border-glow);
+  color: var(--gold-light);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.2);
 }
 
 .action-btn i {
@@ -879,7 +977,7 @@ export default {
 
 @media (max-width: 768px) {
   .profile-page {
-    padding: 0.5rem 0 !important;
+    padding: 96px 0 40px !important;
   }
   
   .profile-header {
@@ -919,7 +1017,7 @@ export default {
 
 @media (max-width: 480px) {
   .profile-page {
-    padding: 0.25rem 0 !important;
+    padding: 88px 0 32px !important;
   }
   
   .profile-header {
