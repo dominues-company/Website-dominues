@@ -607,6 +607,7 @@ export default {
       pendingRoomCodeToJoin: null, // Código de sala pendiente para enviar cuando el juego esté listo
       roomCodeValidated: false, // Indica si el código de invitado ya fue validado exitosamente en la base de datos
       currentMatchId: null,
+      matchAuthPromise: null,
       // Datos de las mesas del backend
       gameTables: [],
       serviceSuspended: false,
@@ -1893,34 +1894,44 @@ export default {
     },
 
     async waitForAuthorizedMatch(tableId) {
+      if (this.matchAuthPromise) {
+        return this.matchAuthPromise;
+      }
+
       const user = getUserData(this.$store, localStorage);
       const maxAttempts = 180;
 
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-          const response = await fetch(`${GAME_CONFIG.API_BASE_URL}/tables/${tableId}/match-status`, {
-            headers: {
-              'Accept': 'application/json',
-              'Authorization': `Bearer ${user.token || ''}`
-            }
-          });
+      this.matchAuthPromise = (async () => {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            const response = await fetch(`${GAME_CONFIG.API_BASE_URL}/tables/${tableId}/match-status`, {
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${user.token || ''}`
+              }
+            });
 
-          if (response.ok) {
-            const payload = await response.json();
-            const matchId = this.extractMatchId(payload);
-            if (payload?.status === 'matched' && matchId) {
-              console.log('✅ [WAITING-ROOM] Match autorizado por backend:', matchId);
-              return matchId;
+            if (response.ok) {
+              const payload = await response.json();
+              const matchId = this.extractMatchId(payload);
+              if (payload?.status === 'matched' && matchId) {
+                console.log('✅ [WAITING-ROOM] Match autorizado por backend:', matchId);
+                return matchId;
+              }
             }
+          } catch (error) {
+            console.warn('⚠️ [WAITING-ROOM] No se pudo consultar match-status:', error);
           }
-        } catch (error) {
-          console.warn('⚠️ [WAITING-ROOM] No se pudo consultar match-status:', error);
+
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
+        return null;
+      })();
 
-      return null;
+      const matchId = await this.matchAuthPromise;
+      this.matchAuthPromise = null;
+      return matchId;
     },
     
     buildGameUrl(mode) {
@@ -4105,6 +4116,19 @@ export default {
         // 🔧 FIX: Usar getConnectingMessage() que maneja modo invitación correctamente
         if (this.gameMode === 'online' || this.selectedTable?.type === 'online-2' || this.selectedTable?.type === 'online-4' || this.selectedTable?.type === 'invite') {
           this.connectingMessage = this.getConnectingMessage();
+        }
+
+        const tableContext = this.ensureSelectedTableDefaults();
+        const needsAuthorizedMatch = this.gameMode === 'online' && !this.inviteMode && tableContext?.id && !this.currentMatchId;
+        if (needsAuthorizedMatch) {
+          this.connectingMessage = 'Esperando rival autorizado...';
+          this.loadingOverlayMessage = this.connectingMessage;
+          this.waitForAuthorizedMatch(tableContext.id).then((matchId) => {
+            if (!matchId || this.currentMatchId) return;
+            this.currentMatchId = matchId;
+            console.log('✅ [WAITING-ROOM] Reenviando GAME_INIT con match autorizado:', matchId);
+            this.continueGameLoad();
+          });
         }
         
         if (this.pendingRoomCodeToJoin) {
