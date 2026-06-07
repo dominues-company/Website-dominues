@@ -1628,7 +1628,7 @@ export default {
           }
           
           if (!this.matchmakingStatus.currentPlayers || this.matchmakingStatus.currentPlayers === 0) {
-            return 'Preparando la mesa...';
+            return 'Esperando rival autorizado...';
           }
           
           // 🔧 FIX: Mensajes diferentes para modo INVITACIÓN vs modo ONLINE normal
@@ -1899,7 +1899,7 @@ export default {
       }
 
       const user = getUserData(this.$store, localStorage);
-      const maxAttempts = 180;
+      const maxAttempts = 60;
 
       this.matchAuthPromise = (async () => {
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -2058,8 +2058,9 @@ export default {
 
         if (isOnlineRandom && !this.currentMatchId) {
           console.error('❌ [WAITING-ROOM] No hay game_matchmaking_id autorizado para iniciar');
-          alert('No pudimos autorizar la partida. No se iniciará el juego sin registro válido.');
-          this.returnToTableSelection();
+          this.connectingMessage = 'No encontramos rival a tiempo. Cancelando búsqueda...';
+          this.loadingOverlayMessage = this.connectingMessage;
+          await this.handleCancelSearch({ skipConfirm: true });
           return;
         }
         
@@ -4189,13 +4190,17 @@ export default {
       });
     },
     
-    handleGameError(data) {
+    async handleGameError(data) {
       // Manejar errores del juego
       console.error('Error en el juego:', data);
       const message = data?.message || 'No pudimos iniciar la partida. Intenta nuevamente.';
       this.connectingMessage = message;
       this.loadingOverlayMessage = message;
       this.showLoadingOverlay = true;
+      if (data?.reason === 'matchmaking_timeout' && this.isSearchingForMatch()) {
+        await this.handleCancelSearch({ skipConfirm: true });
+        return;
+      }
       if (this.isConnecting || this.gameStarted) {
         alert(message);
         this.returnToTableSelection();
