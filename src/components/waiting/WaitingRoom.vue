@@ -2531,6 +2531,11 @@ export default {
         case 'MATCHMAKING_STATUS':
           this.handleMatchmakingStatus(data);
           break;
+        case 'MATCH_AUTH_PENDING':
+          this.connectingMessage = data?.message || 'Autorizando partida con el servidor...';
+          this.showLoadingOverlay = true;
+          this.loadingOverlayMessage = this.connectingMessage;
+          break;
         case 'ALL_PLAYERS_JOINED':
         case 'GAME_READY':
         case 'GAME_STARTING':
@@ -4163,6 +4168,14 @@ export default {
     handleGameError(data) {
       // Manejar errores del juego
       console.error('Error en el juego:', data);
+      const message = data?.message || 'No pudimos iniciar la partida. Intenta nuevamente.';
+      this.connectingMessage = message;
+      this.loadingOverlayMessage = message;
+      this.showLoadingOverlay = true;
+      if (this.isConnecting || this.gameStarted) {
+        alert(message);
+        this.returnToTableSelection();
+      }
       this.$emit('game-error', data);
     },
     
