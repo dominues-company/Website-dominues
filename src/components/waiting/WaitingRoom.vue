@@ -606,6 +606,7 @@ export default {
       friendRoomCode: '',
       pendingRoomCodeToJoin: null, // Código de sala pendiente para enviar cuando el juego esté listo
       roomCodeValidated: false, // Indica si el código de invitado ya fue validado exitosamente en la base de datos
+      currentMatchId: null,
       // Datos de las mesas del backend
       gameTables: [],
       serviceSuspended: false,
@@ -1377,6 +1378,7 @@ export default {
             throw new Error('No se pudo confirmar el descuento del saldo. Intenta nuevamente.');
           }
 
+          this.currentMatchId = this.extractMatchId(response.data);
           console.log('✅ [WAITING-ROOM] Unido exitosamente a la mesa:', response);
 
           // 🔧 FIX: Pausar música de fondo al confirmar juego
@@ -1866,6 +1868,60 @@ export default {
       
       return correctPlayersRoom;
     },
+
+    extractMatchId(payload = {}) {
+      const candidates = [
+        payload.match_id,
+        payload.matchmaking_id,
+        payload.room_id,
+        payload?.data?.match_id,
+        payload?.data?.matchmaking_id,
+        payload?.data?.room_id,
+        payload?.match?.id,
+        payload?.gameData?.matchId,
+        payload?.gameData?.matchmakingId
+      ];
+
+      for (const candidate of candidates) {
+        const parsed = parseInt(candidate, 10);
+        if (!Number.isNaN(parsed) && parsed > 0) {
+          return parsed;
+        }
+      }
+
+      return null;
+    },
+
+    async waitForAuthorizedMatch(tableId) {
+      const user = getUserData(this.$store, localStorage);
+      const maxAttempts = 180;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const response = await fetch(`${GAME_CONFIG.API_BASE_URL}/tables/${tableId}/match-status`, {
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${user.token || ''}`
+            }
+          });
+
+          if (response.ok) {
+            const payload = await response.json();
+            const matchId = this.extractMatchId(payload);
+            if (payload?.status === 'matched' && matchId) {
+              console.log('✅ [WAITING-ROOM] Match autorizado por backend:', matchId);
+              return matchId;
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ [WAITING-ROOM] No se pudo consultar match-status:', error);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      return null;
+    },
     
     buildGameUrl(mode) {
       const firstName = this.getFirstName(this.playerName);
@@ -1919,6 +1975,10 @@ export default {
       if (tableContext && tableContext.id) {
         params.append('tableId', tableContext.id.toString());
         params.append('tableName', tableContext.name || 'Mesa Desconocida');
+        if (this.currentMatchId) {
+          params.append('matchId', this.currentMatchId.toString());
+          params.append('matchmakingId', this.currentMatchId.toString());
+        }
         params.append('winPoints', (tableContext.win_points || 100).toString());
         params.append('winnerPayout', (tableContext.winner_payout || 0).toString());
         params.append('entryPrice', (tableContext.entry_price || 0).toString());
@@ -1964,7 +2024,7 @@ export default {
       });
     },
 
-    continueGameLoad() {
+    async continueGameLoad() {
       // Enviar datos al juego cuando esté cargado
       // 🔧 FIX: Usar $refs.gameFrame en lugar de this.gameFrame (que nunca se asigna)
       if (this.$refs.gameFrame && this.$refs.gameFrame.contentWindow) {
@@ -1976,6 +2036,19 @@ export default {
         
         if (!tableContext) {
           console.error('❌ [WAITING-ROOM] No hay mesa para enviar información al juego');
+          return;
+        }
+
+        const isOnlineRandom = gameMode === 'online' && !this.inviteMode;
+        if (isOnlineRandom && !this.currentMatchId) {
+          this.connectingMessage = 'Buscando partida autorizada...';
+          this.currentMatchId = await this.waitForAuthorizedMatch(tableContext.id);
+        }
+
+        if (isOnlineRandom && !this.currentMatchId) {
+          console.error('❌ [WAITING-ROOM] No hay game_matchmaking_id autorizado para iniciar');
+          alert('No pudimos autorizar la partida. No se iniciará el juego sin registro válido.');
+          this.returnToTableSelection();
           return;
         }
         
@@ -2009,6 +2082,9 @@ export default {
           tableId: tableContext?.id,
           tableName: tableContext?.name,
           tableType: tableContext?.type,
+          matchId: this.currentMatchId,
+          matchmakingId: this.currentMatchId,
+          requiresMatchmaking: gameMode === 'online' && !this.inviteMode,
           winPoints: tableContext?.win_points,
           entryPrice: tableContext?.entry_price,
           // 🔧 FIX: Agregar sessionId para aislar cada partida
@@ -2074,6 +2150,7 @@ export default {
       this.friendRoomCode = '';
       this.pendingRoomCodeToJoin = null;
       this.roomCodeValidated = false;
+      this.currentMatchId = null;
       this.isInviteGuest = false; // 🔧 FIX: Reset flag de invitado
       
       // === RESET DE ESTADO DE CONFIRMACIÓN ===
@@ -2316,14 +2393,16 @@ export default {
           alert('No se pudo confirmar el descuento del saldo. Intenta nuevamente.');
           return;
         }
+
+        this.currentMatchId = this.extractMatchId(result);
           
-          // Marcar que el código ya fue validado exitosamente
-          // A partir de este punto, se debe mostrar el botón "Rendirse" en lugar de "Cancelar"
-          this.roomCodeValidated = true;
-          console.log('✅ [WAITING-ROOM] Código validado - se mostrará botón "Rendirse"');
+        // Marcar que el código ya fue validado exitosamente
+        // A partir de este punto, se debe mostrar el botón "Rendirse" en lugar de "Cancelar"
+        this.roomCodeValidated = true;
+        console.log('✅ [WAITING-ROOM] Código validado - se mostrará botón "Rendirse"');
           
-          // Actualizar saldo si viene en la respuesta
-          this.updateBalanceFromPayload(result);
+        // Actualizar saldo si viene en la respuesta
+        this.updateBalanceFromPayload(result);
           
         } catch (error) {
           console.error('❌ [WAITING-ROOM] Error al unirse a sala:', error);
@@ -2833,7 +2912,11 @@ export default {
       if (this.$refs.gameFrame && this.$refs.gameFrame.contentWindow) {
         this.$refs.gameFrame.contentWindow.postMessage({
           type: 'JOIN_ROOM_WITH_CODE',
-          data: { roomCode: roomCode }
+          data: {
+            roomCode: roomCode,
+            matchId: this.currentMatchId,
+            matchmakingId: this.currentMatchId
+          }
         }, '*');
         
         console.log('✅ [WAITING-ROOM] Mensaje JOIN_ROOM_WITH_CODE enviado');
@@ -2879,15 +2962,22 @@ export default {
         const betAmounts = calculateBetAmounts(entryPrice, gameData.isWinner, winnerPayout);
         
         // 🔧 FIX: Construir datos base
+        const authorizedMatchId = this.extractMatchId(gameData) || this.currentMatchId;
         const baseResultData = {
           tableId: tableId,
+          match_id: authorizedMatchId,
+          matchmaking_id: authorizedMatchId,
           userId: user.id,
           betAmount: betAmounts.betAmount,
           totalPot: betAmounts.totalPot,
           houseFee: betAmounts.houseFee,
           winnerAmount: betAmounts.winnerAmount,
           isWinner: gameData.isWinner,
-          gameData: gameData.gameData || gameData,
+          gameData: {
+            ...(gameData.gameData || gameData),
+            matchId: authorizedMatchId,
+            matchmakingId: authorizedMatchId
+          },
           playerName: gameData.playerName,
           roomCode: gameData.roomCode || this.roomCode || (gameData.gameData && gameData.gameData.roomCode),
           tableName: safeTable?.name || 'Mesa Online',
