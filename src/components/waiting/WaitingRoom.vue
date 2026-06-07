@@ -313,7 +313,7 @@
                 Código de Sala: <strong>{{ roomCode }}</strong>
               </p>
               <p v-if="shouldShowMatchmakingInfo" class="matchmaking-info">
-                Jugadores en sala: {{ matchmakingStatus.currentPlayers || 1 }}/{{ matchmakingStatus.expectedPlayers }}
+                Jugadores en sala: {{ displayedMatchmakingPlayers }}/{{ matchmakingStatus.expectedPlayers }}
               </p>
               <div class="waiting-dots">
                 <span></span>
@@ -727,6 +727,14 @@ export default {
              this.gameMode === 'online' && 
              this.matchmakingStatus && 
              this.matchmakingStatus.expectedPlayers > 0;
+    },
+
+    displayedMatchmakingPlayers() {
+      const currentPlayers = parseInt(this.matchmakingStatus?.currentPlayers, 10);
+      if (!Number.isNaN(currentPlayers) && currentPlayers >= 0) {
+        return currentPlayers;
+      }
+      return 0;
     },
     
     // 🔧 FIX: Computed property para verificar si hay algún modal activo
@@ -1913,6 +1921,18 @@ export default {
 
             if (response.ok) {
               const payload = await response.json();
+              if (typeof payload?.waiting_players !== 'undefined') {
+                const waitingPlayers = parseInt(payload.waiting_players, 10);
+                if (!Number.isNaN(waitingPlayers)) {
+                  this.matchmakingStatus = {
+                    currentPlayers: waitingPlayers,
+                    expectedPlayers: this.playersRoom || this.matchmakingStatus.expectedPlayers || 2,
+                    playersNeeded: Math.max(0, (this.playersRoom || this.matchmakingStatus.expectedPlayers || 2) - waitingPlayers)
+                  };
+                  this.connectingMessage = this.getConnectingMessage();
+                }
+              }
+
               const matchId = this.extractMatchId(payload);
               if (payload?.status === 'matched' && matchId) {
                 console.log('✅ [WAITING-ROOM] Match autorizado por backend:', matchId);
