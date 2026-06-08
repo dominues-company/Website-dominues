@@ -2564,9 +2564,7 @@ export default {
           this.handleMatchmakingStatus(data);
           break;
         case 'MATCH_AUTH_PENDING':
-          this.connectingMessage = data?.message || 'Autorizando partida con el servidor...';
-          this.showLoadingOverlay = true;
-          this.loadingOverlayMessage = this.connectingMessage;
+          this.handleMatchAuthPending(data);
           break;
         case 'ALL_PLAYERS_JOINED':
         case 'GAME_READY':
@@ -4114,6 +4112,32 @@ export default {
         
         console.log('⚠️ [WAITING-ROOM] Advertencia de timeout mostrada:', warningMessage);
       }
+    },
+
+    async handleMatchAuthPending(data) {
+      this.connectingMessage = data?.message || 'Autorizando partida con el servidor...';
+      this.showLoadingOverlay = true;
+      this.loadingOverlayMessage = this.connectingMessage;
+
+      if (this.gameMode !== 'online' || this.inviteMode) {
+        return;
+      }
+
+      const tableContext = this.ensureSelectedTableDefaults();
+      if (!tableContext?.id) {
+        return;
+      }
+
+      if (!this.currentMatchId) {
+        const matchId = await this.waitForAuthorizedMatch(tableContext.id);
+        if (!matchId) {
+          return;
+        }
+        this.currentMatchId = matchId;
+      }
+
+      console.log('✅ [WAITING-ROOM] Reenviando GAME_INIT tras MATCH_AUTH_PENDING:', this.currentMatchId);
+      this.continueGameLoad();
     },
     
     handleAllPlayersJoined(data, messageType) {
