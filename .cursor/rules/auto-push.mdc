@@ -1,0 +1,17 @@
+---
+description: Push commits automatically after implementing fixes (user preference)
+alwaysApply: true
+---
+
+# Auto-push after changes
+
+When the user asks for fixes, features, or implementation work:
+
+1. After changes are complete and verified (lint/syntax OK), **commit and push** without waiting to be asked.
+2. Push **every repo** that was modified (e.g. Website-dominues, Game-dominues, backend).
+3. Use clear commit messages focused on the "why".
+4. Do **not** push secrets (`.env`, credentials).
+5. Do **not** force-push to main/master.
+6. Report the commit hash(es) and confirm push succeeded.
+
+Only skip push if the user explicitly says not to push, or if there are no changes to commit.
