@@ -2402,6 +2402,13 @@ export default {
           params.append('opponentType', 'human');
           params.append('inviteMode', 'true');
           params.append('maxPlayers', '2');
+          if (this.inviteMode && !this.isInviteGuest) {
+            params.append('autoCreateRoom', 'true');
+          }
+          const inviteRoomCode = this.pendingRoomCodeToJoin || this.roomCode || this.friendRoomCode;
+          if (inviteRoomCode) {
+            params.append('roomCode', String(inviteRoomCode).trim());
+          }
         }
         
         console.log('🎮 [WAITING-ROOM] Añadiendo datos de mesa a URL:', {
@@ -2481,7 +2488,10 @@ export default {
           gameType: GAME_CONFIG.DEFAULT_GAME_TYPE,
           points: GAME_CONFIG.DEFAULT_POINTS,
           autoStart: true, // Iniciar automáticamente
-          inviteMode: this.inviteMode, // Bandera para modo invitación
+          inviteMode: this.inviteMode || this.isInviteGuest,
+          autoCreateRoom: !!(this.inviteMode && !this.isInviteGuest),
+          isInviteGuest: !!this.isInviteGuest,
+          roomCode: (this.pendingRoomCodeToJoin || this.roomCode || this.friendRoomCode || '').toString().trim() || undefined,
           winnerPayout: tableContext?.winner_payout || 0, // Agregar premio al ganador
           // Datos adicionales de la mesa
           tableId: tableContext?.id,
@@ -2489,7 +2499,7 @@ export default {
           tableType: tableContext?.type,
           matchId: this.currentMatchId,
           matchmakingId: this.currentMatchId,
-          requiresMatchmaking: gameMode === 'online' && !this.inviteMode,
+          requiresMatchmaking: gameMode === 'online' && !this.inviteMode && !this.isInviteGuest,
           winPoints: tableContext?.win_points,
           entryPrice: tableContext?.entry_price,
           // 🔧 FIX: Agregar sessionId para aislar cada partida
