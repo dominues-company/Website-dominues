@@ -24,7 +24,7 @@
 
     <div class="waiting-container" :class="{ 'game-active': gameStarted }">
       <!-- Saldo visible al elegir mesa -->
-      <div v-if="!gameStarted" class="waiting-balance-bar">
+      <div v-if="!isLobbyHidden" class="waiting-balance-bar">
         <div class="waiting-balance-content">
           <span class="waiting-balance-label">
             <i class="fas fa-coins"></i>
@@ -48,7 +48,7 @@
       </div>
 
       <!-- Header con información del jugador (oculto en partida para dar espacio al tablero) -->
-      <div v-if="!gameStarted" class="player-header">
+      <div v-if="!isLobbyHidden" class="player-header">
         <div class="player-info">
           <div class="player-avatar">
             <i class="fas fa-user"></i>
@@ -66,7 +66,7 @@
         </div>
 
       <!-- Formulario de entrada -->
-      <div v-if="!gameStarted && !serviceSuspended" class="entry-form">
+      <div v-if="!isLobbyHidden && !serviceSuspended" class="entry-form">
         <div class="game-modes">
           <h3 class="modes-title">Elige tu Mesa de Juego</h3>
           <p class="modes-subtitle">Selecciona donde quieres jugar</p>
@@ -263,12 +263,6 @@
         </button>
       </div>
 
-      <!-- Estado de conexión (antes de cargar el iframe) -->
-      <div v-if="isConnecting && !gameStarted" class="connecting-state">
-        <div class="loading-spinner"></div>
-        <p class="connecting-text">{{ connectingMessage }}</p>
-      </div>
-
       <!-- Contenedor del juego -->
       <div v-if="gameStarted" ref="gameContainer" class="game-container">
         <div ref="gameViewport" class="game-viewport">
@@ -347,6 +341,32 @@
         </div>
       </div>
     </div>
+
+      <!-- Overlay pantalla completa antes del iframe (matchmaking / espera rival) -->
+      <div v-if="isPreMatchOverlayVisible" class="matchmaking-screen-overlay">
+        <div class="loading-overlay-content matchmaking-screen-content">
+          <div class="loading-spinner-large"></div>
+          <h2>{{ connectingMessage }}</h2>
+          <p v-if="shouldShowMatchmakingInfo" class="matchmaking-info">
+            Jugadores en sala: {{ displayedMatchmakingPlayers }}/{{ matchmakingStatus.expectedPlayers }}
+          </p>
+          <div class="waiting-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <button
+            v-if="isOnlineRandomMatchmaking() && !roomCodeValidated"
+            type="button"
+            class="prematch-cancel-btn"
+            :disabled="isCancelling"
+            @click="handleCancelSearch"
+          >
+            <i class="fas fa-times"></i>
+            {{ isCancelling ? 'Cancelando...' : 'Cancelar búsqueda' }}
+          </button>
+        </div>
+      </div>
 
       <!-- Overlays de invitación fuera de .waiting-container: backdrop-filter del contenedor rompe position:fixed en móvil -->
       <!-- Modal de elección para invitación -->
@@ -763,6 +783,14 @@ export default {
 
     isGameViewportActive() {
       return this.gameStarted && !this.isConnecting && !this.showLoadingOverlay;
+    },
+
+    isLobbyHidden() {
+      return this.isConnecting || this.gameStarted;
+    },
+
+    isPreMatchOverlayVisible() {
+      return this.isConnecting && !this.gameStarted && !this.serviceSuspended;
     },
 
     userBalanceAmount() {
@@ -1638,6 +1666,14 @@ export default {
           // 1. El juego (iframe) esté cargado (isGameReady = true)
           // 2. Y tengamos datos reales del servidor (currentPlayers > 0)
           if (!this.isGameReady) {
+            if (!this.gameStarted) {
+              const expectedPlayers = this.matchmakingStatus.expectedPlayers || this.playersRoom || 2;
+              const waitingPlayers = this.matchmakingStatus.currentPlayers || 0;
+              if (waitingPlayers > 0) {
+                return `Esperando rivales (${waitingPlayers}/${expectedPlayers})...`;
+              }
+              return 'Esperando rivales en la mesa...';
+            }
             return 'Cargando juego...';
           }
           
@@ -1973,7 +2009,9 @@ export default {
       }
 
       this.isConnecting = true;
-      this.connectingMessage = this.getConnectingMessage();
+      this.showLoadingOverlay = true;
+      this.connectingMessage = 'Esperando rivales en la mesa...';
+      this.loadingOverlayMessage = this.connectingMessage;
       this.scrollWaitingViewToTop();
       this.startMatchmakingMessageUpdater();
       this.startMatchmakingWatchdog();
@@ -5895,31 +5933,60 @@ export default {
   font-size: 1.2rem;
 }
 
-/* Estado de conexión */
-.connecting-state {
-  padding: 60px 40px;
-  text-align: center;
-}
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(255, 107, 53, 0.2);
-  border-top: 4px solid #ff6b35;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 30px;
-}
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-.connecting-text {
-  color: #f5f5f7;
-  font-size: 1.2rem;
-  font-weight: 600;
+/* Overlay fijo centrado: visible en desktop sin hacer scroll */
+.matchmaking-screen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(45, 27, 105, 0.97) 0%, rgba(74, 44, 122, 0.97) 50%, rgba(107, 70, 193, 0.97) 100%);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.matchmaking-screen-content {
+  width: min(520px, 100%);
+}
+
+.matchmaking-screen-content h2 {
+  font-size: clamp(1.25rem, 2.5vw, 2rem);
+  line-height: 1.35;
+  margin: 16px 0 8px;
+}
+
+.prematch-cancel-btn {
+  margin-top: 24px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(234, 88, 12, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prematch-cancel-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(234, 88, 12, 0.45);
+}
+
+.prematch-cancel-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* Contenedor del juego */
