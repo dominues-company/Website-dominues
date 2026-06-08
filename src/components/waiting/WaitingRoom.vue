@@ -683,6 +683,7 @@ export default {
       
       // 🔧 FIX: Interval para actualizar mensaje de matchmaking
       matchmakingMessageInterval: null,
+      socketJoinNudgeInterval: null,
       
       // 🔧 FIX: Detección de fallo de carga
       iframeLoadTimeout: null,
@@ -750,7 +751,10 @@ export default {
              this.matchmakingStatus.expectedPlayers <= 0) {
         return false;
       }
-      // Ocultar 0/2 engañoso mientras el iframe carga tras match de Laravel
+      // Solo mostrar contador cuando el juego cargó y hay match autorizado (conteo = socket)
+      if (this.isOnlineRandomMatchmaking()) {
+        return !!(this.currentMatchId && this.isGameReady);
+      }
       if (this.currentMatchId && !this.isGameReady && this.displayedMatchmakingPlayers === 0) {
         return false;
       }
@@ -1554,8 +1558,10 @@ export default {
       // 🔧 FIX: Para modos online, iniciar actualización periódica del mensaje de matchmaking
       if (this.gameMode === 'online') {
         this.startMatchmakingMessageUpdater();
-        // 🔧 FIX MOBILE: Iniciar watchdog para detectar desconexiones
         this.startMatchmakingWatchdog();
+        if (this.isOnlineRandomMatchmaking() && this.currentMatchId) {
+          this.startSocketJoinNudge();
+        }
       }
       
       // 🔧 OPTIMIZATION: Reducir delay inicial - el iframe comenzará a cargar inmediatamente
@@ -1683,55 +1689,47 @@ export default {
         case 'cpu':
           return 'Preparando partida contra La Banca...';
         case 'online': {
-          // 🔧 FIX: No mostrar conteo de jugadores hasta que el juego esté cargado Y en matchmaking
-          // Mostrar "Conectando..." hasta que:
-          // 1. El juego (iframe) esté cargado (isGameReady = true)
-          // 2. Y tengamos datos reales del servidor (currentPlayers > 0)
-          if (!this.isGameReady) {
-            if (!this.gameStarted) {
-              if (this.currentMatchId) {
-                return 'Rival encontrado. Abriendo juego...';
-              }
-              const expectedPlayers = this.matchmakingStatus.expectedPlayers || this.playersRoom || 2;
-              const waitingPlayers = this.matchmakingStatus.currentPlayers || 0;
-              if (waitingPlayers >= expectedPlayers) {
-                return 'Rival encontrado. Autorizando partida...';
-              }
-              if (waitingPlayers > 0) {
-                return `Buscando rival (${waitingPlayers}/${expectedPlayers})...`;
-              }
-              return 'Buscando rival en la mesa...';
-            }
-            return 'Cargando juego...';
-          }
-          
-          if (!this.matchmakingStatus.currentPlayers || this.matchmakingStatus.currentPlayers === 0) {
-            return 'Esperando rival autorizado...';
-          }
-          
-          // 🔧 FIX: Mensajes diferentes para modo INVITACIÓN vs modo ONLINE normal
           const isInviteMode = this.inviteMode || this.isInviteGuest || this.selectedTable?.type === 'invite';
-          
+
           if (isInviteMode) {
             return this.getInviteConnectingMessage();
           }
-          
-          // Modo ONLINE normal (2 o 4 jugadores aleatorios)
+
+          // Online random: un solo flujo — Laravel busca, socket conecta, mismo contador
+          if (this.isOnlineRandomMatchmaking()) {
+            const expected = this.matchmakingStatus.expectedPlayers || this.playersRoom || 2;
+            const connected = parseInt(this.matchmakingStatus.currentPlayers, 10) || 0;
+
+            if (!this.currentMatchId) {
+              if (connected >= expected) {
+                return 'Autorizando partida...';
+              }
+              if (connected > 0) {
+                return `Buscando rival (${connected}/${expected})...`;
+              }
+              return 'Buscando rival en la mesa...';
+            }
+
+            if (!this.isGameReady) {
+              return 'Conectando al juego...';
+            }
+
+            if (connected >= expected) {
+              return `Iniciando partida (${expected}/${expected})...`;
+            }
+            return `Esperando que rival conecte (${connected}/${expected})...`;
+          }
+
+          if (!this.isGameReady) {
+            return 'Cargando juego...';
+          }
           const expectedPlayers = this.matchmakingStatus.expectedPlayers || this.playersRoom || 2;
           const currentPlayers = this.matchmakingStatus.currentPlayers || 0;
           const playersNeeded = Math.max(0, expectedPlayers - currentPlayers);
-
-          if (this.currentMatchId && this.gameStarted) {
-            if (playersNeeded > 0) {
-              return `Esperando que rival conecte (${currentPlayers}/${expectedPlayers})...`;
-            }
+          if (playersNeeded > 0) {
             return `Conectando jugadores (${currentPlayers}/${expectedPlayers})...`;
           }
-
-          if (playersNeeded > 0) {
-            return `Buscando rival (${currentPlayers}/${expectedPlayers})...`;
-          }
-          return `¡Listo! Iniciando partida (${expectedPlayers}/${expectedPlayers})...`;
+          return `Iniciando partida (${expectedPlayers}/${expectedPlayers})...`;
         }
         default:
           return 'Iniciando juego...';
@@ -1797,6 +1795,45 @@ export default {
         console.log('🛑 [WAITING-ROOM] Deteniendo actualizador de mensaje de matchmaking');
         clearInterval(this.matchmakingMessageInterval);
         this.matchmakingMessageInterval = null;
+      }
+    },
+
+    nudgeIframeSocketJoin() {
+      if (!this.isOnlineRandomMatchmaking() || !this.currentMatchId) {
+        return;
+      }
+      if (this.$refs.gameFrame && this.$refs.gameFrame.contentWindow) {
+        this.$refs.gameFrame.contentWindow.postMessage({
+          type: 'FORCE_JOIN_AUTHORIZED_MATCH',
+          data: {
+            matchId: this.currentMatchId,
+            matchmakingId: this.currentMatchId
+          }
+        }, '*');
+      }
+    },
+
+    startSocketJoinNudge() {
+      this.stopSocketJoinNudge();
+      if (!this.isOnlineRandomMatchmaking() || !this.currentMatchId) {
+        return;
+      }
+      this.nudgeIframeSocketJoin();
+      this.socketJoinNudgeInterval = setInterval(() => {
+        const expected = this.matchmakingStatus.expectedPlayers || this.playersRoom || 2;
+        const connected = parseInt(this.matchmakingStatus.currentPlayers, 10) || 0;
+        if (connected >= expected) {
+          this.stopSocketJoinNudge();
+          return;
+        }
+        this.nudgeIframeSocketJoin();
+      }, 3000);
+    },
+
+    stopSocketJoinNudge() {
+      if (this.socketJoinNudgeInterval) {
+        clearInterval(this.socketJoinNudgeInterval);
+        this.socketJoinNudgeInterval = null;
       }
     },
     
@@ -2008,7 +2045,7 @@ export default {
                   expectedPlayers: expected,
                   playersNeeded: Math.max(0, expected - 1)
                 };
-                this.connectingMessage = 'Rival encontrado. Abriendo juego...';
+                this.connectingMessage = 'Conectando al juego...';
                 this.loadingOverlayMessage = this.connectingMessage;
                 return matchId;
               }
@@ -2085,7 +2122,7 @@ export default {
       }
 
       console.log('✅ [WAITING-ROOM] Match autorizado, cargando juego:', this.currentMatchId);
-      this.connectingMessage = 'Rival encontrado. Abriendo juego...';
+      this.connectingMessage = 'Conectando al juego...';
       this.loadingOverlayMessage = this.connectingMessage;
       this.clearGameSessionStorage();
       this.startActualGame();
@@ -2292,6 +2329,7 @@ export default {
       
       // Detener todos los intervalos y timeouts activos
       this.stopMatchmakingMessageUpdater();
+      this.stopSocketJoinNudge();
       
       if (this.iframeLoadTimeout) {
         clearTimeout(this.iframeLoadTimeout);
@@ -4251,6 +4289,9 @@ export default {
           console.log('   A:', newMessage);
           this.connectingMessage = newMessage;
           this.loadingOverlayMessage = newMessage;
+          if (socketPlayers >= data.expectedPlayers) {
+            this.stopSocketJoinNudge();
+          }
         }
         console.log('📊 [WAITING-ROOM] ==========================================');
           } else {
@@ -4364,6 +4405,11 @@ export default {
         // 🔧 FIX: Marcar que el juego está cargado y listo
         this.isGameReady = true;
         console.log('✅ [WAITING-ROOM] isGameReady = true');
+
+        if (this.isOnlineRandomMatchmaking() && this.currentMatchId) {
+          this.nudgeIframeSocketJoin();
+          this.startSocketJoinNudge();
+        }
         
         // 🔧 FIX: Usar getConnectingMessage() que maneja modo invitación correctamente
         if (this.gameMode === 'online' || this.selectedTable?.type === 'online-2' || this.selectedTable?.type === 'online-4' || this.selectedTable?.type === 'invite') {
@@ -4429,8 +4475,8 @@ export default {
       
       // 🔧 FIX: Detener actualizador de mensaje de matchmaking
       this.stopMatchmakingMessageUpdater();
-      // 🔧 FIX MOBILE: Detener watchdog cuando el juego inicia
       this.stopMatchmakingWatchdog();
+      this.stopSocketJoinNudge();
       
       // Ahora SÍ ocultar el overlay de configurando juego
       this.isConnecting = false;
@@ -5054,8 +5100,7 @@ export default {
       this.matchAuthPromise = null;
       this.stopMatchmakingMessageUpdater();
       this.stopMatchmakingWatchdog();
-      
-      this.isCancelling = true;
+      this.stopSocketJoinNudge();
       
       try {
         console.log('🔄 [WAITING-ROOM] Cancelando búsqueda de partida...');
