@@ -628,6 +628,7 @@ export default {
       roomCodeValidated: false, // Indica si el código de invitado ya fue validado exitosamente en la base de datos
       currentMatchId: null,
       matchAuthPromise: null,
+      matchSearchCancelled: false,
       // Datos de las mesas del backend
       gameTables: [],
       serviceSuspended: false,
@@ -1416,6 +1417,15 @@ export default {
           }
 
           this.currentMatchId = this.extractMatchId(response.data);
+          const waitingPlayers = parseInt(response.data?.waiting_players, 10);
+          const expectedPlayers = this.pendingPlayersRoom || this.pendingTable?.max_players || 2;
+          if (!Number.isNaN(waitingPlayers)) {
+            this.matchmakingStatus = {
+              currentPlayers: waitingPlayers,
+              expectedPlayers,
+              playersNeeded: Math.max(0, expectedPlayers - waitingPlayers)
+            };
+          }
           console.log('✅ [WAITING-ROOM] Unido exitosamente a la mesa:', response);
 
           // 🔧 FIX: Pausar música de fondo al confirmar juego
@@ -1670,9 +1680,9 @@ export default {
               const expectedPlayers = this.matchmakingStatus.expectedPlayers || this.playersRoom || 2;
               const waitingPlayers = this.matchmakingStatus.currentPlayers || 0;
               if (waitingPlayers > 0) {
-                return `Esperando rivales (${waitingPlayers}/${expectedPlayers})...`;
+                return `Buscando rival (${waitingPlayers}/${expectedPlayers})...`;
               }
-              return 'Esperando rivales en la mesa...';
+              return 'Buscando rival en la mesa...';
             }
             return 'Cargando juego...';
           }
@@ -1948,11 +1958,13 @@ export default {
         return this.matchAuthPromise;
       }
 
+      this.matchSearchCancelled = false;
       const user = getUserData(this.$store, localStorage);
-      const maxAttempts = 60;
 
       this.matchAuthPromise = (async () => {
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        let attempt = 0;
+        while (!this.matchSearchCancelled) {
+          attempt += 1;
           try {
             const response = await fetch(`${GAME_CONFIG.API_BASE_URL}/tables/${tableId}/match-status`, {
               headers: {
@@ -1972,6 +1984,7 @@ export default {
                     playersNeeded: Math.max(0, (this.playersRoom || this.matchmakingStatus.expectedPlayers || 2) - waitingPlayers)
                   };
                   this.connectingMessage = this.getConnectingMessage();
+                  this.loadingOverlayMessage = this.connectingMessage;
                 }
               }
 
@@ -1985,7 +1998,7 @@ export default {
             console.warn('⚠️ [WAITING-ROOM] No se pudo consultar match-status:', error);
           }
 
-          const pollDelay = attempt <= 10 ? 300 : 500;
+          const pollDelay = attempt <= 10 ? 300 : (attempt <= 120 ? 500 : 1000);
           await new Promise(resolve => setTimeout(resolve, pollDelay));
         }
 
@@ -2017,20 +2030,19 @@ export default {
       this.startMatchmakingWatchdog();
 
       if (!this.currentMatchId && safeTable.id) {
-        this.connectingMessage = 'Esperando rivales en la mesa...';
+        this.connectingMessage = 'Buscando rival en la mesa...';
         this.loadingOverlayMessage = this.connectingMessage;
         this.currentMatchId = await this.waitForAuthorizedMatch(safeTable.id);
       }
 
-      if (!this.currentMatchId) {
-        console.error('❌ [WAITING-ROOM] No se obtuvo match autorizado antes de cargar el juego');
-        this.connectingMessage = 'No encontramos rival a tiempo. Cancelando búsqueda...';
-        this.loadingOverlayMessage = this.connectingMessage;
-        await this.handleCancelSearch({ skipConfirm: true });
+      if (this.matchSearchCancelled || !this.currentMatchId) {
+        console.log('⏹️ [WAITING-ROOM] Búsqueda de rival detenida');
         return;
       }
 
       console.log('✅ [WAITING-ROOM] Match autorizado, cargando juego:', this.currentMatchId);
+      this.connectingMessage = 'Cargando juego...';
+      this.loadingOverlayMessage = this.connectingMessage;
       this.startActualGame();
     },
 
@@ -2263,6 +2275,8 @@ export default {
       this.pendingRoomCodeToJoin = null;
       this.roomCodeValidated = false;
       this.currentMatchId = null;
+      this.matchSearchCancelled = true;
+      this.matchAuthPromise = null;
       this.isInviteGuest = false; // 🔧 FIX: Reset flag de invitado
       
       // === RESET DE ESTADO DE CONFIRMACIÓN ===
@@ -4979,6 +4993,11 @@ export default {
           return;
         }
       }
+
+      this.matchSearchCancelled = true;
+      this.matchAuthPromise = null;
+      this.stopMatchmakingMessageUpdater();
+      this.stopMatchmakingWatchdog();
       
       this.isCancelling = true;
       
@@ -5012,7 +5031,9 @@ export default {
         this.updateBalanceFromPayload(result);
         
         // Mensaje de confirmación
-        alert(`Búsqueda cancelada. Se te ha reembolsado ${safeTable.entry_price} Dcoins`);
+        if (!skipConfirm) {
+          alert(`Búsqueda cancelada. Se te ha reembolsado ${safeTable.entry_price} Dcoins`);
+        }
         
         // Resetear juego y volver a elegir mesa
         this.resetGame();
