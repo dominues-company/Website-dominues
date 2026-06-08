@@ -1472,7 +1472,13 @@ export default {
         return;
       }
       
-      // Para otros modos, iniciar directamente
+      // Online random: esperar match_id antes de cargar iframe (evita "Autorizando partida" en el juego)
+      if (this.isOnlineRandomMatchmaking()) {
+        this.startOnlineRandomGame();
+        return;
+      }
+
+      // CPU e invite: flujo existente sin cambios
       this.startActualGame();
     },
     
@@ -1943,7 +1949,8 @@ export default {
             console.warn('⚠️ [WAITING-ROOM] No se pudo consultar match-status:', error);
           }
 
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          const pollDelay = attempt <= 10 ? 300 : 500;
+          await new Promise(resolve => setTimeout(resolve, pollDelay));
         }
 
         return null;
@@ -1952,6 +1959,56 @@ export default {
       const matchId = await this.matchAuthPromise;
       this.matchAuthPromise = null;
       return matchId;
+    },
+
+    isOnlineRandomMatchmaking() {
+      return this.gameMode === 'online' && !this.inviteMode;
+    },
+
+    async startOnlineRandomGame() {
+      const safeTable = this.ensureSelectedTableDefaults();
+      if (!safeTable) {
+        alert('Error: No se pudo identificar la mesa seleccionada. Inténtalo de nuevo.');
+        return;
+      }
+
+      this.isConnecting = true;
+      this.connectingMessage = this.getConnectingMessage();
+      this.scrollWaitingViewToTop();
+      this.startMatchmakingMessageUpdater();
+      this.startMatchmakingWatchdog();
+
+      if (!this.currentMatchId && safeTable.id) {
+        this.connectingMessage = 'Esperando rivales en la mesa...';
+        this.loadingOverlayMessage = this.connectingMessage;
+        this.currentMatchId = await this.waitForAuthorizedMatch(safeTable.id);
+      }
+
+      if (!this.currentMatchId) {
+        console.error('❌ [WAITING-ROOM] No se obtuvo match autorizado antes de cargar el juego');
+        this.connectingMessage = 'No encontramos rival a tiempo. Cancelando búsqueda...';
+        this.loadingOverlayMessage = this.connectingMessage;
+        await this.handleCancelSearch({ skipConfirm: true });
+        return;
+      }
+
+      console.log('✅ [WAITING-ROOM] Match autorizado, cargando juego:', this.currentMatchId);
+      this.startActualGame();
+    },
+
+    sendGameInitToIframe(gameData, delayMs = 150) {
+      setTimeout(() => {
+        if (this.$refs.gameFrame && this.$refs.gameFrame.contentWindow) {
+          this.$refs.gameFrame.contentWindow.postMessage({
+            type: 'GAME_INIT',
+            data: gameData
+          }, '*');
+          console.log('✅ [WAITING-ROOM] GAME_INIT enviado correctamente');
+          this.applyIframeMute();
+        } else {
+          console.error('❌ [WAITING-ROOM] No se pudo enviar GAME_INIT - iframe no disponible');
+        }
+      }, delayMs);
     },
     
     buildGameUrl(mode) {
@@ -2070,7 +2127,7 @@ export default {
           return;
         }
 
-        const isOnlineRandom = gameMode === 'online' && !this.inviteMode;
+        const isOnlineRandom = this.isOnlineRandomMatchmaking();
         if (isOnlineRandom && !this.currentMatchId) {
           this.connectingMessage = 'Buscando partida autorizada...';
           this.currentMatchId = await this.waitForAuthorizedMatch(tableContext.id);
@@ -2124,22 +2181,7 @@ export default {
         };
 
         console.log('🎮 [WAITING-ROOM] Enviando datos al juego:', gameData);
-        
-        // Enviar GAME_INIT para inicializar el socket
-        // Esperar un poco para que el juego esté completamente cargado
-        // 🔧 FIX: Usar $refs.gameFrame
-        setTimeout(() => {
-          if (this.$refs.gameFrame && this.$refs.gameFrame.contentWindow) {
-            this.$refs.gameFrame.contentWindow.postMessage({
-              type: 'GAME_INIT',
-              data: gameData
-            }, '*');
-            console.log('✅ [WAITING-ROOM] GAME_INIT enviado correctamente');
-            this.applyIframeMute();
-          } else {
-            console.error('❌ [WAITING-ROOM] No se pudo enviar GAME_INIT - iframe no disponible');
-          }
-        }, 1000);
+        this.sendGameInitToIframe(gameData, 150);
       }
     },
     
@@ -2565,6 +2607,9 @@ export default {
           break;
         case 'MATCH_AUTH_PENDING':
           this.handleMatchAuthPending(data);
+          break;
+        case 'WAITING_FOR_PLAYERS':
+          this.handleWaitingForPlayers(data);
           break;
         case 'ALL_PLAYERS_JOINED':
         case 'GAME_READY':
@@ -4112,6 +4157,20 @@ export default {
         
         console.log('⚠️ [WAITING-ROOM] Advertencia de timeout mostrada:', warningMessage);
       }
+    },
+
+    handleWaitingForPlayers(data) {
+      if (!this.isOnlineRandomMatchmaking()) {
+        return;
+      }
+      const connected = parseInt(data?.connected, 10);
+      const required = parseInt(data?.required, 10);
+      if (Number.isNaN(connected) || Number.isNaN(required)) {
+        return;
+      }
+      this.connectingMessage = `Conectando jugadores (${connected}/${required})...`;
+      this.loadingOverlayMessage = this.connectingMessage;
+      this.showLoadingOverlay = true;
     },
 
     async handleMatchAuthPending(data) {
