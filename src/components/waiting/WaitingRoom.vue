@@ -2611,6 +2611,15 @@ export default {
         case 'WAITING_FOR_PLAYERS':
           this.handleWaitingForPlayers(data);
           break;
+        case 'PLAYERS_READY':
+          this.handlePlayersReady(data);
+          break;
+        case 'MATCH_FOUND':
+          this.handleMatchFound(data);
+          break;
+        case 'GAME_BOARD_INIT':
+          this.handleGameBoardInit(data);
+          break;
         case 'ALL_PLAYERS_JOINED':
         case 'GAME_READY':
         case 'GAME_STARTING':
@@ -4168,9 +4177,40 @@ export default {
       if (Number.isNaN(connected) || Number.isNaN(required)) {
         return;
       }
-      this.connectingMessage = `Conectando jugadores (${connected}/${required})...`;
+      this.connectingMessage = connected >= required
+        ? '¡Todos conectados! Preparando mesa...'
+        : `Conectando jugadores (${connected}/${required})...`;
       this.loadingOverlayMessage = this.connectingMessage;
+      this.isConnecting = true;
       this.showLoadingOverlay = true;
+    },
+
+    handlePlayersReady(data) {
+      if (!this.isOnlineRandomMatchmaking()) {
+        return;
+      }
+      this.connectingMessage = data?.message || '¡Todos conectados! Preparando mesa...';
+      this.loadingOverlayMessage = this.connectingMessage;
+      this.isConnecting = true;
+      this.showLoadingOverlay = true;
+    },
+
+    handleMatchFound(data) {
+      if (!this.isOnlineRandomMatchmaking()) {
+        return;
+      }
+      this.connectingMessage = data?.message || 'Preparando la mesa...';
+      this.loadingOverlayMessage = this.connectingMessage;
+      this.isConnecting = true;
+      this.showLoadingOverlay = true;
+    },
+
+    handleGameBoardInit(data) {
+      if (!this.isOnlineRandomMatchmaking()) {
+        return;
+      }
+      this.connectingMessage = data?.message || 'Configurando partida...';
+      this.loadingOverlayMessage = this.connectingMessage;
     },
 
     async handleMatchAuthPending(data) {
@@ -4250,6 +4290,11 @@ export default {
       }
       
       // Para ALL_PLAYERS_JOINED y GAME_STARTING:
+      if (messageType === 'GAME_STARTING') {
+        this.connectingMessage = data?.message || 'Repartiendo fichas...';
+        this.loadingOverlayMessage = this.connectingMessage;
+      }
+
       // Cerrar el modal de invitación (tanto para creador como invitado)
       console.log('🎮 [WAITING-ROOM] Todos los jugadores listos - Cerrando modales');
       this.showInviteCode = false;
@@ -4281,6 +4326,8 @@ export default {
       
       // Ahora SÍ ocultar el overlay de configurando juego
       this.isConnecting = false;
+      this.showLoadingOverlay = false;
+      this.loadingOverlayMessage = '';
       
       console.log('✅ [WAITING-ROOM] Overlay ocultado - isConnecting ahora es:', this.isConnecting);
       console.log('🎮 [WAITING-ROOM] Juego visible y jugando');
