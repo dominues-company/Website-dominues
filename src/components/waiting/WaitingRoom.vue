@@ -744,10 +744,17 @@ export default {
     },
     // 🔧 FIX: Computed property para mostrar información de matchmaking
     shouldShowMatchmakingInfo() {
-      return this.isConnecting && 
-             this.gameMode === 'online' && 
-             this.matchmakingStatus && 
-             this.matchmakingStatus.expectedPlayers > 0;
+      if (!this.isConnecting ||
+             this.gameMode !== 'online' ||
+             !this.matchmakingStatus ||
+             this.matchmakingStatus.expectedPlayers <= 0) {
+        return false;
+      }
+      // Ocultar 0/2 engañoso mientras el iframe carga tras match de Laravel
+      if (this.currentMatchId && !this.isGameReady && this.displayedMatchmakingPlayers === 0) {
+        return false;
+      }
+      return true;
     },
 
     displayedMatchmakingPlayers() {
@@ -1481,12 +1488,14 @@ export default {
       this.playersRoom = this.pendingPlayersRoom || sanitizedPending.max_players || GAME_CONFIG.DEFAULT_PLAYERS;
       
       // 🔧 FIX: Inicializar estado de matchmaking para modos online
-      // Iniciar con 0 jugadores - el servidor confirmará cuando estemos en cola
       if (this.gameMode === 'online') {
+        const expectedPlayers = this.playersRoom || sanitizedPending.max_players || 2;
+        const existingCount = parseInt(this.matchmakingStatus?.currentPlayers, 10);
+        const preservedCount = !Number.isNaN(existingCount) && existingCount > 0 ? existingCount : 0;
         this.matchmakingStatus = {
-          currentPlayers: 0, // 🔧 FIX: Iniciar en 0 - se actualizará cuando el servidor confirme
-          expectedPlayers: this.playersRoom,
-          playersNeeded: this.playersRoom // Faltan todos hasta que confirmemos
+          currentPlayers: preservedCount,
+          expectedPlayers,
+          playersNeeded: Math.max(0, expectedPlayers - preservedCount)
         };
         
         console.log('✅ [WAITING-ROOM] Estado de matchmaking inicializado (esperando servidor):', {
@@ -1714,7 +1723,7 @@ export default {
 
           if (this.currentMatchId && this.gameStarted) {
             if (playersNeeded > 0) {
-              return `Rival encontrado. Conectando (${currentPlayers}/${expectedPlayers})...`;
+              return `Esperando que rival conecte (${currentPlayers}/${expectedPlayers})...`;
             }
             return `Conectando jugadores (${currentPlayers}/${expectedPlayers})...`;
           }
@@ -1995,9 +2004,9 @@ export default {
                 console.log('✅ [WAITING-ROOM] Match autorizado por backend:', matchId);
                 const expected = this.playersRoom || this.matchmakingStatus.expectedPlayers || 2;
                 this.matchmakingStatus = {
-                  currentPlayers: expected,
+                  currentPlayers: 1,
                   expectedPlayers: expected,
-                  playersNeeded: 0
+                  playersNeeded: Math.max(0, expected - 1)
                 };
                 this.connectingMessage = 'Rival encontrado. Abriendo juego...';
                 this.loadingOverlayMessage = this.connectingMessage;
@@ -4218,20 +4227,22 @@ export default {
       this.markMatchmakingUpdate();
       
       if (data && typeof data.currentPlayers !== 'undefined' && typeof data.expectedPlayers !== 'undefined') {
-        // 🔧 FIX: Actualizar estado de matchmaking
         const oldStatus = JSON.parse(JSON.stringify(this.matchmakingStatus));
-        
+        let socketPlayers = parseInt(data.currentPlayers, 10);
+        if (Number.isNaN(socketPlayers)) {
+          socketPlayers = data.currentPlayers;
+        }
+
         this.matchmakingStatus = {
-          currentPlayers: data.currentPlayers,
+          currentPlayers: socketPlayers,
           expectedPlayers: data.expectedPlayers,
-          playersNeeded: data.playersNeeded || (data.expectedPlayers - data.currentPlayers)
+          playersNeeded: data.playersNeeded || (data.expectedPlayers - socketPlayers)
         };
         
         console.log('📊 [WAITING-ROOM] Estado de matchmaking ACTUALIZADO:');
         console.log('   Anterior:', oldStatus);
         console.log('   Nuevo:', this.matchmakingStatus);
         
-        // 🔧 FIX: Usar getConnectingMessage() que maneja correctamente modo invitación vs online
         if (this.gameMode === 'online' || this.selectedTable?.type === 'online-2' || this.selectedTable?.type === 'online-4' || this.selectedTable?.type === 'invite') {
           const newMessage = this.getConnectingMessage();
           
@@ -4239,6 +4250,7 @@ export default {
           console.log('   De:', this.connectingMessage);
           console.log('   A:', newMessage);
           this.connectingMessage = newMessage;
+          this.loadingOverlayMessage = newMessage;
         }
         console.log('📊 [WAITING-ROOM] ==========================================');
           } else {
@@ -4275,7 +4287,7 @@ export default {
       };
       this.connectingMessage = connected >= required
         ? `Conectando jugadores (${connected}/${required})...`
-        : `Rival encontrado. Conectando (${connected}/${required})...`;
+        : `Esperando que rival conecte (${connected}/${required})...`;
       this.loadingOverlayMessage = this.connectingMessage;
       this.isConnecting = true;
       this.showLoadingOverlay = true;
