@@ -1417,6 +1417,9 @@ export default {
           }
 
           this.currentMatchId = this.extractMatchId(response.data);
+          if (response.data?.match_found && this.currentMatchId) {
+            console.log('✅ [WAITING-ROOM] Match inmediato en join:', this.currentMatchId);
+          }
           const waitingPlayers = parseInt(response.data?.waiting_players, 10);
           const expectedPlayers = this.pendingPlayersRoom || this.pendingTable?.max_players || 2;
           if (!Number.isNaN(waitingPlayers)) {
@@ -1677,8 +1680,14 @@ export default {
           // 2. Y tengamos datos reales del servidor (currentPlayers > 0)
           if (!this.isGameReady) {
             if (!this.gameStarted) {
+              if (this.currentMatchId) {
+                return 'Rival encontrado. Abriendo juego...';
+              }
               const expectedPlayers = this.matchmakingStatus.expectedPlayers || this.playersRoom || 2;
               const waitingPlayers = this.matchmakingStatus.currentPlayers || 0;
+              if (waitingPlayers >= expectedPlayers) {
+                return 'Rival encontrado. Autorizando partida...';
+              }
               if (waitingPlayers > 0) {
                 return `Buscando rival (${waitingPlayers}/${expectedPlayers})...`;
               }
@@ -1700,22 +1709,20 @@ export default {
           
           // Modo ONLINE normal (2 o 4 jugadores aleatorios)
           const expectedPlayers = this.matchmakingStatus.expectedPlayers || this.playersRoom || 2;
-          const currentPlayers = this.matchmakingStatus.currentPlayers || 1;
+          const currentPlayers = this.matchmakingStatus.currentPlayers || 0;
           const playersNeeded = Math.max(0, expectedPlayers - currentPlayers);
-          
-          console.log('📊 [WAITING-ROOM] getConnectingMessage - valores:', {
-            expectedPlayers,
-            currentPlayers,
-            playersNeeded,
-            matchmakingStatusExpected: this.matchmakingStatus.expectedPlayers,
-            playersRoom: this.playersRoom
-          });
-          
-          if (playersNeeded > 0) {
-            return `${currentPlayers}/${expectedPlayers} jugadores - Faltan ${playersNeeded} para empezar`;
-          } else {
-            return `${currentPlayers}/${expectedPlayers} jugadores - ¡Iniciando partida!`;
+
+          if (this.currentMatchId && this.gameStarted) {
+            if (playersNeeded > 0) {
+              return `Rival encontrado. Conectando (${currentPlayers}/${expectedPlayers})...`;
+            }
+            return `Conectando jugadores (${currentPlayers}/${expectedPlayers})...`;
           }
+
+          if (playersNeeded > 0) {
+            return `Buscando rival (${currentPlayers}/${expectedPlayers})...`;
+          }
+          return `¡Listo! Iniciando partida (${expectedPlayers}/${expectedPlayers})...`;
         }
         default:
           return 'Iniciando juego...';
@@ -1764,21 +1771,16 @@ export default {
       // Limpiar intervalo anterior si existe
       this.stopMatchmakingMessageUpdater();
       
-      // Actualizar mensaje cada 500ms para asegurar que se vea en todas las plataformas
+      // Actualizar mensaje cada 2s (evita spam en consola y parpadeo)
       this.matchmakingMessageInterval = setInterval(() => {
         if (this.isConnecting && this.gameMode === 'online') {
           const newMessage = this.getConnectingMessage();
           if (this.connectingMessage !== newMessage) {
-            console.log('🔄 [WAITING-ROOM] Actualizando mensaje de matchmaking:', newMessage);
-            console.log('🔄 [WAITING-ROOM] Estado actual:', {
-              expectedPlayers: this.matchmakingStatus.expectedPlayers,
-              currentPlayers: this.matchmakingStatus.currentPlayers,
-              playersNeeded: this.matchmakingStatus.playersNeeded
-            });
             this.connectingMessage = newMessage;
+            this.loadingOverlayMessage = newMessage;
           }
         }
-      }, 500);
+      }, 2000);
     },
 
     stopMatchmakingMessageUpdater() {
@@ -1991,14 +1993,35 @@ export default {
               const matchId = this.extractMatchId(payload);
               if (payload?.status === 'matched' && matchId) {
                 console.log('✅ [WAITING-ROOM] Match autorizado por backend:', matchId);
+                const expected = this.playersRoom || this.matchmakingStatus.expectedPlayers || 2;
+                this.matchmakingStatus = {
+                  currentPlayers: expected,
+                  expectedPlayers: expected,
+                  playersNeeded: 0
+                };
+                this.connectingMessage = 'Rival encontrado. Abriendo juego...';
+                this.loadingOverlayMessage = this.connectingMessage;
                 return matchId;
+              }
+
+              if (payload?.status === 'waiting' && typeof payload?.waiting_players !== 'undefined') {
+                const waitingPlayers = parseInt(payload.waiting_players, 10);
+                const expected = this.playersRoom || this.matchmakingStatus.expectedPlayers || 2;
+                if (!Number.isNaN(waitingPlayers)) {
+                  if (waitingPlayers >= expected) {
+                    this.connectingMessage = 'Rival encontrado. Autorizando partida...';
+                  } else {
+                    this.connectingMessage = `Buscando rival (${Math.min(waitingPlayers, expected)}/${expected})...`;
+                  }
+                  this.loadingOverlayMessage = this.connectingMessage;
+                }
               }
             }
           } catch (error) {
             console.warn('⚠️ [WAITING-ROOM] No se pudo consultar match-status:', error);
           }
 
-          const pollDelay = attempt <= 10 ? 300 : (attempt <= 120 ? 500 : 1000);
+          const pollDelay = attempt <= 60 ? 300 : (attempt <= 180 ? 500 : 1000);
           await new Promise(resolve => setTimeout(resolve, pollDelay));
         }
 
@@ -2014,6 +2037,17 @@ export default {
       return this.gameMode === 'online' && !this.inviteMode;
     },
 
+    clearGameSessionStorage() {
+      try {
+        sessionStorage.removeItem('domino_room');
+      } catch (error) {
+        /* ignore */
+      }
+      if (this.$refs.gameFrame && this.$refs.gameFrame.contentWindow) {
+        this.$refs.gameFrame.contentWindow.postMessage({ type: 'CLEAR_MATCH_SESSION' }, '*');
+      }
+    },
+
     async startOnlineRandomGame() {
       const safeTable = this.ensureSelectedTableDefaults();
       if (!safeTable) {
@@ -2021,6 +2055,7 @@ export default {
         return;
       }
 
+      this.clearGameSessionStorage();
       this.isConnecting = true;
       this.showLoadingOverlay = true;
       this.connectingMessage = 'Esperando rivales en la mesa...';
@@ -2041,8 +2076,9 @@ export default {
       }
 
       console.log('✅ [WAITING-ROOM] Match autorizado, cargando juego:', this.currentMatchId);
-      this.connectingMessage = 'Cargando juego...';
+      this.connectingMessage = 'Rival encontrado. Abriendo juego...';
       this.loadingOverlayMessage = this.connectingMessage;
+      this.clearGameSessionStorage();
       this.startActualGame();
     },
 
@@ -2313,6 +2349,9 @@ export default {
       this.balanceNotificationMessage = '';
       
       // === GENERAR NUEVA SESSION ID ===
+      try {
+        sessionStorage.removeItem('domino_room');
+      } catch (eRoom) { /* ignore */ }
       this.currentSessionId = this.generateSessionId();
       
       console.log('🧹 [WAITING-ROOM] Nueva session ID:', this.currentSessionId);
@@ -4229,9 +4268,14 @@ export default {
       if (Number.isNaN(connected) || Number.isNaN(required)) {
         return;
       }
+      this.matchmakingStatus = {
+        currentPlayers: connected,
+        expectedPlayers: required,
+        playersNeeded: Math.max(0, required - connected)
+      };
       this.connectingMessage = connected >= required
-        ? '¡Todos conectados! Preparando mesa...'
-        : `Conectando jugadores (${connected}/${required})...`;
+        ? `Conectando jugadores (${connected}/${required})...`
+        : `Rival encontrado. Conectando (${connected}/${required})...`;
       this.loadingOverlayMessage = this.connectingMessage;
       this.isConnecting = true;
       this.showLoadingOverlay = true;
