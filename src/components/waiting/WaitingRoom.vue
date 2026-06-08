@@ -684,6 +684,9 @@ export default {
       // 🔧 FIX: Interval para actualizar mensaje de matchmaking
       matchmakingMessageInterval: null,
       socketJoinNudgeInterval: null,
+      matchPusherChannel: null,
+      matchPusherHandler: null,
+      matchPusherTableId: null,
       
       // 🔧 FIX: Detección de fallo de carga
       iframeLoadTimeout: null,
@@ -2001,6 +2004,64 @@ export default {
       return null;
     },
 
+    applyAuthorizedMatchFromBackend(matchId, source = 'poll') {
+      const expected = this.playersRoom || this.matchmakingStatus.expectedPlayers || 2;
+      this.matchmakingStatus = {
+        currentPlayers: 1,
+        expectedPlayers: expected,
+        playersNeeded: Math.max(0, expected - 1)
+      };
+      this.connectingMessage = 'Conectando al juego...';
+      this.loadingOverlayMessage = this.connectingMessage;
+      console.log(`✅ [WAITING-ROOM] Match autorizado por backend (${source}):`, matchId);
+      return matchId;
+    },
+
+    stopMatchPusherListener() {
+      if (this.matchPusherChannel && this.matchPusherHandler && window.Echo) {
+        try {
+          this.matchPusherChannel.stopListening('.MatchCreated', this.matchPusherHandler);
+          if (this.matchPusherTableId) {
+            window.Echo.leave(`table.${this.matchPusherTableId}`);
+          }
+        } catch (error) {
+          /* ignore */
+        }
+      }
+      this.matchPusherChannel = null;
+      this.matchPusherHandler = null;
+      this.matchPusherTableId = null;
+    },
+
+    startMatchPusherListener(tableId, userId, onMatched) {
+      this.stopMatchPusherListener();
+      if (!window.Echo || !tableId || typeof onMatched !== 'function') {
+        return;
+      }
+
+      this.matchPusherTableId = tableId;
+      const channelName = `table.${tableId}`;
+      console.log('📡 [WAITING-ROOM] Escuchando Pusher MatchCreated en', channelName);
+
+      this.matchPusherHandler = (event) => {
+        const matchId = parseInt(event?.match_id || event?.matchmaking_id, 10);
+        if (!matchId || Number.isNaN(matchId)) {
+          return;
+        }
+
+        const playerIds = (event?.player_ids || []).map((id) => parseInt(id, 10)).filter((id) => !Number.isNaN(id));
+        const uid = parseInt(userId, 10);
+        if (playerIds.length && uid && !playerIds.includes(uid)) {
+          return;
+        }
+
+        onMatched(this.applyAuthorizedMatchFromBackend(matchId, 'pusher'));
+      };
+
+      this.matchPusherChannel = window.Echo.channel(channelName);
+      this.matchPusherChannel.listen('.MatchCreated', this.matchPusherHandler);
+    },
+
     async waitForAuthorizedMatch(tableId) {
       if (this.matchAuthPromise) {
         return this.matchAuthPromise;
@@ -2008,10 +2069,22 @@ export default {
 
       this.matchSearchCancelled = false;
       const user = getUserData(this.$store, localStorage);
+      const userId = user?.id;
 
       this.matchAuthPromise = (async () => {
+        let resolvedMatchId = null;
+
+        const resolveMatch = (matchId) => {
+          if (resolvedMatchId || !matchId) {
+            return;
+          }
+          resolvedMatchId = matchId;
+        };
+
+        this.startMatchPusherListener(tableId, userId, resolveMatch);
+
         let attempt = 0;
-        while (!this.matchSearchCancelled) {
+        while (!this.matchSearchCancelled && !resolvedMatchId) {
           attempt += 1;
           try {
             const response = await fetch(`${GAME_CONFIG.API_BASE_URL}/tables/${tableId}/match-status`, {
@@ -2038,16 +2111,8 @@ export default {
 
               const matchId = this.extractMatchId(payload);
               if (payload?.status === 'matched' && matchId) {
-                console.log('✅ [WAITING-ROOM] Match autorizado por backend:', matchId);
-                const expected = this.playersRoom || this.matchmakingStatus.expectedPlayers || 2;
-                this.matchmakingStatus = {
-                  currentPlayers: 1,
-                  expectedPlayers: expected,
-                  playersNeeded: Math.max(0, expected - 1)
-                };
-                this.connectingMessage = 'Conectando al juego...';
-                this.loadingOverlayMessage = this.connectingMessage;
-                return matchId;
+                resolveMatch(this.applyAuthorizedMatchFromBackend(matchId, 'poll'));
+                break;
               }
 
               if (payload?.status === 'waiting' && typeof payload?.waiting_players !== 'undefined') {
@@ -2067,11 +2132,17 @@ export default {
             console.warn('⚠️ [WAITING-ROOM] No se pudo consultar match-status:', error);
           }
 
-          const pollDelay = attempt <= 60 ? 300 : (attempt <= 180 ? 500 : 1000);
+          if (resolvedMatchId) {
+            break;
+          }
+
+          // Pusher es primario; polling más lento como respaldo
+          const pollDelay = attempt <= 20 ? 500 : (attempt <= 120 ? 1500 : 3000);
           await new Promise(resolve => setTimeout(resolve, pollDelay));
         }
 
-        return null;
+        this.stopMatchPusherListener();
+        return resolvedMatchId;
       })();
 
       const matchId = await this.matchAuthPromise;
@@ -2330,6 +2401,7 @@ export default {
       // Detener todos los intervalos y timeouts activos
       this.stopMatchmakingMessageUpdater();
       this.stopSocketJoinNudge();
+      this.stopMatchPusherListener();
       
       if (this.iframeLoadTimeout) {
         clearTimeout(this.iframeLoadTimeout);
@@ -4477,6 +4549,7 @@ export default {
       this.stopMatchmakingMessageUpdater();
       this.stopMatchmakingWatchdog();
       this.stopSocketJoinNudge();
+      this.stopMatchPusherListener();
       
       // Ahora SÍ ocultar el overlay de configurando juego
       this.isConnecting = false;
@@ -5101,6 +5174,7 @@ export default {
       this.stopMatchmakingMessageUpdater();
       this.stopMatchmakingWatchdog();
       this.stopSocketJoinNudge();
+      this.stopMatchPusherListener();
       
       try {
         console.log('🔄 [WAITING-ROOM] Cancelando búsqueda de partida...');

@@ -145,7 +145,7 @@ export default {
 
     if (window.Echo) {
       this.pusherChannel = window.Echo.channel('tables')
-        .listen('UserJoinedTable', () => {
+        .listen('.UserJoinedTable', () => {
           this.fetchGames()
         })
       this.$store.commit('games/SET_SOCKET_CONNECTED', true)
