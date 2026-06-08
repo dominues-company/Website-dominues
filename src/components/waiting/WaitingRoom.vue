@@ -686,7 +686,10 @@ export default {
       socketJoinNudgeInterval: null,
       matchPusherChannel: null,
       matchPusherHandler: null,
+      matchPusherTablesHandler: null,
       matchPusherTableId: null,
+      opponentStuckSince: null,
+      opponentStuckRecoveryInProgress: false,
       
       // 🔧 FIX: Detección de fallo de carga
       iframeLoadTimeout: null,
@@ -1840,14 +1843,100 @@ export default {
       }
     },
     
-    // 🔧 FIX MOBILE: Watchdog DESHABILITADO - El sistema anterior era demasiado agresivo
-    // Confiamos en la reconexión automática del socket (configurada en socket.js)
+    // Watchdog: detectar rival que nunca conecta al socket (1/2 eterno)
     startMatchmakingWatchdog() {
-      console.log('🐕 [WATCHDOG] Watchdog simplificado - Confiando en reconexión automática del socket');
-      // Solo inicializar timestamp para referencia, sin verificaciones agresivas
       this.lastMatchmakingUpdate = Date.now();
       this.connectionError = false;
       this.isReconnecting = false;
+      this.stopMatchmakingWatchdog();
+      this.matchmakingWatchdogInterval = setInterval(() => {
+        this.checkOpponentStuckState();
+      }, 5000);
+    },
+
+    checkOpponentStuckState() {
+      if (!this.isOnlineRandomMatchmaking() || !this.currentMatchId || !this.isGameReady) {
+        this.opponentStuckSince = null;
+        return;
+      }
+      if (this.opponentStuckRecoveryInProgress) {
+        return;
+      }
+
+      const expected = this.matchmakingStatus.expectedPlayers || this.playersRoom || 2;
+      const connected = parseInt(this.matchmakingStatus.currentPlayers, 10) || 0;
+      if (connected >= expected) {
+        this.opponentStuckSince = null;
+        return;
+      }
+
+      if (!this.opponentStuckSince) {
+        this.opponentStuckSince = Date.now();
+        return;
+      }
+
+      const stuckMs = Date.now() - this.opponentStuckSince;
+      if (stuckMs >= 90000) {
+        console.warn('⚠️ [WATCHDOG] Rival no conectó en 90s — reiniciando búsqueda');
+        this.recoverFromStuckOpponent();
+      }
+    },
+
+    async recoverFromStuckOpponent() {
+      if (this.opponentStuckRecoveryInProgress) {
+        return;
+      }
+      this.opponentStuckRecoveryInProgress = true;
+      this.opponentStuckSince = null;
+      this.stopSocketJoinNudge();
+      this.stopMatchPusherListener();
+      this.connectingMessage = 'Rival no conectó. Buscando nuevo rival...';
+      this.loadingOverlayMessage = this.connectingMessage;
+
+      const safeTable = this.ensureSelectedTableDefaults();
+      if (safeTable?.id) {
+        try {
+          const user = getUserData(this.$store, localStorage);
+          await fetch(`${GAME_CONFIG.API_BASE_URL}/tables/${safeTable.id}/leave`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${user.token || ''}`
+            }
+          });
+        } catch (error) {
+          console.warn('⚠️ [WATCHDOG] Error al salir de partida bloqueada:', error);
+        }
+      }
+
+      this.currentMatchId = null;
+      this.gameStarted = false;
+      this.isGameReady = false;
+      this.gameUrl = '';
+      this.matchSearchCancelled = false;
+      this.clearGameSessionStorage();
+      this.opponentStuckRecoveryInProgress = false;
+
+      if (safeTable?.id) {
+        try {
+          const response = await this.$store.dispatch('games/joinTable', {
+            tableId: safeTable.id,
+            entryPrice: safeTable.entry_price
+          });
+          if (response.success) {
+            this.currentMatchId = this.extractMatchId(response.data);
+            await this.startOnlineRandomGame();
+            return;
+          }
+        } catch (error) {
+          console.error('❌ [WATCHDOG] No se pudo re-entrar a la mesa:', error);
+        }
+      }
+
+      this.connectingMessage = 'No se encontró rival. Intenta de nuevo.';
+      this.loadingOverlayMessage = this.connectingMessage;
+      this.isConnecting = false;
     },
     
     // 🔧 FIX MOBILE: Detener watchdog (ya no hay interval que detener, pero mantenemos el método para compatibilidad)
@@ -2028,8 +2117,16 @@ export default {
           /* ignore */
         }
       }
+      if (this.matchPusherTablesHandler && window.Echo) {
+        try {
+          window.Echo.channel('tables').stopListening('.MatchCreated', this.matchPusherTablesHandler);
+        } catch (error) {
+          /* ignore */
+        }
+      }
       this.matchPusherChannel = null;
       this.matchPusherHandler = null;
+      this.matchPusherTablesHandler = null;
       this.matchPusherTableId = null;
     },
 
@@ -2055,11 +2152,24 @@ export default {
           return;
         }
 
+        console.log(`📡 [WAITING-ROOM] MatchCreated recibido (pusher): ${matchId}`);
         onMatched(this.applyAuthorizedMatchFromBackend(matchId, 'pusher'));
       };
 
       this.matchPusherChannel = window.Echo.channel(channelName);
       this.matchPusherChannel.listen('.MatchCreated', this.matchPusherHandler);
+
+      // Fallback: mismo evento en canal global (backend también emite en tables)
+      if (!this.matchPusherTablesHandler) {
+        this.matchPusherTablesHandler = (event) => {
+          if (parseInt(event?.table_id, 10) !== parseInt(tableId, 10)) {
+            return;
+          }
+          console.log('📡 [WAITING-ROOM] MatchCreated recibido (tables):', event?.match_id);
+          this.matchPusherHandler(event);
+        };
+        window.Echo.channel('tables').listen('.MatchCreated', this.matchPusherTablesHandler);
+      }
     },
 
     async waitForAuthorizedMatch(tableId) {
@@ -2171,6 +2281,9 @@ export default {
         alert('Error: No se pudo identificar la mesa seleccionada. Inténtalo de nuevo.');
         return;
       }
+
+      // Reset from prior resetAllGameState(); required when match_found on join skips waitForAuthorizedMatch
+      this.matchSearchCancelled = false;
 
       this.clearGameSessionStorage();
       this.isConnecting = true;
