@@ -3634,31 +3634,77 @@ export default {
 
     savePendingGameResult(resultData, gameData) {
       try {
-        sessionStorage.setItem(
-          GAME_CONFIG.RESULT_SAVE_PENDING_KEY,
-          JSON.stringify({
-            resultData,
-            gameData: {
-              isWinner: gameData.isWinner,
-              playerName: gameData.playerName,
-              opponentName: gameData.opponentName,
-              winner: gameData.winner,
-              playerScore: gameData.playerScore,
-              opponentScore: gameData.opponentScore,
-              roomCode: gameData.roomCode,
-              gameData: gameData.gameData
-            },
-            savedAt: new Date().toISOString()
-          })
-        );
+        const payload = JSON.stringify({
+          resultData,
+          gameData: {
+            isWinner: gameData.isWinner,
+            playerName: gameData.playerName,
+            opponentName: gameData.opponentName,
+            winner: gameData.winner,
+            playerScore: gameData.playerScore,
+            opponentScore: gameData.opponentScore,
+            roomCode: gameData.roomCode,
+            gameData: gameData.gameData
+          },
+          savedAt: new Date().toISOString()
+        });
+        sessionStorage.setItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY, payload);
+        localStorage.setItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY, payload);
       } catch (e) {
-        console.warn('No se pudo guardar resultado pendiente en sessionStorage:', e);
+        console.warn('No se pudo guardar resultado pendiente:', e);
+      }
+    },
+
+    loadPendingGameResult() {
+      try {
+        const raw =
+          sessionStorage.getItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY) ||
+          localStorage.getItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        const savedAt = parsed?.savedAt ? new Date(parsed.savedAt).getTime() : 0;
+        if (savedAt && Date.now() - savedAt > 24 * 60 * 60 * 1000) {
+          this.clearPendingGameResult();
+          return null;
+        }
+        return parsed;
+      } catch (e) {
+        return null;
+      }
+    },
+
+    async retryPendingGameResultIfAny() {
+      const pending = this.loadPendingGameResult();
+      if (!pending?.resultData?.isWinner) return;
+
+      const user = getUserData(this.$store, localStorage);
+      if (!user?.token) return;
+
+      console.log('🔄 [WAITING-ROOM] Reintentando resultado pendiente de victoria...');
+
+      try {
+        const { ok, result } = await this.postGameResultOnce(
+          pending.resultData,
+          user.token
+        );
+
+        if (ok) {
+          this.clearPendingGameResult();
+          console.log('✅ [WAITING-ROOM] Resultado pendiente acreditado:', result);
+          await this.syncUserBalance(true);
+          if (pending.gameData) {
+            this.showGameResultMessage(pending.gameData);
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ [WAITING-ROOM] Reintento de resultado pendiente falló:', e);
       }
     },
 
     clearPendingGameResult() {
       try {
         sessionStorage.removeItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY);
+        localStorage.removeItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY);
       } catch (e) {
         /* ignore */
       }
@@ -5520,6 +5566,7 @@ export default {
     
     // Sincronizar balance y verificar servicio antes de cargar mesas
     await this.syncUserBalance(true);
+    await this.retryPendingGameResultIfAny();
     const isSuspended = await this.checkGameServiceStatus();
 
     if (!isSuspended) {
