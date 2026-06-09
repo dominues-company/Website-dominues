@@ -2986,6 +2986,11 @@ export default {
           console.log('❌ [WAITING-ROOM] Derrota por fallo de reconexión:', data);
           this.handleReconnectFailedLose(data);
           break;
+        case 'BOT_WON_HOUSE_POT':
+          // Ganó un asiento controlado por bot (jugador rendido/desconectado) → el pozo queda para la casa
+          console.log('🤖🏆 [WAITING-ROOM] Victoria del bot - pozo para la casa:', data);
+          this.handleBotWonHousePot(data);
+          break;
         default:
           // 🔧 FIX MOBILE: Para cualquier otro mensaje durante matchmaking, marcarlo como actualización
           if (this.isConnecting && this.gameMode === 'online' && type && type !== 'ADAPTER_READY') {
@@ -3276,6 +3281,60 @@ export default {
         console.log('🏠 Regresando a selección de mesas después de fallo de reconexión...');
         this.returnToTableSelection();
       }, 2000);
+    },
+
+    async handleBotWonHousePot(data) {
+      // Ganó un asiento controlado por bot (jugador rendido/desconectado) → el pozo queda para la casa.
+      // El jugador local NO gana (su derrota se reporta por el flujo normal de gameEnd); aquí solo
+      // registramos el pozo de la casa para que sea visible/contabilizable en el panel del backend.
+      try {
+        const matchId = data?.matchmakingId || data?.matchId || this.currentMatchId;
+        const safeTable = this.ensureSelectedTableDefaults();
+        const tableId = safeTable?.id || getTableId();
+
+        if (!matchId || !tableId) {
+          console.warn('🤖 [WAITING-ROOM] No se pudo registrar pozo a la casa: falta matchId/tableId', { matchId, tableId });
+          return;
+        }
+
+        const user = getUserData(this.$store, localStorage);
+        let token = user?.token;
+        if (!token) {
+          token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+        }
+
+        const payload = {
+          tableId: tableId,
+          match_id: matchId,
+          matchmaking_id: matchId,
+          botWinnerName: data?.botWinnerName || null,
+          roomCode: data?.roomCode || this.roomCode || null,
+          allScores: data?.allScores || [],
+          allNames: data?.allNames || []
+        };
+
+        console.log('🤖🏆 [WAITING-ROOM] Registrando pozo a la casa por victoria del bot:', payload);
+
+        const response = await fetch(`${GAME_CONFIG.API_BASE_URL}/game/bot-house-win`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${token || ''}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ [WAITING-ROOM] Pozo a la casa registrado:', result);
+        } else {
+          const raw = await response.text();
+          console.warn('⚠️ [WAITING-ROOM] No se pudo registrar pozo a la casa:', response.status, raw.slice(0, 300));
+        }
+      } catch (e) {
+        console.error('❌ [WAITING-ROOM] Error registrando pozo a la casa por bot:', e);
+      }
     },
     
     async handleRoomCodeGenerated(data) {
