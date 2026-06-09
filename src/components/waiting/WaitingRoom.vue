@@ -317,9 +317,9 @@
             </div>
           </div>
 
-          <!-- Botón de Cancelar - Solo visible durante la carga (excepto si el código ya fue validado) -->
+          <!-- Botón de Cancelar - Solo durante búsqueda inicial (nunca en partida activa) -->
           <button
-            v-if="(isConnecting || showLoadingOverlay) && !roomCodeValidated"
+            v-if="(isConnecting || showLoadingOverlay) && !roomCodeValidated && !gameStarted"
             @click="handleCancelSearch"
             class="surrender-btn cancel-btn"
             :disabled="isCancelling"
@@ -356,7 +356,7 @@
             <span></span>
           </div>
           <button
-            v-if="isOnlineRandomMatchmaking() && !roomCodeValidated"
+            v-if="isOnlineRandomMatchmaking() && !roomCodeValidated && !gameStarted"
             type="button"
             class="prematch-cancel-btn"
             :disabled="isCancelling"
@@ -4616,6 +4616,11 @@ export default {
       if (!this.isOnlineRandomMatchmaking()) {
         return;
       }
+      // Partida ya en curso: evento de resync de socket, no volver al lobby ni mostrar Cancelar/reembolso
+      if (this.isLiveOnlineMatch()) {
+        console.log('⏭️ [WAITING-ROOM] WAITING_FOR_PLAYERS ignorado — partida activa (reconexión in-game)');
+        return;
+      }
       const connected = parseInt(data?.connected, 10);
       const required = parseInt(data?.required, 10);
       if (Number.isNaN(connected) || Number.isNaN(required)) {
@@ -4638,6 +4643,10 @@ export default {
       if (!this.isOnlineRandomMatchmaking()) {
         return;
       }
+      if (this.isLiveOnlineMatch()) {
+        console.log('⏭️ [WAITING-ROOM] PLAYERS_READY ignorado — partida activa');
+        return;
+      }
       this.connectingMessage = data?.message || '¡Todos conectados! Preparando mesa...';
       this.loadingOverlayMessage = this.connectingMessage;
       this.isConnecting = true;
@@ -4646,6 +4655,10 @@ export default {
 
     handleMatchFound(data) {
       if (!this.isOnlineRandomMatchmaking()) {
+        return;
+      }
+      if (this.isLiveOnlineMatch()) {
+        console.log('⏭️ [WAITING-ROOM] MATCH_FOUND ignorado — partida activa');
         return;
       }
       this.connectingMessage = data?.message || 'Preparando la mesa...';
@@ -4824,6 +4837,15 @@ export default {
         this.isGameReady &&
         !this.resultSent &&
         !this.isSurrendering
+      );
+    },
+
+    isLiveOnlineMatch() {
+      return (
+        this.gameMode === 'online' &&
+        this.gameStarted &&
+        !!this.currentMatchId &&
+        !this.resultSent
       );
     },
 
@@ -5389,6 +5411,11 @@ export default {
     
     async handleCancelSearch(options = {}) {
       const { skipConfirm = false } = options;
+
+      if (this.gameStarted && this.currentMatchId) {
+        console.warn('⛔ [WAITING-ROOM] Cancelar bloqueado — partida en curso (usar Rendirse)');
+        return;
+      }
 
       if (!skipConfirm) {
         const confirmed = await this.askSessionExitConfirmation('cancel');
