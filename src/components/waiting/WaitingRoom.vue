@@ -1182,6 +1182,7 @@ export default {
     },
 
     returnToTableSelection(delay = 0) {
+      this.disableSessionNavigationGuard();
       const url = buildWaitingRoomUrl(this.getTableIdForRedirect());
       const navigate = () => {
         console.log('🏠 [WAITING-ROOM] Regresando a selección de mesas:', url);
@@ -3274,13 +3275,30 @@ export default {
     async handleReconnectFailedLose(data) {
       console.log('❌ [WAITING-ROOM] Derrota por fallo de reconexión propia:', data);
 
+      this.disableSessionNavigationGuard();
+
       if (this.resultSent) {
-        this.disableSessionNavigationGuard();
         setTimeout(() => this.returnToTableSelection(), 800);
         return;
       }
 
-      this.disableSessionNavigationGuard();
+      const isFourPlayerOnline = this.gameMode === 'online' && this.playersRoom === 4;
+
+      // 2P: igual que antes — el ganador registra en el API; este cliente solo sale.
+      if (!isFourPlayerOnline) {
+        this.resultSent = true;
+        this.isSurrendering = false;
+        this.showGameResultMessage({
+          playerName: this.getFirstName(this.playerName),
+          opponentName: data?.opponentName || 'Oponente',
+          playerScore: 0,
+          opponentScore: 0,
+          isWinner: false,
+          gameData: data || {}
+        });
+        setTimeout(() => this.returnToTableSelection(), GAME_CONFIG.REDIRECT_DELAY || 2000);
+        return;
+      }
 
       const playerName = this.getFirstName(this.playerName);
       const roomCode = this.roomCode || data?.roomCode || '';
