@@ -3271,16 +3271,51 @@ export default {
       }, 4000);
     },
     
-    handleReconnectFailedLose(data) {
-      // Derrota porque no pude reconectar
-      console.log('❌ [WAITING-ROOM] Derrota por fallo de reconexión propia');
-      
-      // No enviar resultado - el ganador lo hará desde su lado
-      // Solo redirigir al dashboard
-      setTimeout(() => {
-        console.log('🏠 Regresando a selección de mesas después de fallo de reconexión...');
-        this.returnToTableSelection();
-      }, 2000);
+    async handleReconnectFailedLose(data) {
+      console.log('❌ [WAITING-ROOM] Derrota por fallo de reconexión propia:', data);
+
+      if (this.resultSent) {
+        this.disableSessionNavigationGuard();
+        setTimeout(() => this.returnToTableSelection(), 800);
+        return;
+      }
+
+      this.disableSessionNavigationGuard();
+
+      const playerName = this.getFirstName(this.playerName);
+      const roomCode = this.roomCode || data?.roomCode || '';
+      const gameResult = {
+        playerName,
+        opponentName: 'Partida en curso',
+        playerScore: 0,
+        opponentScore: 0,
+        isWinner: false,
+        winner: '',
+        gameMode: this.gameMode || 'online',
+        roomCode,
+        surrendered: true,
+        disconnected: true,
+        disconnectReason: data?.message || 'No reconectaste a tiempo',
+        gameData: {
+          playerName,
+          surrendered: true,
+          disconnected: true,
+          disconnectReason: data?.reason || 'reconnect_timeout',
+          eliminated: true,
+          roomCode,
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      this.resultSent = true;
+      this.isSurrendering = false;
+
+      try {
+        await this.sendGameResultToBackend(gameResult);
+      } catch (err) {
+        console.error('❌ [WAITING-ROOM] Error enviando derrota por reconexión:', err);
+        setTimeout(() => this.returnToTableSelection(), 1500);
+      }
     },
 
     async handleBotWonHousePot(data) {
@@ -5148,19 +5183,6 @@ export default {
 
       if (this.isSurrendering) {
         console.log('⏳ [WAITING-ROOM] Ya se está procesando una rendición, ignorando petición duplicada.');
-        return;
-      }
-
-      // 🔧 MODO ESPECIAL: Online 4 jugadores
-      // Para probar si el juego soporta continuar con 3 jugadores:
-      // - NO enviamos PLAYER_SURRENDER al iframe
-      // - NO enviamos GAME_END ni resultado al backend
-      // - Solo sacamos a este jugador al dashboard, dejando que el socket se desconecte
-      const isFourPlayerOnline = this.gameMode === 'online' && this.playersRoom === 4;
-      if (isFourPlayerOnline) {
-        console.log('🏳️ [WAITING-ROOM] Rendición en modo online 4 jugadores - regresar a selección de mesas.');
-        this.isSurrendering = true;
-        this.returnToTableSelection();
         return;
       }
 
