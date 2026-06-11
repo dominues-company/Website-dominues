@@ -3282,9 +3282,9 @@ export default {
         return;
       }
 
-      const isFourPlayerOnline = this.gameMode === 'online' && this.playersRoom === 4;
+      const isFourPlayerOnline = this.gameMode === 'online' && this.playersRoom === 4 && !this.inviteMode;
 
-      // 2P: igual que antes — el ganador registra en el API; este cliente solo sale.
+      // 2P e invitado: igual que antes — el ganador registra en el API; este cliente solo sale.
       if (!isFourPlayerOnline) {
         this.resultSent = true;
         this.isSurrendering = false;
