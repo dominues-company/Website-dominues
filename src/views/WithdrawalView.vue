@@ -30,7 +30,7 @@
             <input 
               type="text" 
               id="availableBalance" 
-              :value="`Bs ${availableBalance}`"
+              :value="`${availableBalance} Dcoins`"
               readonly 
               class="readonly-input balance-input"
             >
@@ -669,7 +669,7 @@ export default {
       }
       
       if (amount < 500) {
-        this.errors.withdrawalAmount = 'El monto mínimo es de Bs. 500,00';
+        this.errors.withdrawalAmount = 'El monto mínimo es de 500,00 Dcoins';
         return;
       }
       
