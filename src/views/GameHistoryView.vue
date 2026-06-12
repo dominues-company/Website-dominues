@@ -304,7 +304,7 @@ export default {
         minimumFractionDigits: 2
       })
         .format(amount || 0)
-        .replace('BOB', 'Bs');
+        .replace('BOB', 'Dcoins');
     },
     async loadHistory() {
       try {
