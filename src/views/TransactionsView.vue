@@ -89,7 +89,7 @@
                 <td class="transaction-amount">
                   <span class="amount" :class="getAmountClass(transaction.type_transaction)">
                     {{ getAmountPrefix(transaction.type_transaction) }}
-                    {{ transaction.payment_method === 'blockbee' ? '$' : 'Bs' }} 
+                    {{ transaction.payment_method === 'blockbee' ? '$' : 'Dcoins' }} 
                     {{ Math.abs(transaction.amount).toFixed(2) }}
                   </span>
                 </td>
@@ -210,7 +210,7 @@
               <label>Monto:</label>
               <span class="amount-detail" :class="getAmountClass(selectedTransaction.type_transaction)">
                 {{ getAmountPrefix(selectedTransaction.type_transaction) }}
-                {{ selectedTransaction.payment_method === 'blockbee' ? '$' : 'Bs' }} 
+                {{ selectedTransaction.payment_method === 'blockbee' ? '$' : 'Dcoins' }} 
                 {{ Math.abs(selectedTransaction.amount).toFixed(2) }}
               </span>
             </div>

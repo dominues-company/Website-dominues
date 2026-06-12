@@ -116,7 +116,7 @@
       <!-- Formulario de recarga -->
       <form @submit.prevent="handleRecharge">
         <div class="form-group">
-          <label for="amount">Monto a Recargar (Bs.)</label>
+          <label for="amount">Monto a Recargar (Dcoins)</label>
           <div class="input-group">
             <span class="input-icon"><i class="fas fa-money-bill-wave"></i></span>
             <input 
@@ -137,7 +137,7 @@
             <i class="fas fa-exclamation-circle"></i> {{ errors.amount }}
           </div>
           <div class="amount-info">
-            <small>Monto mínimo: Bs. 250,00</small>
+            <small>Monto mínimo: 250,00 Dcoins</small>
           </div>
         </div>
 
@@ -214,7 +214,7 @@
         <ul>
           <li>La transacción será validada en pocos minutos</li>
           <li>Usaremos tu número telefónico: <strong>{{ accountInfo.phone }}</strong> y tu documento de identidad registrado: <strong>{{ accountInfo.type_identification }}-{{ accountInfo.n_identification }}</strong> para recargas y retiros</li>
-          <li>El monto mínimo de cada recarga es de <strong>Bs. 250,00</strong></li>
+          <li>El monto mínimo de cada recarga es de <strong>250,00 Dcoins</strong></li>
           <li>Los montos se acreditan automáticamente una vez verificado el pago</li>
         </ul>
       </div>
@@ -1144,7 +1144,7 @@ export default {
     postRechargeWhatsAppUrl() {
       const s = this.rechargeSuccessSnapshot;
       if (!s) return '#';
-      const amountStr = s.amount ? `Bs. ${s.amount}` : '';
+      const amountStr = s.amount ? `${s.amount} Dcoins` : '';
       let msg = buildRechargeReportMessage({
         userName: this.displayUserName,
         amount: amountStr,
@@ -1378,7 +1378,7 @@ export default {
       }
       
       if (amount < 250) {
-        this.errors.amount = 'El monto mínimo es de Bs. 250,00';
+        this.errors.amount = 'El monto mínimo es de 250,00 Dcoins';
         return;
       }
       
