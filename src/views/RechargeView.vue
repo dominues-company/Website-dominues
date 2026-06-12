@@ -4,6 +4,10 @@
       <div class="recharge-header">
         <h2>Recargas</h2>
         <p>Elige el método de pago para recargar tu cuenta</p>
+        <p class="currency-note">
+          <i class="fas fa-info-circle me-1"></i>
+          Bs y USDT ($) son medios de pago para obtener <strong>DCoins</strong>, nuestra moneda interna.
+        </p>
       </div>
 
       <!-- Loading para determinar método -->
@@ -116,7 +120,7 @@
       <!-- Formulario de recarga -->
       <form @submit.prevent="handleRecharge">
         <div class="form-group">
-          <label for="amount">Monto a Recargar (Dcoins)</label>
+          <label for="amount">Monto a Recargar (Bs.)</label>
           <div class="input-group">
             <span class="input-icon"><i class="fas fa-money-bill-wave"></i></span>
             <input 
@@ -137,7 +141,7 @@
             <i class="fas fa-exclamation-circle"></i> {{ errors.amount }}
           </div>
           <div class="amount-info">
-            <small>Monto mínimo: 250,00 Dcoins</small>
+            <small>Monto mínimo: Bs. 250,00</small>
           </div>
         </div>
 
@@ -214,7 +218,7 @@
         <ul>
           <li>La transacción será validada en pocos minutos</li>
           <li>Usaremos tu número telefónico: <strong>{{ accountInfo.phone }}</strong> y tu documento de identidad registrado: <strong>{{ accountInfo.type_identification }}-{{ accountInfo.n_identification }}</strong> para recargas y retiros</li>
-          <li>El monto mínimo de cada recarga es de <strong>250,00 Dcoins</strong></li>
+          <li>El monto mínimo de cada recarga es de <strong>Bs. 250,00</strong></li>
           <li>Los montos se acreditan automáticamente una vez verificado el pago</li>
         </ul>
       </div>
@@ -385,6 +389,20 @@
 .recharge-header p {
   color: #7f8c8d;
   font-size: 16px;
+}
+
+.recharge-header .currency-note {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #2c3e50;
+  background: #eef6ff;
+  border: 1px solid #cfe5ff;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.recharge-header .currency-note strong {
+  color: #1565c0;
 }
 
 .payment-method-selector {
@@ -1144,7 +1162,7 @@ export default {
     postRechargeWhatsAppUrl() {
       const s = this.rechargeSuccessSnapshot;
       if (!s) return '#';
-      const amountStr = s.amount ? `${s.amount} Dcoins` : '';
+      const amountStr = s.amount ? `Bs. ${s.amount}` : '';
       let msg = buildRechargeReportMessage({
         userName: this.displayUserName,
         amount: amountStr,
@@ -1378,7 +1396,7 @@ export default {
       }
       
       if (amount < 250) {
-        this.errors.amount = 'El monto mínimo es de 250,00 Dcoins';
+        this.errors.amount = 'El monto mínimo es de Bs. 250,00';
         return;
       }
       
