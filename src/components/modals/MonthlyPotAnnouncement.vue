@@ -87,8 +87,8 @@ export default {
         currency: 'BOB',
         minimumFractionDigits: 2
       }).format(amount || 0);
-      // Asegurar que muestre Rup en lugar de BOB
-      return formatted.replace('BOB', 'Rup');
+      // Asegurar que muestre Dcoins en lugar de BOB
+      return formatted.replace('BOB', 'Dcoins');
     }
   }
 };
