@@ -5284,7 +5284,7 @@ export default {
         return;
       }
 
-      this.loadingOverlayMessage = 'Has acumulado 3 faltas. Rendición automática...';
+      this.loadingOverlayMessage = 'Has acumulado 2 faltas. Rendición automática...';
       this.showLoadingOverlay = true;
 
       this.handleSurrender({
