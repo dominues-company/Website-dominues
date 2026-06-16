@@ -137,7 +137,8 @@ export default {
     try {
       await Promise.all([
         this.$store.dispatch('games/fetchGames'),
-        this.$store.dispatch('games/fetchUserBalance')
+        this.$store.dispatch('games/fetchUserBalance'),
+        this.$store.dispatch('games/fetchTables')
       ])
     } finally {
       this.gamesReady = true
@@ -177,7 +178,8 @@ export default {
 
       Promise.all([
         this.fetchGames(),
-        this.$store.dispatch('games/fetchUserBalance')
+        this.$store.dispatch('games/fetchUserBalance'),
+        this.$store.dispatch('games/fetchTables')
       ]).catch((error) => {
         console.error('Error refrescando datos del dashboard:', error)
       })
@@ -287,7 +289,6 @@ export default {
       }
 
       console.log('Navigating to WaitingRoomPage with tableId:', tableId);
-      // Ir directamente a la sala de espera de la mesa específica
       this.$router.push({
         name: 'WaitingRoomPage',
         params: { tableId: tableId }

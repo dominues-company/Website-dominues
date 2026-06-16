@@ -70,7 +70,27 @@
         <div class="game-modes">
           <h3 class="modes-title">Elige tu Mesa de Juego</h3>
           <p class="modes-subtitle">Selecciona donde quieres jugar</p>
-          
+
+          <div v-if="isLobbyLoading" class="lobby-loading" aria-live="polite" aria-busy="true">
+            <div class="lobby-loading-header">
+              <div class="lobby-loading-spinner"></div>
+              <p class="lobby-loading-text">Cargando mesas disponibles...</p>
+            </div>
+            <div class="lobby-skeleton-grid">
+              <div v-for="n in 5" :key="'skeleton-' + n" class="mode-card-skeleton"></div>
+            </div>
+          </div>
+
+          <div v-else-if="lobbyLoadError" class="lobby-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>{{ lobbyLoadError }}</p>
+            <button type="button" class="lobby-retry-btn" @click="retryLobbyLoad">
+              <i class="fas fa-redo"></i>
+              Reintentar
+            </button>
+          </div>
+
+          <template v-else>
           <!-- 🔧 Contador general de jugadores en línea - Solo mostrar cuando las mesas estén cargadas -->
           <div class="global-online-indicator" v-if="gameTables && gameTables.length > 0">
             <div class="online-indicator-content">
@@ -238,6 +258,7 @@
               </div>
             </div>
           </div>
+          </template>
         </div>
 
         <!-- Botón de Salir -->
@@ -631,6 +652,8 @@ export default {
       matchSearchCancelled: false,
       // Datos de las mesas del backend
       gameTables: [],
+      isLobbyLoading: true,
+      lobbyLoadError: null,
       serviceSuspended: false,
       serviceSuspendedMessage: '',
       suspensionNotified: false,
@@ -1101,23 +1124,47 @@ export default {
 
       try {
         console.log('🔄 [WAITING-ROOM] Cargando mesas desde el backend...');
-        
-        // Obtener datos desde el store de Vuex (que ya tiene los datos del backend)
+        await this.$store.dispatch('games/fetchTables');
         const games = this.$store.state.games.games || [];
-        
-        if (games.length > 0) {
-          console.log('📡 [WAITING-ROOM] Datos obtenidos del store:', games);
-          this.mapBackendDataToTables(games);
-        } else {
-          console.log('⚠️ [WAITING-ROOM] No hay datos en el store, cargando desde API...');
-          // Si no hay datos en el store, cargar desde la API
-          await this.$store.dispatch('games/fetchTables');
-          const updatedGames = this.$store.state.games.games || [];
-          this.mapBackendDataToTables(updatedGames);
-        }
+        this.mapBackendDataToTables(games);
       } catch (error) {
         console.error('❌ [WAITING-ROOM] Error cargando mesas:', error);
+        throw error;
       }
+    },
+
+    async initializeLobby() {
+      this.isLobbyLoading = true;
+      this.lobbyLoadError = null;
+
+      try {
+        const [, , isSuspended] = await Promise.all([
+          this.syncUserBalance(true),
+          this.retryPendingGameResultIfAny(),
+          this.checkGameServiceStatus()
+        ]);
+
+        if (!isSuspended) {
+          await this.loadGameTables();
+
+          if (this.gameTables.length === 0) {
+            this.lobbyLoadError = 'No se pudieron cargar las mesas. Intenta de nuevo.';
+          }
+        }
+      } catch (error) {
+        console.error('❌ [WAITING-ROOM] Error inicializando lobby:', error);
+        this.lobbyLoadError = 'Error al cargar las mesas. Intenta de nuevo.';
+      } finally {
+        this.isLobbyLoading = false;
+
+        if (!this.serviceSuspended) {
+          this.startOnlinePlayersUpdate();
+        }
+      }
+    },
+
+    async retryLobbyLoad() {
+      await this.initializeLobby();
     },
 
     async checkGameServiceStatus() {
@@ -5625,15 +5672,7 @@ export default {
     // Escuchar eventos de actualización de balance
     window.addEventListener('balance-updated', this.handleBalanceUpdate);
     
-    // Sincronizar balance y verificar servicio antes de cargar mesas
-    await this.syncUserBalance(true);
-    await this.retryPendingGameResultIfAny();
-    const isSuspended = await this.checkGameServiceStatus();
-
-    if (!isSuspended) {
-      await this.loadGameTables();
-      this.startOnlinePlayersUpdate();
-    }
+    await this.initializeLobby();
   },
   
   beforeUnmount() {
@@ -6006,6 +6045,105 @@ export default {
 }
 
 /* Opciones de modo */
+.lobby-loading {
+  margin-bottom: 40px;
+}
+
+.lobby-loading-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.lobby-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.15);
+  border-left-color: #ffa500;
+  border-radius: 50%;
+  animation: lobby-spin 0.9s linear infinite;
+}
+
+.lobby-loading-text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.lobby-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+.mode-card-skeleton {
+  min-height: 200px;
+  border-radius: 20px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: lobby-shimmer 1.4s ease-in-out infinite;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lobby-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 20px;
+  margin-bottom: 32px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fff;
+  text-align: center;
+}
+
+.lobby-error i {
+  font-size: 2rem;
+  color: #f87171;
+}
+
+.lobby-error p {
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.lobby-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff8c00, #ff6b35);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lobby-retry-btn:hover {
+  opacity: 0.92;
+}
+
+@keyframes lobby-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes lobby-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .mode-options {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -6764,7 +6902,8 @@ export default {
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .mode-options {
+  .mode-options,
+  .lobby-skeleton-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 22px;
   }
@@ -6968,7 +7107,8 @@ export default {
     display: inline-block;
   }
   
-  .mode-options {
+  .mode-options,
+  .lobby-skeleton-grid {
     grid-template-columns: 1fr;
     gap: 10px;
   }

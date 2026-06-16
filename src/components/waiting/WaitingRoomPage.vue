@@ -5,8 +5,8 @@
     <div v-if="loading" class="loading-screen">
       <div class="loading-spinner">
         <div class="spinner"></div>
-        <h3>Cargando juego...</h3>
-        <p>Preparando tu partida</p>
+        <h3>Preparando sala de juego...</h3>
+        <p>Cargando mesas y saldo</p>
       </div>
     </div>
 
@@ -128,7 +128,10 @@ export default {
         
         // Primero intentar cargar las mesas desde el backend
         console.log('🔄 [WAITING-PAGE] Cargando mesas desde el backend...')
-        await this.$store.dispatch('games/fetchTables')
+        await Promise.all([
+          this.$store.dispatch('games/fetchTables'),
+          this.$store.dispatch('games/fetchUserBalance')
+        ])
         
         console.log('📡 [WAITING-PAGE] Juegos cargados del backend:', this.$store.state.games.games)
         
