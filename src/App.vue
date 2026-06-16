@@ -75,14 +75,35 @@ export default {
     window.addEventListener('invalid-session', this.handleInvalidSession);
     window.addEventListener('valid-session', this.handleValidSession);
     window.addEventListener('session-conflict', this.handleSessionConflict);
+    window.addEventListener('app-refresh-data', this.refreshLiveData);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    window.addEventListener('pageshow', this.handlePageShow);
   },
   methods: {
+    refreshLiveData() {
+      if (!this.$store.getters['auth/isAuthenticated']) {
+        return;
+      }
+
+      this.$store.dispatch('games/fetchGames');
+      this.$store.dispatch('games/fetchUserBalance');
+    },
+    handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        AuthService.refreshLiveData();
+      }
+    },
+    handlePageShow(event) {
+      if (event.persisted) {
+        AuthService.refreshLiveData();
+      }
+    },
     handleInvalidSession() {
       this.sessionAlertMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
       this.showSessionExpiredAlert = true;
     },
     handleValidSession() {
-      // Actualizar datos del usuario si es necesario
+      this.refreshLiveData();
     },
     handleSessionConflict(event) {
       // Manejar conflicto de sesión (otra sesión activa)
@@ -107,6 +128,9 @@ export default {
     window.removeEventListener('invalid-session', this.handleInvalidSession);
     window.removeEventListener('valid-session', this.handleValidSession);
     window.removeEventListener('session-conflict', this.handleSessionConflict);
+    window.removeEventListener('app-refresh-data', this.refreshLiveData);
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    window.removeEventListener('pageshow', this.handlePageShow);
   }
 }
 </script>

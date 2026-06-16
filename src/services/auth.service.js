@@ -331,7 +331,18 @@ class AuthService {
   handleVisibilityChange() {
     if (document.visibilityState === 'visible') {
       this.checkInactivity();
+      this.refreshLiveData();
     }
+  }
+
+  refreshLiveData() {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      return;
+    }
+
+    this.checkSession();
+    window.dispatchEvent(new CustomEvent('app-refresh-data'));
   }
 
   addStorageListener() {

@@ -31,6 +31,17 @@ api.interceptors.request.use(
         config.headers['X-Session-ID'] = sessionId;
       }
     }
+
+    // Evitar respuestas cacheadas en navegadores móviles (Safari, Chrome Android)
+    const method = (config.method || 'get').toLowerCase();
+    if (method === 'get') {
+      config.headers['Cache-Control'] = 'no-cache';
+      config.headers['Pragma'] = 'no-cache';
+      config.params = {
+        ...config.params,
+        _t: Date.now()
+      };
+    }
     
     return config;
   },

@@ -2,6 +2,10 @@ const path = require('path')
 const { defineConfig } = require('@vue/cli-service')
 const CompressionPlugin = require('compression-webpack-plugin')
 
+const buildId = process.env.VERCEL_GIT_COMMIT_SHA
+  || process.env.VUE_APP_BUILD_ID
+  || String(Date.now())
+
 module.exports = defineConfig({
   transpileDependencies: true,
   // Evitar que el build falle por ESLint (scripts en assets/js y legacy)
@@ -57,6 +61,7 @@ module.exports = defineConfig({
       d.__VUE_OPTIONS_API__ = JSON.stringify(true)
       d.__VUE_PROD_DEVTOOLS__ = JSON.stringify(false)
       d.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ = JSON.stringify(false)
+      d['process.env'].VUE_APP_BUILD_ID = JSON.stringify(buildId)
       return definitions
     })
 

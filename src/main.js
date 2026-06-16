@@ -67,19 +67,40 @@ document.addEventListener('DOMContentLoaded', () => {
   initGlobalJqueryPlugins();
 });
 
-// Prevenir caché en desarrollo móvil
-if (process.env.NODE_ENV === 'development') {
-  // Forzar recarga completa cada vez que se detecta un cambio
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-      registrations.forEach(registration => {
-        registration.unregister();
-      });
+// Limpiar service workers heredados que puedan servir assets viejos
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      registration.unregister();
     });
-  }
-  
-  // Agregar versión única a la URL para evitar caché
-  const version = Date.now();
-  console.log(`🔄 Versión de build: ${version}`);
-  window.__APP_VERSION__ = version;
+  });
 }
+
+// Recargar una vez cuando hay un deploy nuevo (producción)
+function ensureFreshBuild() {
+  if (process.env.NODE_ENV === 'development') {
+    const version = Date.now();
+    window.__APP_VERSION__ = version;
+    return;
+  }
+
+  const buildId = process.env.VUE_APP_BUILD_ID;
+  if (!buildId) {
+    return;
+  }
+
+  window.__APP_BUILD_ID__ = buildId;
+
+  const storedBuildId = localStorage.getItem('app_build_id');
+  if (storedBuildId === buildId) {
+    return;
+  }
+
+  localStorage.setItem('app_build_id', buildId);
+
+  if (storedBuildId) {
+    window.location.reload();
+  }
+}
+
+ensureFreshBuild();

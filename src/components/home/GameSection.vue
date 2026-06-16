@@ -150,8 +150,11 @@ export default {
         })
       this.$store.commit('games/SET_SOCKET_CONNECTED', true)
     }
+
+    window.addEventListener('app-refresh-data', this.handleAppRefreshData)
   },
   beforeUnmount() {
+    window.removeEventListener('app-refresh-data', this.handleAppRefreshData)
     // Desconectar Socket.IO al salir del componente
     this.disconnectSocket()
     // Desuscribirse del canal de Pusher
@@ -166,6 +169,19 @@ export default {
       'initSocketConnection',
       'disconnectSocket'
     ]),
+
+    handleAppRefreshData() {
+      if (!this.isAuthenticated) {
+        return
+      }
+
+      Promise.all([
+        this.fetchGames(),
+        this.$store.dispatch('games/fetchUserBalance')
+      ]).catch((error) => {
+        console.error('Error refrescando datos del dashboard:', error)
+      })
+    },
     
     
     getImageUrl(name) {

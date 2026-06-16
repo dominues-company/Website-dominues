@@ -2349,10 +2349,7 @@ export default {
         selectedTable: tableContext
       });
       
-      // 🔧 OPTIMIZATION: Usar cache buster solo cuando sea necesario (nueva sesión)
-      // No invalidar caché en cada carga - permite que el navegador cachee recursos estáticos
       const sessionId = this.currentSessionId || this.generateSessionId();
-      const isNewSession = !this.currentSessionId;
       
       const params = new URLSearchParams({
         mode: gameMode,
@@ -2368,13 +2365,10 @@ export default {
         mute: this.isGameMuted ? 'true' : 'false'
       });
       
-      // 🔧 OPTIMIZATION: Solo agregar cache buster si es una nueva sesión
-      // Esto permite que recursos estáticos se cacheen entre partidas del mismo usuario
-      if (isNewSession) {
-        const cacheBuster = Date.now();
-        params.set('timestamp', cacheBuster.toString());
-        params.set('_cb', cacheBuster.toString());
-      }
+      // Cache buster en cada carga del iframe para evitar JS/CSS viejos en móvil
+      const cacheBuster = Date.now();
+      params.set('timestamp', cacheBuster.toString());
+      params.set('_cb', cacheBuster.toString());
       
       // Añadir datos de la mesa seleccionada si están disponibles
       if (tableContext && tableContext.id) {
