@@ -79,6 +79,7 @@ export default {
   namespaced: true,
   state: {
     games: [],
+    tables: [],
     userBalance: 0,
     loading: false,
     socketConnected: false,
@@ -87,6 +88,9 @@ export default {
   mutations: {
     SET_GAMES(state, games) {
       state.games = games
+    },
+    SET_TABLES(state, tables) {
+      state.tables = tables
     },
     UPDATE_GAME(state, updatedGame) {
       const index = state.games.findIndex(game => game.id === updatedGame.id)
@@ -177,19 +181,17 @@ export default {
           console.log('⚠️ [STORE-WAITING] Estructura de datos no reconocida:', response.data)
         }
         
-        console.log('✅ [STORE-WAITING] Juegos finales procesados:', games)
-        commit('SET_GAMES', games)
+        console.log('✅ [STORE-WAITING] Mesas finales procesadas:', games)
+        commit('SET_TABLES', games)
       } catch (error) {
         console.error('❌ [STORE-WAITING] Error al obtener juegos:', error)
         console.error('❌ [STORE-WAITING] Error response:', error.response)
         console.error('❌ [STORE-WAITING] Error message:', error.message)
-        commit('SET_GAMES', [])
+        commit('SET_TABLES', [])
       } finally {
         commit('SET_LOADING', false)
       }
     },
-
-    // Acción para unirse a una mesa
     async joinTable({ commit, state }, { tableId, entryPrice }) {
       try {
         console.log('🔄 [STORE] Uniéndose a mesa:', { tableId, entryPrice });
@@ -318,9 +320,17 @@ export default {
       }
       return state.games
     },
+    availableTables: state => {
+      if (!state.tables || !state.tables.length) return []
+      return state.tables.filter(table => table.status === 'open' || table.status === 'activo')
+    },
     getGameById: state => (gameId) => {
       if (!state.games || !state.games.length) return null
       return state.games.find(game => game.id == gameId)
+    },
+    getTableById: state => (tableId) => {
+      if (!state.tables || !state.tables.length) return null
+      return state.tables.find(table => table.id == tableId)
     },
     canJoinGame: state => (entryFee) => {
       return state.userBalance >= entryFee

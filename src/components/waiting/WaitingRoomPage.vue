@@ -129,11 +129,13 @@ export default {
         // Primero intentar cargar las mesas desde el backend
         console.log('🔄 [WAITING-PAGE] Cargando mesas desde el backend...')
         await Promise.all([
+          this.$store.dispatch('games/fetchGames'),
           this.$store.dispatch('games/fetchTables'),
           this.$store.dispatch('games/fetchUserBalance')
         ])
         
         console.log('📡 [WAITING-PAGE] Juegos cargados del backend:', this.$store.state.games.games)
+        console.log('📡 [WAITING-PAGE] Mesas cargadas del backend:', this.$store.state.games.tables)
         
         // Obtener el juego desde el store o crear datos por defecto
         let gameData = this.$store.getters['games/getGameById'](this.gameId)

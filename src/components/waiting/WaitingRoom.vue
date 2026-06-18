@@ -1125,8 +1125,8 @@ export default {
       try {
         console.log('🔄 [WAITING-ROOM] Cargando mesas desde el backend...');
         await this.$store.dispatch('games/fetchTables');
-        const games = this.$store.state.games.games || [];
-        this.mapBackendDataToTables(games);
+        const tables = this.$store.state.games.tables || [];
+        this.mapBackendDataToTables(tables);
       } catch (error) {
         console.error('❌ [WAITING-ROOM] Error cargando mesas:', error);
         throw error;
@@ -1136,6 +1136,7 @@ export default {
     async initializeLobby() {
       this.isLobbyLoading = true;
       this.lobbyLoadError = null;
+      this.gameTables = [];
 
       try {
         const [, , isSuspended] = await Promise.all([
@@ -2009,8 +2010,8 @@ export default {
         if (!this.gameStarted && !this.isConnecting) {
           try {
             await this.$store.dispatch('games/fetchTables');
-            const updatedGames = this.$store.state.games.games || [];
-            this.mapBackendDataToTables(updatedGames);
+            const updatedTables = this.$store.state.games.tables || [];
+            this.mapBackendDataToTables(updatedTables);
           } catch (error) {
             console.warn('⚠️ [ONLINE-PLAYERS] Error actualizando jugadores en línea:', error);
           }

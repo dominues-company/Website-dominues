@@ -2,13 +2,14 @@
    <section class="game-section padding-top padding-bottom bg_img" :style="{ background: `url(${getAssetImageUrl('bg3.jpg')}) center` }" id="games">
         <div class="container">
             <div v-if="loading" class="row gy-4 justify-content-center">
-                <div class="col-12 text-center">
-                    <div class="loading-spinner">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                        <p class="mt-2">Cargando juegos...</p>
+                <div class="col-12 text-center lobby-loading-header" style="margin-bottom: 1rem;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
                     </div>
+                    <p class="mt-2 mb-0" style="color: rgba(255,255,255,0.9);">Cargando juegos disponibles...</p>
+                </div>
+                <div v-for="n in 3" :key="'game-skeleton-' + n" class="col-lg-6 col-xl-4 col-md-6 col-sm-12">
+                    <div class="game-card-skeleton" aria-hidden="true"></div>
                 </div>
             </div>
             <template v-else>
@@ -137,8 +138,7 @@ export default {
     try {
       await Promise.all([
         this.$store.dispatch('games/fetchGames'),
-        this.$store.dispatch('games/fetchUserBalance'),
-        this.$store.dispatch('games/fetchTables')
+        this.$store.dispatch('games/fetchUserBalance')
       ])
     } finally {
       this.gamesReady = true
@@ -171,18 +171,23 @@ export default {
       'disconnectSocket'
     ]),
 
-    handleAppRefreshData() {
+    async handleAppRefreshData() {
       if (!this.isAuthenticated) {
         return
       }
 
-      Promise.all([
-        this.fetchGames(),
-        this.$store.dispatch('games/fetchUserBalance'),
-        this.$store.dispatch('games/fetchTables')
-      ]).catch((error) => {
+      this.gamesReady = false
+
+      try {
+        await Promise.all([
+          this.fetchGames(),
+          this.$store.dispatch('games/fetchUserBalance')
+        ])
+      } catch (error) {
         console.error('Error refrescando datos del dashboard:', error)
-      })
+      } finally {
+        this.gamesReady = true
+      }
     },
     
     
@@ -425,6 +430,25 @@ export default {
 }
 
 /* Estados de carga y mensajes */
+.game-card-skeleton {
+  min-height: 280px;
+  border-radius: 20px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: game-skeleton-shimmer 1.4s ease-in-out infinite;
+  border: 1px solid rgba(255, 165, 0, 0.15);
+}
+
+@keyframes game-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .loading-spinner {
   padding: 40px 0;
 }
