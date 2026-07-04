@@ -3370,12 +3370,12 @@ export default {
       this.resultSent = true;
       this.isSurrendering = false;
 
-      try {
-        await this.sendGameResultToBackend(gameResult);
-      } catch (err) {
-        console.error('❌ [WAITING-ROOM] Error enviando derrota por reconexión:', err);
-        setTimeout(() => this.returnToTableSelection(), 1500);
-      }
+      this.showDisconnectLoseMessage({
+        ...gameResult,
+        disconnectReason: 'Perdiste la mesa por problemas de conexion. Revisa tu senal e ingresa a una nueva partida de inmediato. La revancha te espera.'
+      });
+
+      setTimeout(() => this.returnToTableSelection(), GAME_CONFIG.REDIRECT_DELAY || 3000);
     },
 
     async handleBotWonHousePot(data) {
@@ -3535,7 +3535,9 @@ export default {
         // Calcular montos usando la configuración de la mesa o valores por defecto
         const entryPrice = safeTable?.entry_price ?? GAME_CONFIG.DEFAULT_BET_AMOUNT;
         const winnerPayout = safeTable?.winner_payout ?? (entryPrice * 2);
-        const betAmounts = calculateBetAmounts(entryPrice, gameData.isWinner, winnerPayout);
+        const playerCountForPot = isMultiplayer ? (this.playersRoom || safeTable?.max_players || 4) : 2;
+        const tableTotalPot = Number(safeTable?.total_pot || 0);
+        const betAmounts = calculateBetAmounts(entryPrice, gameData.isWinner, winnerPayout, playerCountForPot, tableTotalPot);
         
         // 🔧 FIX: Construir datos base
         const authorizedMatchId = this.extractMatchId(gameData) || this.currentMatchId;

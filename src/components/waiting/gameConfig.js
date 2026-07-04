@@ -55,25 +55,27 @@ export function shouldRetryGameResultSave(httpStatus) {
 }
 
 // Función para calcular montos de apuesta
-export function calculateBetAmounts(betAmount, isWinner, winnerPayout = null) {
-  // Si se proporciona winnerPayout específico de la mesa, usarlo
+export function calculateBetAmounts(betAmount, isWinner, winnerPayout = null, playerCount = 2, totalPotOverride = null) {
+  const count = Math.max(1, Number(playerCount) || 2);
+  const totalPot = Number(totalPotOverride) > 0
+    ? Number(totalPotOverride)
+    : Number(betAmount || 0) * count;
+
   if (winnerPayout) {
-    const totalPot = betAmount * 2; // Jugador + Casa
-    const houseFee = totalPot - winnerPayout;
-    
+    const payout = Number(winnerPayout) || 0;
+    const houseFee = Math.max(0, totalPot - payout);
+
     return {
       betAmount,
       totalPot,
       houseFee,
-      winnerAmount: isWinner ? winnerPayout : 0
+      winnerAmount: isWinner ? payout : 0
     };
   }
-  
-  // Cálculo por defecto
-  const totalPot = betAmount * 2; // Jugador + Casa
+
   const houseFee = totalPot * GAME_CONFIG.HOUSE_FEE_PERCENTAGE;
   const winnerAmount = isWinner ? totalPot - houseFee : 0;
-  
+
   return {
     betAmount,
     totalPot,
@@ -81,7 +83,6 @@ export function calculateBetAmounts(betAmount, isWinner, winnerPayout = null) {
     winnerAmount
   };
 }
-
 // Función para obtener datos del usuario
 export function getUserData(store, localStorage) {
   let user = null;
