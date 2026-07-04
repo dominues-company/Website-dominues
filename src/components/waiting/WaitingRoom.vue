@@ -603,7 +603,9 @@ import {
   getTableId,
   buildWaitingRoomUrl,
   sleep,
-  shouldRetryGameResultSave
+  shouldRetryGameResultSave,
+  isConnectionLossGameData,
+  getConnectionLossIconHtml
 } from './gameConfig.js'
 
 export default {
@@ -3068,21 +3070,20 @@ export default {
           isWinner: data.isWinner
         });
         
-        // Mostrar mensaje de derrota
-        this.showGameResultMessage({
-          playerName: data.playerName,
-          opponentName: data.opponentName,
-          playerScore: data.playerScore || 0,
-          opponentScore: data.opponentScore || 0,
-          isWinner: false,
-          gameData: data
+        this.resultSent = true;
+        this.isSurrendering = false;
+
+        this.showDisconnectLoseMessage({
+          ...data,
+          disconnected: true,
+          playerDisconnected: true,
+          disconnectReason: data.disconnectReason || `${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_BODY} ${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_FOOTER}`
         });
         
-        // Redirigir al dashboard
         setTimeout(() => {
           console.log('🏠 Regresando a selección de mesas después de derrota por desconexión...');
           this.returnToTableSelection();
-        }, 3000);
+        }, GAME_CONFIG.REDIRECT_DELAY);
         
         return; // ← IMPORTANTE: Salir sin enviar resultado
       }
@@ -3241,12 +3242,12 @@ export default {
       // Solo el ganador enviará el resultado y el backend creará automáticamente la derrota del oponente
       console.log('⏭️ [WAITING-ROOM] Jugador desconectado - NO enviar resultado (el ganador lo hará)');
       
-      // Crear mensaje especial para derrota por desconexión
-      const disconnectMessage = `Perdiste por desconexión - ${data.winner} ganó`;
-      console.log('Disconnect lose message:', disconnectMessage);
-      
-      // Mostrar mensaje de derrota
-      this.showDisconnectLoseMessage(data);
+      this.showDisconnectLoseMessage({
+        ...data,
+        disconnected: true,
+        playerDisconnected: true,
+        disconnectReason: data?.disconnectReason || `${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_BODY} ${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_FOOTER}`
+      });
       
       // ❌ NO ENVIAR AL BACKEND - El ganador se encargará
       console.log('⏭️ [WAITING-ROOM] Omitiendo envío al backend (el ganador registrará ambos resultados)');
@@ -3372,7 +3373,9 @@ export default {
 
       this.showDisconnectLoseMessage({
         ...gameResult,
-        disconnectReason: 'Perdiste la mesa por problemas de conexion. Revisa tu senal e ingresa a una nueva partida de inmediato. La revancha te espera.'
+        disconnected: true,
+        playerDisconnected: true,
+        disconnectReason: GAME_CONFIG.MESSAGES.CONNECTION_LOSS_SAVE_ERROR
       });
 
       setTimeout(() => this.returnToTableSelection(), GAME_CONFIG.REDIRECT_DELAY || 3000);
@@ -3534,8 +3537,8 @@ export default {
         
         // Calcular montos usando la configuración de la mesa o valores por defecto
         const entryPrice = safeTable?.entry_price ?? GAME_CONFIG.DEFAULT_BET_AMOUNT;
-        const winnerPayout = safeTable?.winner_payout ?? (entryPrice * 2);
         const playerCountForPot = isMultiplayer ? (this.playersRoom || safeTable?.max_players || 4) : 2;
+        const winnerPayout = safeTable?.winner_payout ?? (entryPrice * playerCountForPot);
         const tableTotalPot = Number(safeTable?.total_pot || 0);
         const betAmounts = calculateBetAmounts(entryPrice, gameData.isWinner, winnerPayout, playerCountForPot, tableTotalPot);
         
@@ -3872,10 +3875,16 @@ export default {
     
     showGameResultSaveError(error, gameData, resultData = null) {
       console.warn('⚠️ [WAITING-ROOM] Error al guardar resultado:', error?.message);
-      const isWinner = Boolean(gameData?.isWinner);
-      const bodyText = isWinner
-        ? GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_WIN
-        : GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_LOSE;
+      const mergedData = { ...(resultData?.gameData || {}), ...(gameData || {}), gameData: gameData?.gameData || resultData?.gameData };
+      const connectionLoss = isConnectionLossGameData(mergedData);
+      const isWinner = Boolean(gameData?.isWinner) && !connectionLoss;
+      const bodyText = connectionLoss
+        ? GAME_CONFIG.MESSAGES.CONNECTION_LOSS_SAVE_ERROR
+        : (isWinner
+          ? GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_WIN
+          : GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_LOSE);
+      const iconHtml = connectionLoss ? getConnectionLossIconHtml(48) : '⚠️';
+      const accentColor = connectionLoss ? '#ef5350' : '#ff9800';
 
       const winnerLabel =
         gameData?.winner ||
@@ -3920,17 +3929,17 @@ export default {
           max-width: 420px;
           width: 90%;
           text-align: center;
-          border: 2px solid #ff9800;
+          border: 2px solid ${accentColor};
           box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         ">
-          <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
-          <h2 style="color: #ff9800; margin: 0 0 12px; font-size: 22px;">
-            ${GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_TITLE}
+          <div style="font-size: 48px; margin-bottom: 12px;">${iconHtml}</div>
+          <h2 style="color: ${accentColor}; margin: 0 0 12px; font-size: 22px;">
+            ${connectionLoss ? GAME_CONFIG.MESSAGES.CONNECTION_LOSS_TITLE : GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_TITLE}
           </h2>
           <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px; color: #e0e0e0;">
             ${bodyText}
           </p>
-          <p style="
+          ${connectionLoss ? '' : `<p style="
             font-size: 13px;
             line-height: 1.45;
             margin: 0 0 12px;
@@ -3945,10 +3954,10 @@ export default {
             ${scoreHint ? `${scoreHint}<br>` : ''}
             ${roomHint ? `${roomHint}<br>` : ''}
             <strong>Resultado:</strong> ${isWinner ? 'Victoria (tú)' : 'Derrota'}
-          </p>
-          <p style="font-size: 13px; color: #9e9e9e; margin: 0 0 20px;">
+          </p>`}
+          ${connectionLoss ? '' : `<p style="font-size: 13px; color: #9e9e9e; margin: 0 0 20px;">
             ${GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_HINT}
-          </p>
+          </p>`}
           <p style="font-size: 12px; color: #757575; margin: 0;">
             ${GAME_CONFIG.MESSAGES.RESULT_SAVE_ERROR_REDIRECT}
           </p>
@@ -4257,7 +4266,13 @@ export default {
     },
     
     showDisconnectLoseMessage(gameData) {
-      // Mostrar mensaje especial de derrota por desconexión
+      const title = GAME_CONFIG.MESSAGES.CONNECTION_LOSS_TITLE;
+      const customReason = String(gameData?.disconnectReason || '').trim();
+      const bodyText = customReason.length > 40
+        ? customReason
+        : `${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_BODY} ${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_FOOTER}`;
+      const iconHtml = getConnectionLossIconHtml(72);
+
       const modal = document.createElement('div');
       modal.style.cssText = `
         position: fixed;
@@ -4289,16 +4304,17 @@ export default {
             font-size: 80px;
             margin-bottom: 20px;
           ">
-            ⚠️
+            ${iconHtml}
           </div>
           <h2 style="
             color: white;
             margin-bottom: 15px;
-            font-size: 32px;
+            font-size: 28px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             font-weight: bold;
+            line-height: 1.3;
           ">
-            ${GAME_CONFIG.MESSAGES.LOSE}
+            ${title}
           </h2>
           <div style="
             background: rgba(255,255,255,0.2);
@@ -4308,27 +4324,13 @@ export default {
             border: 1px solid rgba(255,255,255,0.3);
           ">
             <p style="
-              font-size: 20px;
-              margin-bottom: 10px;
+              font-size: 18px;
+              margin-bottom: 0;
               color: white;
-              font-weight: bold;
+              font-weight: 500;
               line-height: 1.5;
             ">
-              Se perdió la conexión
-            </p>
-            <p style="
-              font-size: 18px;
-              color: rgba(255,255,255,0.95);
-              margin-top: 15px;
-            ">
-              ${GAME_CONFIG.MESSAGES.LOSE_SUBTITLE}
-            </p>
-            <p style="
-              font-size: 14px;
-              color: rgba(255,255,255,0.8);
-              margin-top: 10px;
-            ">
-              Razón: ${gameData.disconnectReason || 'Tu conexión se perdió'}
+              ${bodyText}
             </p>
           </div>
           <p style="

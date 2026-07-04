@@ -40,9 +40,34 @@ export const GAME_CONFIG = {
     RESULT_SAVE_ERROR_LOSE: 'Hubo un problema al cerrar la partida. Si algo no cuadra en tu saldo, contacta a soporte.',
     RESULT_SAVE_ERROR_HINT: 'Indica la hora de la partida y el código de sala, si lo recuerdas.',
     RESULT_SAVE_ERROR_REDIRECT: 'Te llevamos a elegir otra mesa en unos segundos...',
-    RESULT_ALREADY_REGISTERED: 'La partida ya fue registrada.'
+    RESULT_ALREADY_REGISTERED: 'La partida ya fue registrada.',
+    CONNECTION_LOSS_TITLE: 'Perdiste la mesa por problemas de conexión',
+    CONNECTION_LOSS_BODY: 'Revisa tu señal e ingresa a una nueva partida de inmediato.',
+    CONNECTION_LOSS_FOOTER: 'La revancha te espera',
+    CONNECTION_LOSS_SAVE_ERROR: 'Perdiste la mesa por problemas de conexión. Revisa tu señal e ingresa a una nueva partida de inmediato. La revancha te espera.'
   }
 };
+
+export function isConnectionLossGameData(gameData) {
+  if (!gameData) return false;
+  const merged = { ...(gameData.gameData || {}), ...gameData };
+  const reason = String(merged.disconnectReason || '').toLowerCase();
+
+  return Boolean(
+    merged.disconnected ||
+    merged.playerDisconnected ||
+    merged.eliminated ||
+    merged.reconnect_timeout ||
+    reason.includes('conexion') ||
+    reason.includes('conexión') ||
+    reason.includes('reconnect') ||
+    reason.includes('desconect')
+  );
+}
+
+export function getConnectionLossIconHtml(sizePx = 80) {
+  return `<i class="fas fa-wifi-slash" style="font-size: ${sizePx}px; color: #fff; opacity: 0.95;"></i>`;
+}
 
 export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
