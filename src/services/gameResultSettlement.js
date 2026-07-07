@@ -12,26 +12,6 @@ import {
   shouldRetryGameResultSave
 } from '../components/waiting/gameConfig.js';
 
-const DBG_ENDPOINT = 'http://127.0.0.1:7752/ingest/5aaf9be0-68cd-4a3d-a9ff-9e0243f0159f';
-const DBG_SESSION = '681594';
-
-function dbgLog(hypothesisId, location, message, data) {
-  // #region agent log
-  fetch(DBG_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': DBG_SESSION },
-    body: JSON.stringify({
-      sessionId: DBG_SESSION,
-      hypothesisId,
-      location,
-      message,
-      data,
-      timestamp: Date.now()
-    })
-  }).catch(() => {});
-  // #endregion
-}
-
 export function extractMatchIdFromPayload(payload = {}) {
   if (!payload || typeof payload !== 'object') return null;
   const candidates = [
@@ -240,19 +220,11 @@ export async function submitGameResultWithRetry(resultData, token) {
 
       if (ok) {
         if (isSameMatchAlreadyRegistered(result, resultData)) {
-          dbgLog('D', 'gameResultSettlement.js:submit', 'same_match_already_registered', {
-            matchId: resultData.match_id,
-            gameResultId: result?.data?.game_result_id
-          });
           clearPendingGameResult();
           return { ok: true, result, duplicateBlocked: false };
         }
 
         if (result?.data?.already_registered) {
-          dbgLog('B', 'gameResultSettlement.js:submit', 'blocked_different_match', {
-            requestedMatchId: resultData.match_id,
-            storedMatchId: result?.data?.matchmaking_id
-          });
           lastError = new Error(
             'El servidor reportó una victoria previa en esta mesa. Reintentando partida nueva...'
           );
@@ -263,24 +235,11 @@ export async function submitGameResultWithRetry(resultData, token) {
           continue;
         }
 
-        dbgLog('D', 'gameResultSettlement.js:submit', 'api_result_ok', {
-          attempt,
-          gameResultId: result?.data?.game_result_id,
-          newBalance: result?.data?.new_balance,
-          matchId: resultData.match_id,
-          isWinner: resultData.isWinner
-        });
         clearPendingGameResult();
         return { ok: true, result, duplicateBlocked: false };
       }
 
       lastError = error;
-      dbgLog('A', 'gameResultSettlement.js:submit', 'api_attempt_failed', {
-        attempt,
-        httpStatus,
-        message: error?.message,
-        matchId: resultData.match_id
-      });
 
       if (!shouldRetryGameResultSave(httpStatus) || attempt >= maxAttempts) break;
     } catch (networkError) {
@@ -290,12 +249,6 @@ export async function submitGameResultWithRetry(resultData, token) {
 
     await sleep(GAME_CONFIG.RESULT_SAVE_RETRY_BASE_DELAY_MS * attempt);
   }
-
-  dbgLog('A', 'gameResultSettlement.js:submit', 'api_result_failed_final', {
-    error: lastError?.message,
-    matchId: resultData.match_id,
-    isWinner: resultData.isWinner
-  });
 
   return {
     ok: false,

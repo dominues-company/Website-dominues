@@ -1152,15 +1152,14 @@ export default {
         const [, , isSuspended] = await Promise.all([
           this.syncUserBalance(true),
           this.retryPendingGameResultIfAny(),
-          this.checkGameServiceStatus()
+          this.checkGameServiceStatus(),
+          this.loadGameTables().catch((error) => {
+            console.error('❌ [WAITING-ROOM] Error cargando mesas en paralelo:', error);
+          })
         ]);
 
-        if (!isSuspended) {
-          await this.loadGameTables();
-
-          if (this.gameTables.length === 0) {
-            this.lobbyLoadError = 'No se pudieron cargar las mesas. Intenta de nuevo.';
-          }
+        if (!isSuspended && this.gameTables.length === 0) {
+          this.lobbyLoadError = 'No se pudieron cargar las mesas. Intenta de nuevo.';
         }
       } catch (error) {
         console.error('❌ [WAITING-ROOM] Error inicializando lobby:', error);
