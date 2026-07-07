@@ -216,12 +216,20 @@ export default {
           commit('SET_USER_BALANCE', detectedBalance)
 
           if (typeof window !== 'undefined' && window.dispatchEvent) {
+            const diff = detectedBalance - oldBalance;
+            const entryLabel = entryPrice > 0
+              ? `Inscripción: ${Math.abs(diff).toFixed(2)} Dcoins descontados.`
+              : '';
             window.dispatchEvent(new CustomEvent('balance-updated', {
               detail: {
                 oldBalance,
                 newBalance: detectedBalance,
-                difference: detectedBalance - oldBalance,
-                message: `Balance actualizado: ${oldBalance} → ${detectedBalance}`
+                difference: diff,
+                source: 'entry',
+                notificationType: 'entry',
+                message: entryLabel
+                  ? `${entryLabel} ¡Buena suerte en la mesa!`
+                  : '¡Entraste a la partida! Buena suerte.'
               }
             }))
           }

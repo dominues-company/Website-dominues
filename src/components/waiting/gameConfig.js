@@ -44,7 +44,12 @@ export const GAME_CONFIG = {
     CONNECTION_LOSS_TITLE: 'Perdiste la mesa por problemas de conexión',
     CONNECTION_LOSS_BODY: 'Revisa tu señal e ingresa a una nueva partida de inmediato.',
     CONNECTION_LOSS_FOOTER: 'La revancha te espera',
-    CONNECTION_LOSS_SAVE_ERROR: 'Perdiste la mesa por problemas de conexión. Revisa tu señal e ingresa a una nueva partida de inmediato. La revancha te espera.'
+    CONNECTION_LOSS_SAVE_ERROR: 'Perdiste la mesa por problemas de conexión. Revisa tu señal e ingresa a una nueva partida de inmediato. La revancha te espera.',
+    NOTIFY_ENTRY: '¡Entraste a la partida! Buena suerte.',
+    NOTIFY_WIN: '¡Ganaste! Premio acreditado en tu saldo.',
+    NOTIFY_LOSE: '¡Casi lo logras! La revancha te espera.',
+    NOTIFY_SURRENDER: 'Te rendiste. Contó como derrota.',
+    NOTIFY_BALANCE_UP: 'Saldo actualizado correctamente.'
   }
 };
 

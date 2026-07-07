@@ -550,10 +550,10 @@
         </div>
       </div>
       
-      <!-- Notificación de balance actualizado -->
+      <!-- Notificación superior derecha (entrada / victoria / derrota) -->
       <div v-if="showBalanceNotification" class="balance-notification" :class="balanceNotificationType">
         <div class="notification-content">
-          <i class="fas fa-coins"></i>
+          <i :class="balanceNotificationIcon"></i>
           <span>{{ balanceNotificationMessage }}</span>
         </div>
       </div>
@@ -687,6 +687,7 @@ export default {
       showBalanceNotification: false,
       balanceNotificationMessage: '',
       balanceNotificationType: 'success',
+      balanceNotificationTimer: null,
       
       // Overlay de loading para esperar jugadores
       showLoadingOverlay: false,
@@ -766,6 +767,17 @@ export default {
       } catch {
         return {};
       }
+    },
+
+    balanceNotificationIcon() {
+      const icons = {
+        success: 'fas fa-trophy',
+        loss: 'fas fa-times-circle',
+        entry: 'fas fa-play-circle',
+        deduction: 'fas fa-coins',
+        info: 'fas fa-info-circle'
+      };
+      return icons[this.balanceNotificationType] || icons.info;
     },
 
     // 🔧 Total de jugadores en línea - Sumar waiting_players de las mesas
@@ -978,7 +990,7 @@ export default {
       await this.syncUserBalance(true);
     },
 
-    announceBalanceChange(oldBalance, newBalance, message = null) {
+    announceBalanceChange(oldBalance, newBalance, message = null, extra = {}) {
       if (typeof window === 'undefined' || !window.dispatchEvent) {
         return
       }
@@ -988,7 +1000,8 @@ export default {
           oldBalance,
           newBalance,
           difference: newBalance - oldBalance,
-          message: message || `Balance actualizado: ${oldBalance} → ${newBalance}`
+          message,
+          ...extra
         }
       }))
     },
@@ -1018,11 +1031,12 @@ export default {
       if (parsedBalance !== null) {
         const oldBalance = this.$store.state.games.userBalance || 0
         this.$store.commit('games/SET_USER_BALANCE', parsedBalance)
-        this.announceBalanceChange(
-          oldBalance,
-          parsedBalance,
-          payload?.message || payload?.data?.message
-        )
+        const diff = parsedBalance - oldBalance
+        const customMessage = payload?.message || payload?.data?.message
+        this.announceBalanceChange(oldBalance, parsedBalance, customMessage, {
+          source: payload?.source || (diff < 0 ? 'entry' : 'settlement'),
+          notificationType: diff < 0 ? 'entry' : undefined
+        })
       }
       return parsedBalance
     },
@@ -1420,24 +1434,83 @@ export default {
     
     // Método para manejar actualización de balance
     handleBalanceUpdate(event) {
-      const { oldBalance, newBalance, difference, message } = event.detail;
-      
-      console.log('💰 [WAITING-ROOM] Balance actualizado:', {
-        oldBalance,
-        newBalance,
-        difference,
-        message
-      });
-      
-      // Mostrar notificación
-      this.balanceNotificationMessage = message;
-      this.balanceNotificationType = difference < 0 ? 'deduction' : 'success';
+      const detail = event?.detail || {};
+      this.showTopNotification(this.resolveBalanceNotification(detail));
+    },
+
+    resolveBalanceNotification(detail = {}) {
+      const oldBalance = Number(detail.oldBalance);
+      const newBalance = Number(detail.newBalance);
+      const hasBalances = Number.isFinite(oldBalance) && Number.isFinite(newBalance);
+      const difference = Number.isFinite(detail.difference)
+        ? detail.difference
+        : (hasBalances ? newBalance - oldBalance : 0);
+
+      let type = detail.notificationType || null;
+      let message = (detail.message && String(detail.message).trim()) || '';
+
+      if (detail.source === 'entry') {
+        type = type || 'entry';
+        if (!message) {
+          message = difference < 0
+            ? `Inscripción: ${Math.abs(difference).toFixed(2)} Dcoins. ${GAME_CONFIG.MESSAGES.NOTIFY_ENTRY}`
+            : GAME_CONFIG.MESSAGES.NOTIFY_ENTRY;
+        }
+      } else if (detail.source === 'settlement' || detail.isWinner === true) {
+        type = type || 'success';
+        if (!message) {
+          if (difference > 0) {
+            message = `¡Ganaste! +${difference.toFixed(2)} Dcoins en tu saldo.`;
+          } else {
+            message = GAME_CONFIG.MESSAGES.NOTIFY_WIN;
+          }
+        }
+      } else if (detail.isWinner === false || detail.source === 'loss') {
+        type = type || 'loss';
+        if (!message) {
+          message = detail.surrendered
+            ? GAME_CONFIG.MESSAGES.NOTIFY_SURRENDER
+            : GAME_CONFIG.MESSAGES.NOTIFY_LOSE;
+        }
+      } else if (difference < 0) {
+        type = type || 'entry';
+        if (!message) {
+          message = `Inscripción: ${Math.abs(difference).toFixed(2)} Dcoins. ${GAME_CONFIG.MESSAGES.NOTIFY_ENTRY}`;
+        }
+      } else if (difference > 0) {
+        type = type || 'success';
+        if (!message) {
+          message = `+${difference.toFixed(2)} Dcoins en tu saldo.`;
+        }
+      } else {
+        type = type || 'info';
+        if (!message) {
+          message = hasBalances
+            ? `Saldo actual: ${newBalance.toFixed(2)} Dcoins`
+            : GAME_CONFIG.MESSAGES.NOTIFY_BALANCE_UP;
+        }
+      }
+
+      return { type, message, duration: detail.duration || 4000 };
+    },
+
+    showTopNotification({ type = 'info', message = '', duration = 4000 } = {}) {
+      const text = String(message || '').trim();
+      if (!text) return;
+
+      if (this.balanceNotificationTimer) {
+        clearTimeout(this.balanceNotificationTimer);
+        this.balanceNotificationTimer = null;
+      }
+
+      this.balanceNotificationMessage = text;
+      this.balanceNotificationType = type;
       this.showBalanceNotification = true;
-      
-      // Ocultar notificación después de 3 segundos
-      setTimeout(() => {
+
+      this.balanceNotificationTimer = setTimeout(() => {
         this.showBalanceNotification = false;
-      }, 3000);
+        this.balanceNotificationTimer = null;
+      }, duration);
     },
     
     // Métodos para el popup de confirmación
@@ -3760,6 +3833,19 @@ export default {
     },
 
     showGameResultMessage(gameData) {
+      const isWinner = Boolean(gameData?.isWinner);
+      const surrendered = Boolean(gameData?.surrendered);
+
+      this.showTopNotification({
+        type: isWinner ? 'success' : 'loss',
+        message: isWinner
+          ? `${GAME_CONFIG.MESSAGES.WIN} ${GAME_CONFIG.MESSAGES.WIN_SUBTITLE}`
+          : (surrendered
+            ? GAME_CONFIG.MESSAGES.NOTIFY_SURRENDER
+            : `${GAME_CONFIG.MESSAGES.LOSE} ${GAME_CONFIG.MESSAGES.LOSE_SUBTITLE}`),
+        duration: 5000
+      });
+
       console.log('🎮 [WAITING-ROOM] Mostrando mensaje de resultado:', {
         gameData: gameData,
         isWinner: gameData.isWinner,
@@ -4059,6 +4145,13 @@ export default {
       const bodyText = customReason.length > 40
         ? customReason
         : `${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_BODY} ${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_FOOTER}`;
+
+      this.showTopNotification({
+        type: 'loss',
+        message: `${title}. ${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_FOOTER}`,
+        duration: 5000
+      });
+
       const iconHtml = getConnectionLossIconHtml(72);
 
       const modal = document.createElement('div');
@@ -5489,6 +5582,10 @@ export default {
     this.teardownGameContainerResizeObserver();
     this.unbindGameWindowResize();
     this.disableSessionNavigationGuard();
+    if (this.balanceNotificationTimer) {
+      clearTimeout(this.balanceNotificationTimer);
+      this.balanceNotificationTimer = null;
+    }
     window.dispatchEvent(new CustomEvent('resume-background-music'));
   }
 }
@@ -8117,9 +8214,27 @@ export default {
   color: white;
 }
 
-.balance-notification.deduction {
+.balance-notification.entry {
+  background: linear-gradient(135deg, #e67e22, #9b59b6);
+  border: 2px solid rgba(155, 89, 182, 0.35);
+  color: white;
+}
+
+.balance-notification.loss {
   background: linear-gradient(135deg, #e74c3c, #c0392b);
   border: 2px solid rgba(231, 76, 60, 0.3);
+  color: white;
+}
+
+.balance-notification.deduction {
+  background: linear-gradient(135deg, #e67e22, #9b59b6);
+  border: 2px solid rgba(155, 89, 182, 0.35);
+  color: white;
+}
+
+.balance-notification.info {
+  background: linear-gradient(135deg, #5b6ee1, #7c4dff);
+  border: 2px solid rgba(124, 77, 255, 0.35);
   color: white;
 }
 

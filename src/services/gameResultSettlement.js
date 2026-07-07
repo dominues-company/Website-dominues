@@ -266,17 +266,22 @@ export async function submitGameResultWithRetry(resultData, token) {
 export function notifySettlementSuccess({ result, store } = {}) {
   if (typeof window === 'undefined') return;
 
+  const oldBalance = Number(store?.state?.games?.userBalance) || 0;
   const newBalance = result?.data?.new_balance;
+  const isWinner = Boolean(result?.data?.is_winner);
+  const winnerAmount = Number(result?.data?.winner_amount);
+  let parsedNew = oldBalance;
+
   if (newBalance != null && store) {
-    const parsed = Number(newBalance);
-    if (Number.isFinite(parsed)) {
-      store.commit('games/SET_USER_BALANCE', parsed);
+    parsedNew = Number(newBalance);
+    if (Number.isFinite(parsedNew)) {
+      store.commit('games/SET_USER_BALANCE', parsedNew);
       try {
-        store.commit('auth/UPDATE_USER_DATA', { balance: parsed });
+        store.commit('auth/UPDATE_USER_DATA', { balance: parsedNew });
         const raw = localStorage.getItem('user');
         if (raw) {
           const user = JSON.parse(raw);
-          user.balance = parsed;
+          user.balance = parsedNew;
           localStorage.setItem('user', JSON.stringify(user));
         }
       } catch {
@@ -285,11 +290,35 @@ export function notifySettlementSuccess({ result, store } = {}) {
     }
   }
 
+  const difference = parsedNew - oldBalance;
+  let message = GAME_CONFIG.MESSAGES.NOTIFY_BALANCE_UP;
+  let notificationType = isWinner ? 'success' : 'loss';
+
+  if (isWinner) {
+    if (Number.isFinite(winnerAmount) && winnerAmount > 0) {
+      message = `¡Ganaste! +${winnerAmount.toFixed(2)} Dcoins en tu saldo.`;
+    } else if (difference > 0) {
+      message = `¡Ganaste! +${difference.toFixed(2)} Dcoins en tu saldo.`;
+    } else {
+      message = GAME_CONFIG.MESSAGES.NOTIFY_WIN;
+    }
+  } else {
+    message = GAME_CONFIG.MESSAGES.NOTIFY_LOSE;
+  }
+
   window.dispatchEvent(new CustomEvent('dominues:history-refresh'));
   window.dispatchEvent(new CustomEvent('app-refresh-data'));
   window.dispatchEvent(
     new CustomEvent('balance-updated', {
-      detail: { newBalance, source: 'settlement' }
+      detail: {
+        oldBalance,
+        newBalance: parsedNew,
+        difference,
+        message,
+        source: 'settlement',
+        isWinner,
+        notificationType
+      }
     })
   );
 }
