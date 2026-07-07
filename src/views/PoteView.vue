@@ -345,8 +345,25 @@ export default {
   },
   mounted() {
     this.loadStats();
+    this._onHistoryRefresh = () => {
+      this.loadStats();
+      if (this.showModal && this.selectedPlayer) {
+        this.showPlayerHistory(this.selectedPlayer);
+      }
+    };
+    document.addEventListener('visibilitychange', this._onPoteVisibility);
+    window.addEventListener('dominues:history-refresh', this._onHistoryRefresh);
+  },
+  beforeUnmount() {
+    window.removeEventListener('dominues:history-refresh', this._onHistoryRefresh);
+    document.removeEventListener('visibilitychange', this._onPoteVisibility);
   },
   methods: {
+    _onPoteVisibility() {
+      if (document.visibilityState === 'visible' && !this.loading) {
+        this.loadStats();
+      }
+    },
     async loadStats() {
       this.loading = true;
       this.error = null;

@@ -255,6 +255,20 @@ export default {
   },
   mounted() {
     this.loadHistory();
+    this._onHistoryRefresh = () => {
+      if (!this.loading) this.loadHistory();
+    };
+    this._onVisibility = () => {
+      if (document.visibilityState === 'visible' && !this.loading) {
+        this.loadHistory();
+      }
+    };
+    window.addEventListener('dominues:history-refresh', this._onHistoryRefresh);
+    document.addEventListener('visibilitychange', this._onVisibility);
+  },
+  beforeUnmount() {
+    window.removeEventListener('dominues:history-refresh', this._onHistoryRefresh);
+    document.removeEventListener('visibilitychange', this._onVisibility);
   },
   methods: {
     isWinner(game) {

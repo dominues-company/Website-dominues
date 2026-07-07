@@ -607,6 +607,14 @@ import {
   isConnectionLossGameData,
   getConnectionLossIconHtml
 } from './gameConfig.js'
+import {
+  buildResultPayload,
+  submitGameResultWithRetry,
+  retryPendingGameResults,
+  clearPendingGameResult,
+  extractMatchIdFromPayload,
+  notifySettlementSuccess
+} from '@/services/gameResultSettlement.js'
 
 export default {
   name: 'WaitingRoom',
@@ -3046,6 +3054,9 @@ export default {
     },
     
     async handleGameEnd(data) {
+      // #region agent log
+      fetch('http://127.0.0.1:7752/ingest/5aaf9be0-68cd-4a3d-a9ff-9e0243f0159f',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'681594'},body:JSON.stringify({sessionId:'681594',hypothesisId:'C',location:'WaitingRoom.vue:handleGameEnd',message:'GAME_END_received',data:{isWinner:data?.isWinner,playerScore:data?.playerScore,opponentScore:data?.opponentScore,matchId:data?.matchId,resultSent:this.resultSent,gameMode:this.gameMode},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       // Manejar fin del juego
       console.log('✅ [WAITING-ROOM] Juego terminado normalmente:', data);
       console.log('✅ [WAITING-ROOM] Datos completos del evento GAME_END:', JSON.stringify(data, null, 2));
@@ -3506,190 +3517,53 @@ export default {
     
     async sendGameResultToBackend(gameData) {
       try {
-        // Obtener datos del usuario y mesa
         const user = getUserData(this.$store, localStorage);
-        
-        // 🔧 FIX: Si no hay selectedTable (modo invitado), intentar obtenerla de groupedTables
         if (!this.selectedTable && this.gameMode === 'online') {
           const inviteTable = this.groupedTables['invite']?.[0];
-          if (inviteTable) {
-            this.selectedTable = inviteTable;
-            console.log('✅ [WAITING-ROOM] Mesa recuperada desde groupedTables para enviar resultado:', inviteTable);
-          }
+          if (inviteTable) this.selectedTable = inviteTable;
         }
 
         const safeTable = this.ensureSelectedTableDefaults();
-        
-        // Usar el tableId de la mesa seleccionada o fallback a URL
-        const tableId = safeTable?.id || getTableId();
-        
-        // 🔧 FIX: Detectar si es juego multi-jugador (4 jugadores)
-        const isMultiplayer = this.playersRoom === 4 || safeTable?.type === 'online-4';
-        
-        console.log('🎮 [WAITING-ROOM] Enviando resultado con datos:', {
-          selectedTable: safeTable,
-          tableId: tableId,
+        const resultData = buildResultPayload({
+          gameData,
+          user,
+          table: safeTable,
           gameMode: this.gameMode,
           playersRoom: this.playersRoom,
-          isMultiplayer: isMultiplayer,
-          gameData: gameData
+          currentMatchId: this.currentMatchId,
+          roomCode: this.roomCode
         });
-        
-        // Calcular montos usando la configuración de la mesa o valores por defecto
-        const entryPrice = safeTable?.entry_price ?? GAME_CONFIG.DEFAULT_BET_AMOUNT;
-        const playerCountForPot = isMultiplayer ? (this.playersRoom || safeTable?.max_players || 4) : 2;
-        const winnerPayout = safeTable?.winner_payout ?? (entryPrice * playerCountForPot);
-        const tableTotalPot = Number(safeTable?.total_pot || 0);
-        const betAmounts = calculateBetAmounts(entryPrice, gameData.isWinner, winnerPayout, playerCountForPot, tableTotalPot);
-        
-        // 🔧 FIX: Construir datos base
-        const authorizedMatchId = this.extractMatchId(gameData) || this.currentMatchId;
-        const baseResultData = {
-          tableId: tableId,
-          match_id: authorizedMatchId,
-          matchmaking_id: authorizedMatchId,
-          userId: user.id,
-          betAmount: betAmounts.betAmount,
-          totalPot: betAmounts.totalPot,
-          houseFee: betAmounts.houseFee,
-          winnerAmount: betAmounts.winnerAmount,
-          isWinner: gameData.isWinner,
-          gameData: {
-            ...(gameData.gameData || gameData),
-            matchId: authorizedMatchId,
-            matchmakingId: authorizedMatchId
-          },
-          playerName: gameData.playerName,
-          roomCode: gameData.roomCode || this.roomCode || (gameData.gameData && gameData.gameData.roomCode),
-          tableName: safeTable?.name || 'Mesa Online',
-          tableType: safeTable?.type || 'invite',
-          gameMode: this.gameMode,
-          entryPrice: safeTable?.entry_price ?? 0,
-          winnerPayout: safeTable?.winner_payout ?? 0,
-          botPlayed: gameData.botPlayed || false,
-          botWinReason: gameData.botWinReason || null
-        };
-        
-        // 🔧 FIX: Para juegos de 4 jugadores, agregar datos multi-jugador
-        let resultData;
-        if (isMultiplayer) {
-          console.log('🎮 [WAITING-ROOM] MODO MULTI-JUGADOR detectado - Enviando datos completos');
-          
-          // Extraer datos de todos los jugadores desde gameData
-          const allPlayerNames = gameData.gameData?.playerNames || [];
-          const allScores = gameData.gameData?.scores || [];
-          const winner = gameData.winner || gameData.gameData?.winner;
-          
-          resultData = {
-            ...baseResultData,
-            // 🔧 FIX: Flags para identificar juego multi-jugador
-            isMultiplayer: true,
-            playersCount: 4,
-            // 🔧 FIX: Datos de todos los jugadores
-            allPlayers: allPlayerNames,
-            allScores: allScores,
-            winner: winner,
-            // Para compatibilidad con backend actual
-            opponentName: winner, // El ganador como "oponente principal"
-            playerScore: allScores[allPlayerNames.indexOf(gameData.playerName)] || 0,
-            opponentScore: allScores[allPlayerNames.indexOf(winner)] || 0
-          };
-          
-          console.log('📊 [WAITING-ROOM] Datos multi-jugador preparados:', {
-            allPlayers: allPlayerNames,
-            allScores: allScores,
-            winner: winner,
-            currentPlayer: gameData.playerName,
-            isWinner: gameData.isWinner
-          });
-        } else {
-          // Juego 1v1 normal (2 jugadores)
-          resultData = {
-            ...baseResultData,
-            opponentName: gameData.opponentName,
-            playerScore: gameData.playerScore,
-            opponentScore: gameData.opponentScore,
-            isMultiplayer: false,
-            playersCount: 2
-          };
-        }
-        
-        console.log('Enviando resultado al backend:', resultData);
 
-        this.savePendingGameResult(resultData, gameData);
+        console.log('[SETTLEMENT] Enviando resultado:', resultData);
 
-        const maxAttempts = GAME_CONFIG.RESULT_SAVE_MAX_ATTEMPTS;
-        let lastError = null;
+        const { ok, result, error } = await submitGameResultWithRetry(
+          resultData,
+          user.token || ''
+        );
 
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-          try {
-            const { ok, result, error, httpStatus } = await this.postGameResultOnce(
-              resultData,
-              user.token || ''
-            );
-
-            if (ok) {
-              this.hideGameResultSaveProgress();
-              this.clearPendingGameResult();
-              console.log('Resultado guardado exitosamente:', result);
-
-              if (result?.data?.already_registered) {
-                console.log('ℹ️ [WAITING-ROOM] Partida ya estaba registrada en el servidor');
-              }
-
-              this.showGameResultMessage(gameData);
-              setTimeout(() => {
-                this.returnToTableSelection();
-              }, GAME_CONFIG.REDIRECT_DELAY);
-              return;
-            }
-
-            lastError = error;
-            const retryable = shouldRetryGameResultSave(httpStatus);
-            console.warn(
-              `⚠️ [WAITING-ROOM] Intento ${attempt}/${maxAttempts} falló:`,
-              error?.message,
-              retryable ? '(se reintentará)' : '(sin más reintentos)'
-            );
-
-            if (!retryable || attempt >= maxAttempts) {
-              break;
-            }
-          } catch (networkError) {
-            lastError = networkError;
-            console.warn(
-              `⚠️ [WAITING-ROOM] Intento ${attempt}/${maxAttempts} — error de red:`,
-              networkError?.message
-            );
-            if (attempt >= maxAttempts) break;
-          }
-
-          const delay =
-            GAME_CONFIG.RESULT_SAVE_RETRY_BASE_DELAY_MS * attempt;
-          await sleep(delay);
+        if (ok) {
+          this.hideGameResultSaveProgress();
+          notifySettlementSuccess({ result, store: this.$store });
+          await this.syncUserBalance(true);
+          this.showGameResultMessage(gameData);
+          setTimeout(() => this.returnToTableSelection(), GAME_CONFIG.REDIRECT_DELAY);
+          return;
         }
 
         this.hideGameResultSaveProgress();
         this.resultSent = false;
-
-        const finalError =
-          lastError instanceof Error
-            ? lastError
-            : new Error(lastError?.message || GAME_CONFIG.MESSAGES.ERROR);
-
-        this.showGameResultSaveError(finalError, gameData, resultData);
+        this.showGameResultSaveError(error, gameData, resultData);
         this.$emit('game-error', {
           message: GAME_CONFIG.MESSAGES.ERROR,
-          detail: finalError.message,
+          detail: error?.message,
           gameData,
           resultData,
-          error: finalError
+          error
         });
       } catch (error) {
-        console.error('Error preparando resultado para el backend:', error);
+        console.error('[SETTLEMENT] Error preparando resultado:', error);
         this.hideGameResultSaveProgress();
         this.resultSent = false;
-
         this.showGameResultSaveError(error, gameData);
         this.$emit('game-error', {
           message: GAME_CONFIG.MESSAGES.ERROR,
@@ -3700,114 +3574,29 @@ export default {
       }
     },
 
-    async postGameResultOnce(resultData, token) {
-      const response = await fetch(`${GAME_CONFIG.API_BASE_URL}/game/result`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(resultData)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        return { ok: true, result, httpStatus: response.status };
-      }
-
-      const raw = await response.text();
-      let serverMessage = `Error del servidor (${response.status})`;
-      try {
-        const body = JSON.parse(raw);
-        if (body.message) serverMessage = body.message;
-      } catch {
-        if (raw) serverMessage = raw.slice(0, 300);
-      }
-
-      return {
-        ok: false,
-        httpStatus: response.status,
-        error: new Error(serverMessage)
-      };
-    },
-
-    savePendingGameResult(resultData, gameData) {
-      try {
-        const payload = JSON.stringify({
-          resultData,
-          gameData: {
-            isWinner: gameData.isWinner,
-            playerName: gameData.playerName,
-            opponentName: gameData.opponentName,
-            winner: gameData.winner,
-            playerScore: gameData.playerScore,
-            opponentScore: gameData.opponentScore,
-            roomCode: gameData.roomCode,
-            gameData: gameData.gameData
-          },
-          savedAt: new Date().toISOString()
-        });
-        sessionStorage.setItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY, payload);
-        localStorage.setItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY, payload);
-      } catch (e) {
-        console.warn('No se pudo guardar resultado pendiente:', e);
-      }
-    },
-
-    loadPendingGameResult() {
-      try {
-        const raw =
-          sessionStorage.getItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY) ||
-          localStorage.getItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        const savedAt = parsed?.savedAt ? new Date(parsed.savedAt).getTime() : 0;
-        if (savedAt && Date.now() - savedAt > 24 * 60 * 60 * 1000) {
-          this.clearPendingGameResult();
-          return null;
-        }
-        return parsed;
-      } catch (e) {
-        return null;
-      }
+    /** @deprecated usar @/services/gameResultSettlement.js */
+    async postGameResultOnce() {
+      console.warn('[SETTLEMENT] postGameResultOnce movido a gameResultSettlement.js');
+      return { ok: false, error: new Error('use gameResultSettlement') };
     },
 
     async retryPendingGameResultIfAny() {
-      const pending = this.loadPendingGameResult();
-      if (!pending?.resultData?.isWinner) return;
-
       const user = getUserData(this.$store, localStorage);
       if (!user?.token) return;
 
-      console.log('🔄 [WAITING-ROOM] Reintentando resultado pendiente de victoria...');
+      const outcome = await retryPendingGameResults(user.token);
+      if (outcome.skipped || !outcome.ok) return;
 
-      try {
-        const { ok, result } = await this.postGameResultOnce(
-          pending.resultData,
-          user.token
-        );
-
-        if (ok) {
-          this.clearPendingGameResult();
-          console.log('✅ [WAITING-ROOM] Resultado pendiente acreditado:', result);
-          await this.syncUserBalance(true);
-          if (pending.gameData) {
-            this.showGameResultMessage(pending.gameData);
-          }
-        }
-      } catch (e) {
-        console.warn('⚠️ [WAITING-ROOM] Reintento de resultado pendiente falló:', e);
+      console.log('✅ [SETTLEMENT] Resultado pendiente acreditado:', outcome.result);
+      notifySettlementSuccess({ result: outcome.result, store: this.$store });
+      await this.syncUserBalance(true);
+      if (outcome.pending?.gameData) {
+        this.showGameResultMessage(outcome.pending.gameData);
       }
     },
 
     clearPendingGameResult() {
-      try {
-        sessionStorage.removeItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY);
-        localStorage.removeItem(GAME_CONFIG.RESULT_SAVE_PENDING_KEY);
-      } catch (e) {
-        /* ignore */
-      }
+      clearPendingGameResult();
     },
 
     /** Reintentos al guardar resultado: sin overlay (el jugador no ve mensajes técnicos). */
