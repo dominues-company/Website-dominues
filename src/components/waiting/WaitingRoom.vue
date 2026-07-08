@@ -228,11 +228,19 @@
               <div class="mode-content">
                 <h4>{{ table.name }}</h4>
                 <p>{{ table.description }}</p>
-                <div class="mode-price">
-                  <span class="price-label">Inscripción</span>
-                  <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Dcoins` }}
-                  </span>
+                <div class="mode-pricing">
+                  <div class="mode-price">
+                    <span class="price-label">Inscripción</span>
+                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
+                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Dcoins` }}
+                    </span>
+                  </div>
+                  <div class="mode-price mode-prize">
+                    <span class="price-label">Premio al Ganador</span>
+                    <span class="price-value prize-value">
+                      {{ table.winner_payout != null ? `${table.winner_payout} Dcoins` : '—' }}
+                    </span>
+                  </div>
                 </div>
                 <div class="mode-features">
                   <span class="feature">🔗 Código de Invitación</span>
@@ -396,6 +404,26 @@
           <div class="choice-header">
             <h2>🎮 ¡Bienvenido!</h2>
             <p>¿Qué quieres hacer?</p>
+          </div>
+
+          <div v-if="pendingTable" class="invite-table-economics">
+            <div class="invite-table-name">{{ pendingTable.name }}</div>
+            <div class="payment-info invite-payment-info">
+              <div class="payment-item">
+                <span class="label">Precio de Inscripción:</span>
+                <span class="amount" :class="{ 'free': pendingTable.entry_price === 0 }">
+                  {{ pendingTable.entry_price === 0 ? 'GRATIS' : `${pendingTable.entry_price} Dcoins` }}
+                </span>
+              </div>
+              <div class="payment-item">
+                <span class="label">Puntos para Ganar:</span>
+                <span class="points">{{ pendingTable.win_points }} pts</span>
+              </div>
+              <div class="payment-item">
+                <span class="label">Premio al Ganador:</span>
+                <span class="prize-amount">{{ pendingTable.winner_payout }} Dcoins</span>
+              </div>
+            </div>
           </div>
           
           <div class="choice-options">
@@ -6208,6 +6236,13 @@ export default {
 }
 
 /* Precio del modo */
+.mode-pricing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
 .mode-price {
   display: flex;
   flex-direction: row;
@@ -6219,6 +6254,14 @@ export default {
   background: rgba(45, 27, 105, 0.05);
   border-radius: 12px;
   border: 1px solid rgba(45, 27, 105, 0.1);
+}
+
+.mode-pricing .mode-price {
+  margin-bottom: 0;
+}
+
+.mode-price.mode-prize .price-value.prize-value {
+  color: #27ae60;
 }
 
 .price-label {
@@ -7160,9 +7203,14 @@ export default {
   margin: 0 0 15px 0 !important;
 }
 
+.invite-mode .mode-pricing,
 .invite-mode .mode-price {
   position: relative;
   z-index: 2;
+}
+
+.invite-mode .mode-price.mode-prize .price-value.prize-value {
+  color: #86efac !important;
 }
 
 .invite-mode .price-label {
@@ -7283,6 +7331,30 @@ export default {
   color: #666;
   font-size: 16px;
   margin-bottom: 30px;
+}
+
+.invite-table-economics {
+  text-align: left;
+  margin: 0 0 24px;
+  padding: 16px;
+  background: rgba(45, 27, 105, 0.06);
+  border-radius: 14px;
+  border: 1px solid rgba(45, 27, 105, 0.12);
+}
+
+.invite-table-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2d1b69;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.invite-payment-info {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .choice-options {
