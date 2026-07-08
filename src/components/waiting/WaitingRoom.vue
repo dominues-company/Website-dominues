@@ -7357,6 +7357,45 @@ export default {
   border: none;
 }
 
+.invite-payment-info .payment-item {
+  margin-bottom: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(45, 27, 105, 0.1);
+}
+
+.invite-payment-info .payment-item:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.invite-payment-info .payment-item .label {
+  color: #2d1b69;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.invite-payment-info .payment-item .amount {
+  color: #e67e22;
+  font-weight: 800;
+  text-shadow: none;
+}
+
+.invite-payment-info .payment-item .amount.free {
+  color: #16a34a;
+}
+
+.invite-payment-info .payment-item .points {
+  color: #2563eb;
+  font-weight: 800;
+  text-shadow: none;
+}
+
+.invite-payment-info .payment-item .prize-amount {
+  color: #15803d;
+  font-weight: 800;
+  text-shadow: none;
+}
+
 .choice-options {
   display: flex;
   flex-direction: column;
