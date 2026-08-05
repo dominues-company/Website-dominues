@@ -1105,7 +1105,8 @@
   border: 1px solid #e67e22;
 }
 
-.bb-canceled {
+.bb-canceled,
+.bb-expired {
   color: #e74c3c;
   border: 1px solid #e74c3c;
 }
@@ -1639,6 +1640,17 @@ export default {
         if (data.code === 'PAYMENT_RECEIVED' || data.payment_status === 'paid') {
           this.showBlockBeeOverlay = false;
           this.successMessage = 'Pago recibido correctamente. Las monedas se acreditarán cuando el administrador apruebe la recarga.';
+          this.clearOrderIdFromUrl();
+          return;
+        }
+
+        if (
+          data.code === 'PAYMENT_CANCELED' ||
+          data.payment_status === 'canceled' ||
+          data.payment_status === 'expired'
+        ) {
+          this.showBlockBeeOverlay = false;
+          this.errorMessage = data.message || 'Este pago expiró o fue cancelado. Puedes crear una nueva recarga.';
           this.clearOrderIdFromUrl();
           return;
         }
