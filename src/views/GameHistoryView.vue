@@ -100,7 +100,7 @@
             <div class="match-header">
               <div class="result-badge" :class="resultBadgeClass(game)">
                 <span class="dot" />
-                {{ isWinner(game) ? 'Victoria' : 'Partida jugada' }}
+                {{ isWinner(game) ? 'Victoria' : 'Derrota' }}
               </div>
               <div class="match-date">{{ formatDateHistory(game.game_date) }}</div>
             </div>

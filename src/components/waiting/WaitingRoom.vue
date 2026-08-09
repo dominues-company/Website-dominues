@@ -717,6 +717,7 @@ export default {
       balanceNotificationMessage: '',
       balanceNotificationType: 'success',
       balanceNotificationTimer: null,
+      gameResultModalTimer: null,
       
       // Overlay de loading para esperar jugadores
       showLoadingOverlay: false,
@@ -3183,9 +3184,6 @@ export default {
     },
     
     async handleGameEnd(data) {
-      // #region agent log
-      fetch('http://127.0.0.1:7752/ingest/5aaf9be0-68cd-4a3d-a9ff-9e0243f0159f',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'681594'},body:JSON.stringify({sessionId:'681594',hypothesisId:'C',location:'WaitingRoom.vue:handleGameEnd',message:'GAME_END_received',data:{isWinner:data?.isWinner,playerScore:data?.playerScore,opponentScore:data?.opponentScore,matchId:data?.matchId,resultSent:this.resultSent,gameMode:this.gameMode},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       // Manejar fin del juego
       console.log('✅ [WAITING-ROOM] Juego terminado normalmente:', data);
       console.log('✅ [WAITING-ROOM] Datos completos del evento GAME_END:', JSON.stringify(data, null, 2));
@@ -3319,33 +3317,19 @@ export default {
     handleGameOverContinue(data) {
       // Manejar clic manual en CONTINUE desde el juego
       console.log('GAME_OVER_CONTINUE recibido (clic manual):', data);
-      
-      // Mostrar mensaje de resultado si tenemos datos del juego
-      if (data.gameResult) {
-        this.showGameResultMessage(data.gameResult);
+      // Compatibilidad con clientes antiguos: GAME_END es el único cierre canónico.
+      if (!this.resultSent && data.gameResult) {
+        this.handleGameEnd(data.gameResult);
       }
-      
-      // Regresar a selección de mesas después de 1 segundo
-      console.log('Regresando a selección de mesas (clic manual)...');
-      setTimeout(() => {
-        this.returnToTableSelection();
-      }, 1000);
     },
     
     handleGameOverAutoRedirect(data) {
       // Manejar auto-redirect después de 2 segundos
       console.log('GAME_OVER_AUTO_REDIRECT recibido (auto-redirect):', data);
-      
-      // Mostrar mensaje de resultado si tenemos datos del juego
-      if (data.gameResult) {
-        this.showGameResultMessage(data.gameResult);
+      // No crear un segundo modal ni un segundo redirect.
+      if (!this.resultSent && data.gameResult) {
+        this.handleGameEnd(data.gameResult);
       }
-      
-      // Regresar a selección de mesas (ya pasaron 2 segundos en el juego)
-      console.log('Auto-regresando a selección de mesas...');
-      setTimeout(() => {
-        this.returnToTableSelection();
-      }, 500);
     },
     
     async handleDisconnectWin(data) {
@@ -3674,7 +3658,8 @@ export default {
           this.hideGameResultSaveProgress();
           notifySettlementSuccess({ result, store: this.$store });
           await this.syncUserBalance(true);
-          this.showGameResultMessage(gameData);
+          // El evento de settlement ya muestra el único toast (incluye el premio).
+          this.showGameResultMessage(gameData, { showToast: false });
           setTimeout(() => this.returnToTableSelection(), GAME_CONFIG.REDIRECT_DELAY);
           return;
         }
@@ -3889,19 +3874,21 @@ export default {
       }, 8000);
     },
 
-    showGameResultMessage(gameData) {
+    showGameResultMessage(gameData, { showToast = true } = {}) {
       const isWinner = Boolean(gameData?.isWinner);
       const surrendered = Boolean(gameData?.surrendered);
 
-      this.showTopNotification({
-        type: isWinner ? 'success' : 'loss',
-        message: isWinner
-          ? `${GAME_CONFIG.MESSAGES.WIN} ${GAME_CONFIG.MESSAGES.WIN_SUBTITLE}`
-          : (surrendered
-            ? GAME_CONFIG.MESSAGES.NOTIFY_SURRENDER
-            : `${GAME_CONFIG.MESSAGES.LOSE} ${GAME_CONFIG.MESSAGES.LOSE_SUBTITLE}`),
-        duration: 5000
-      });
+      if (showToast) {
+        this.showTopNotification({
+          type: isWinner ? 'success' : 'loss',
+          message: isWinner
+            ? `${GAME_CONFIG.MESSAGES.WIN} ${GAME_CONFIG.MESSAGES.WIN_SUBTITLE}`
+            : (surrendered
+              ? GAME_CONFIG.MESSAGES.NOTIFY_SURRENDER
+              : `${GAME_CONFIG.MESSAGES.LOSE} ${GAME_CONFIG.MESSAGES.LOSE_SUBTITLE}`),
+          duration: 5000
+        });
+      }
 
       console.log('🎮 [WAITING-ROOM] Mostrando mensaje de resultado:', {
         gameData: gameData,
@@ -3971,13 +3958,32 @@ export default {
         `;
       } else {
         // Juego 1v1 normal (2 jugadores)
+        const playerScore = Number(gameData.playerScore ?? gameData.gameData?.finalScore ?? 0);
+        const opponentScore = Number(gameData.opponentScore ?? gameData.gameData?.opponentFinalScore ?? 0);
+        const opponentLabel = gameData.opponentName ||
+          (gameData.gameMode === 'cpu' ? 'La Banca' : 'Rival');
         messageContent = `
-          <h2 style="color: ${gameData.isWinner ? '#4CAF50' : '#f44336'}; margin-bottom: 15px; font-size: 28px; font-weight: bold;">
+          <div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:${gameData.isWinner ? '#6ee7b7' : '#fda4af'};margin-bottom:10px;font-weight:800;">
+            Resultado final
+          </div>
+          <h2 style="color: ${gameData.isWinner ? '#6ee7b7' : '#fda4af'}; margin:0 0 10px; font-size:34px; font-weight:900;">
             ${gameData.isWinner ? GAME_CONFIG.MESSAGES.WIN : GAME_CONFIG.MESSAGES.LOSE}
           </h2>
-          <p style="font-size: 18px; margin-bottom: 20px; color: ${gameData.isWinner ? '#2e7d32' : '#c62828'}; font-weight: 500;">
+          <p style="font-size:16px;margin:0 0 24px;color:#cbd5e1;font-weight:500;">
             ${gameData.isWinner ? GAME_CONFIG.MESSAGES.WIN_SUBTITLE : GAME_CONFIG.MESSAGES.LOSE_SUBTITLE}
           </p>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin:0 0 18px;">
+            <div style="padding:16px 12px;border-radius:14px;background:${gameData.isWinner ? 'rgba(16,185,129,.16)' : 'rgba(255,255,255,.055)'};border:1px solid ${gameData.isWinner ? 'rgba(110,231,183,.45)' : 'rgba(255,255,255,.1)'};">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#94a3b8;margin-bottom:7px;">Tú</div>
+              <div style="font-size:30px;font-weight:900;color:#f8fafc;">${playerScore}</div>
+            </div>
+            <div style="font-size:11px;font-weight:800;color:#64748b;">VS</div>
+            <div style="padding:16px 12px;border-radius:14px;background:${!gameData.isWinner ? 'rgba(244,63,94,.14)' : 'rgba(255,255,255,.055)'};border:1px solid ${!gameData.isWinner ? 'rgba(253,164,175,.4)' : 'rgba(255,255,255,.1)'};">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#94a3b8;margin-bottom:7px;">${opponentLabel}</div>
+              <div style="font-size:30px;font-weight:900;color:#f8fafc;">${opponentScore}</div>
+            </div>
+          </div>
+          <p style="font-size:12px;color:#94a3b8;margin:0;">Dominó por castigo: gana la puntuación más baja.</p>
         `;
       }
       
@@ -3987,14 +3993,22 @@ export default {
       const redirectMessage = gameData.isWinner ? GAME_CONFIG.MESSAGES.REDIRECTING_WIN : GAME_CONFIG.MESSAGES.REDIRECTING;
       
       // Crear modal de resultado
+      const previousModal = document.getElementById('dominues-game-result-modal');
+      if (previousModal) previousModal.remove();
+      if (this.gameResultModalTimer) {
+        clearTimeout(this.gameResultModalTimer);
+        this.gameResultModalTimer = null;
+      }
       const modal = document.createElement('div');
+      modal.id = 'dominues-game-result-modal';
       modal.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.8);
+        background: radial-gradient(circle at 50% 15%, rgba(91,33,182,.28), transparent 38%), rgba(3,7,18,.88);
+        backdrop-filter: blur(10px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -4018,29 +4032,33 @@ export default {
       modal.innerHTML = `
         ${confettiCanvas}
         <div style="
-          background: white;
-          padding: 30px;
-          border-radius: 15px;
+          background: linear-gradient(145deg, rgba(30,24,48,.98), rgba(12,17,31,.98));
+          color: #f8fafc;
+          padding: 34px;
+          border-radius: 22px;
           text-align: center;
-          max-width: 500px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+          width: min(88vw, 480px);
+          box-shadow: 0 28px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
+          border: 1px solid ${gameData.isWinner ? 'rgba(110,231,183,.35)' : 'rgba(253,164,175,.3)'};
           position: relative;
           z-index: 10002;
         ">
           ${messageContent}
-          <p style="font-size: 14px; color: #666; margin-top: 20px;">${redirectMessage}</p>
+          <p style="font-size:13px;color:#94a3b8;margin-top:24px;">${redirectMessage}</p>
           <div style="margin-top: 20px;">
             <div style="
               width: 100%;
               height: 4px;
-              background: #e0e0e0;
+              background: rgba(255,255,255,.08);
               border-radius: 2px;
               overflow: hidden;
             ">
               <div style="
                 width: 100%;
                 height: 100%;
-                background: linear-gradient(90deg, #4CAF50, #8BC34A);
+                background: ${gameData.isWinner
+                  ? 'linear-gradient(90deg,#10b981,#6ee7b7)'
+                  : 'linear-gradient(90deg,#e11d48,#fda4af)'};
                 animation: progress ${redirectSeconds}s linear forwards;
               "></div>
             </div>
@@ -4062,13 +4080,14 @@ export default {
       }
       
       // Remover modal después del delay configurado
-      setTimeout(() => {
+      this.gameResultModalTimer = setTimeout(() => {
         if (modal.parentNode) {
           modal.parentNode.removeChild(modal);
         }
         if (gameData.isWinner) {
           this.stopConfetti();
         }
+        this.gameResultModalTimer = null;
       }, redirectDelay);
     },
     
@@ -5644,6 +5663,12 @@ export default {
       clearTimeout(this.balanceNotificationTimer);
       this.balanceNotificationTimer = null;
     }
+    if (this.gameResultModalTimer) {
+      clearTimeout(this.gameResultModalTimer);
+      this.gameResultModalTimer = null;
+    }
+    const resultModal = document.getElementById('dominues-game-result-modal');
+    if (resultModal) resultModal.remove();
     window.dispatchEvent(new CustomEvent('resume-background-music'));
   }
 }
