@@ -624,6 +624,7 @@
 import FloatingRechargeButton from '@/components/common/FloatingRechargeButton.vue';
 import api from '@/services/api';
 import { sanitizeApiMessage } from '@/utils/userFacingError';
+import { closeMobileNavigation } from '@/utils/mobileNavigation';
 import {
   GAME_CONFIG,
   calculateBetAmounts,
@@ -1272,7 +1273,15 @@ export default {
     },
 
     goToDashboard() {
-      window.location.href = GAME_CONFIG.DASHBOARD_URL;
+      this.redirectEmbeddedGameHome('manual_exit');
+    },
+
+    redirectEmbeddedGameHome(reason = 'game_redirect') {
+      console.log('🏠 [WAITING-ROOM] Redirección solicitada por el juego:', reason);
+      closeMobileNavigation();
+      this.resetFullState(true);
+      this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', false);
+      window.location.replace(GAME_CONFIG.DASHBOARD_URL);
     },
 
     getTableIdForRedirect() {
@@ -1285,8 +1294,10 @@ export default {
       const url = buildWaitingRoomUrl(this.getTableIdForRedirect());
       const navigate = () => {
         console.log('🏠 [WAITING-ROOM] Regresando a selección de mesas:', url);
+        closeMobileNavigation();
+        this.resetFullState(true);
         this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', false);
-        window.location.href = url;
+        window.location.replace(url);
       };
 
       if (delay > 0) {
@@ -2676,6 +2687,7 @@ export default {
       
       // Detener todos los intervalos y timeouts activos
       this.stopMatchmakingMessageUpdater();
+      this.stopMatchmakingWatchdog();
       this.stopSocketJoinNudge();
       this.stopMatchPusherListener();
       
@@ -3069,6 +3081,10 @@ export default {
           break;
         case 'GAME_OVER_AUTO_REDIRECT':
           this.handleGameOverAutoRedirect(data);
+          break;
+        case 'RECONNECT_REDIRECT_HOME':
+        case 'DESYNC_KICK':
+          this.redirectEmbeddedGameHome(data?.reason || type);
           break;
         case 'DISCONNECT_WIN':
           this.handleDisconnectWin(data);
@@ -5574,6 +5590,7 @@ export default {
   },
 
   async mounted() {
+    closeMobileNavigation();
     this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', false);
     window.dispatchEvent(new CustomEvent('pause-background-music'));
     // 🔧 CACHE CONTROL: El router ya maneja la limpieza de caché

@@ -100,6 +100,8 @@ export default {
   },
 
   async mounted() {
+    // La navegación móvil puede sobrevivir al historial/bfcache y cubrir el lobby.
+    closeMobileNavigation()
     console.log('🚀 [WAITING-PAGE] Componente montado')
     console.log('🚀 [WAITING-PAGE] Ruta actual:', this.$route)
     console.log('🚀 [WAITING-PAGE] Parámetros de ruta:', this.$route.params)

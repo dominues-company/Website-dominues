@@ -32,6 +32,7 @@ import NotificationToast from '@/components/common/NotificationToast.vue';
 import BackgroundMusic from '@/components/common/BackgroundMusic.vue';
 import WhatsAppButton from '@/components/common/WhatsAppButton.vue';
 import AuthService from '@/services/auth.service';
+import { closeMobileNavigation } from '@/utils/mobileNavigation';
 
 export default {
   name: 'App',
@@ -53,13 +54,7 @@ export default {
   computed: {
     hideLayout() {
       const routeHidesLayout = this.$route.matched.some(record => record.meta.hideLayout);
-      if (!routeHidesLayout) return false;
-
-      if (this.$route.name === 'WaitingRoomPage') {
-        return this.$store.getters['games/waitingRoomGameActive'];
-      }
-
-      return true;
+      return routeHidesLayout;
     }
   },
   created() {
@@ -94,6 +89,9 @@ export default {
       }
     },
     handlePageShow(event) {
+      if (this.$route.name === 'WaitingRoomPage') {
+        closeMobileNavigation();
+      }
       if (event.persisted) {
         AuthService.refreshLiveData();
       }
