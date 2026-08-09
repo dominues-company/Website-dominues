@@ -22,11 +22,19 @@
   "right": [
     {
       "q": "¿Es seguro jugar aquí?",
-      "a": "Totalmente. Usamos servidores de alta velocidad (Render) para que no haya lag y tecnología de encriptación para proteger tus datos. Además, nuestro equipo supervisa las mesas para asegurar que el juego sea siempre limpio."
+      "a": "Usamos infraestructura en la nube y medidas de seguridad para proteger tus datos. Las mesas son supervisadas para mantener el juego limpio. Como toda plataforma online, el servicio depende de internet y de proveedores externos; la disponibilidad se rige por nuestros <a href=\"/terms\" style=\"color:#FFC827;\">Términos y Condiciones</a>."
     },
     {
       "q": "¿Qué pasa si se me cae el internet en plena partida?",
       "a": "El sistema de reconexión y el bot automático ayudan a no trancar la mesa, pero son herramientas de cortesía: Dominues <strong>no se hace responsable</strong> por pérdidas por cortes de luz, fallas de tu operador o mala señal, y <strong>no generan derecho a reembolso</strong>. Juega siempre con buena conexión."
+    },
+    {
+      "q": "¿Qué pasa si se cae el servidor del juego (por ejemplo varias horas)?",
+      "a": "Si hay una interrupción del servidor o de un proveedor externo, Dominues puede suspender mesas, anular partidas no liquidadas de forma confiable y, <strong>solo cuando sea verificable</strong>, reintegrar la apuesta de entrada de esas partidas. <strong>Una caída no obliga a devolver el saldo completo de las cuentas</strong> ni genera compensación automática. Los reclamos se atienden por soporte oficial, caso por caso, con base en los logs del sistema. Detalle en Términos (secciones 32–36)."
+    },
+    {
+      "q": "¿Tengo derecho a reembolso si hay mantenimiento o falla técnica?",
+      "a": "No de forma automática. Mantenimientos, actualizaciones y fallas técnicas (propias o de terceros) <strong>no generan derecho a compensación</strong>. Solo en fallas generales comprobadas Dominues puede, a su criterio, anular partidas afectadas y reintegrar la entrada. El saldo en Dcoins sigue las reglas de retiros y auditoría."
     },
     {
       "q": "¿Puedo jugar desde mi teléfono?",
