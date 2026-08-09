@@ -731,6 +731,7 @@ export default {
       
       // Flag para evitar envío duplicado de resultados
       resultSent: false,
+      matchCancellationHandled: false,
 
       // Interceptar botón "Atrás" del navegador/móvil durante la partida
       backGuardEnabled: false,
@@ -1282,6 +1283,14 @@ export default {
       this.resetFullState(true);
       this.$store.commit('games/SET_WAITING_ROOM_GAME_ACTIVE', false);
       window.location.replace(GAME_CONFIG.DASHBOARD_URL);
+    },
+
+    handleMatchCancelled(data = {}) {
+      if (this.matchCancellationHandled) return;
+      this.matchCancellationHandled = true;
+      console.log('↩️ [WAITING-ROOM] Partida cancelada por desconexión de ambos:', data);
+      alert('La partida fue cancelada porque ambos jugadores perdieron conexión. La entrada será devuelta automáticamente.');
+      this.returnToTableSelection(250);
     },
 
     getTableIdForRedirect() {
@@ -2748,6 +2757,7 @@ export default {
       
       // === RESET DE FLAGS DE RESULTADO ===
       this.resultSent = false;
+      this.matchCancellationHandled = false;
       this.isSurrendering = false;
       this.isCancelling = false;
       
@@ -3085,6 +3095,9 @@ export default {
         case 'RECONNECT_REDIRECT_HOME':
         case 'DESYNC_KICK':
           this.redirectEmbeddedGameHome(data?.reason || type);
+          break;
+        case 'MATCH_CANCELLED':
+          this.handleMatchCancelled(data);
           break;
         case 'DISCONNECT_WIN':
           this.handleDisconnectWin(data);
