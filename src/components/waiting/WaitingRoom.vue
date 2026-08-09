@@ -32,7 +32,7 @@
           </span>
           <span class="waiting-balance-value">
             {{ formattedUserBalance }}
-            <small>Dcoins</small>
+            <small>Bs</small>
           </span>
         </div>
         <button
@@ -126,7 +126,7 @@
                 <div class="mode-price">
                   <span class="price-label">Inscripción</span>
                   <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Dcoins` }}
+                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
                   </span>
                 </div>
                 <div class="mode-features">
@@ -157,7 +157,7 @@
                 <div class="mode-price">
                   <span class="price-label">Inscripción</span>
                   <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Dcoins` }}
+                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
                   </span>
                 </div>
                 <div class="mode-features">
@@ -194,7 +194,7 @@
                 <div class="mode-price">
                   <span class="price-label">Inscripción</span>
                   <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Dcoins` }}
+                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
                   </span>
                 </div>
                 <div class="mode-features">
@@ -232,13 +232,13 @@
                   <div class="mode-price">
                     <span class="price-label">Inscripción</span>
                     <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Dcoins` }}
+                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
                     </span>
                   </div>
                   <div class="mode-price mode-prize">
                     <span class="price-label">Premio al Ganador</span>
                     <span class="price-value prize-value">
-                      {{ table.winner_payout != null ? `${table.winner_payout} Dcoins` : '—' }}
+                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
                   </div>
                 </div>
@@ -412,7 +412,7 @@
               <div class="payment-item">
                 <span class="label">Precio de Inscripción:</span>
                 <span class="amount" :class="{ 'free': pendingTable.entry_price === 0 }">
-                  {{ pendingTable.entry_price === 0 ? 'GRATIS' : `${pendingTable.entry_price} Dcoins` }}
+                  {{ pendingTable.entry_price === 0 ? 'GRATIS' : `${pendingTable.entry_price} Bs` }}
                 </span>
               </div>
               <div class="payment-item">
@@ -421,7 +421,7 @@
               </div>
               <div class="payment-item">
                 <span class="label">Premio al Ganador:</span>
-                <span class="prize-amount">{{ pendingTable.winner_payout }} Dcoins</span>
+                <span class="prize-amount">{{ pendingTable.winner_payout }} Bs</span>
               </div>
             </div>
           </div>
@@ -538,7 +538,7 @@
               <div class="payment-item">
                 <span class="label">Precio de Inscripción:</span>
                 <span class="amount" :class="{ 'free': pendingTable?.entry_price === 0 }">
-                  {{ pendingTable?.entry_price === 0 ? 'GRATIS' : `${pendingTable?.entry_price} Dcoins` }}
+                  {{ pendingTable?.entry_price === 0 ? 'GRATIS' : `${pendingTable?.entry_price} Bs` }}
                 </span>
               </div>
               
@@ -549,12 +549,12 @@
                  
                  <div class="payment-item">
                    <span class="label">Premio al Ganador:</span>
-                   <span class="prize-amount">{{ pendingTable?.winner_payout }} Dcoins</span>
+                   <span class="prize-amount">{{ pendingTable?.winner_payout }} Bs</span>
                  </div>
               
               <div class="payment-item total" v-if="pendingTable?.entry_price > 0">
                 <span class="label">Total a Descontar:</span>
-                <span class="amount">{{ pendingTable?.entry_price }} Dcoins</span>
+                <span class="amount">{{ pendingTable?.entry_price }} Bs</span>
               </div>
             </div>
             
@@ -1501,14 +1501,14 @@ export default {
         type = type || 'entry';
         if (!message) {
           message = difference < 0
-            ? `Inscripción: ${Math.abs(difference).toFixed(2)} Dcoins. ${GAME_CONFIG.MESSAGES.NOTIFY_ENTRY}`
+            ? `Inscripción: ${Math.abs(difference).toFixed(2)} Bs. ${GAME_CONFIG.MESSAGES.NOTIFY_ENTRY}`
             : GAME_CONFIG.MESSAGES.NOTIFY_ENTRY;
         }
       } else if (detail.source === 'settlement' || detail.isWinner === true) {
         type = type || 'success';
         if (!message) {
           if (difference > 0) {
-            message = `¡Ganaste! +${difference.toFixed(2)} Dcoins en tu saldo.`;
+            message = `¡Ganaste! +${difference.toFixed(2)} Bs en tu saldo.`;
           } else {
             message = GAME_CONFIG.MESSAGES.NOTIFY_WIN;
           }
@@ -1523,18 +1523,18 @@ export default {
       } else if (difference < 0) {
         type = type || 'entry';
         if (!message) {
-          message = `Inscripción: ${Math.abs(difference).toFixed(2)} Dcoins. ${GAME_CONFIG.MESSAGES.NOTIFY_ENTRY}`;
+          message = `Inscripción: ${Math.abs(difference).toFixed(2)} Bs. ${GAME_CONFIG.MESSAGES.NOTIFY_ENTRY}`;
         }
       } else if (difference > 0) {
         type = type || 'success';
         if (!message) {
-          message = `+${difference.toFixed(2)} Dcoins en tu saldo.`;
+          message = `+${difference.toFixed(2)} Bs en tu saldo.`;
         }
       } else {
         type = type || 'info';
         if (!message) {
           message = hasBalances
-            ? `Saldo actual: ${newBalance.toFixed(2)} Dcoins`
+            ? `Saldo actual: ${newBalance.toFixed(2)} Bs`
             : GAME_CONFIG.MESSAGES.NOTIFY_BALANCE_UP;
         }
       }
@@ -5486,7 +5486,7 @@ export default {
         
         // Mensaje de confirmación
         if (!skipConfirm) {
-          alert(`Búsqueda cancelada. Se te ha reembolsado ${safeTable.entry_price} Dcoins`);
+          alert(`Búsqueda cancelada. Se te ha reembolsado ${safeTable.entry_price} Bs`);
         }
         
         // Resetear juego y volver a elegir mesa
@@ -5539,7 +5539,7 @@ export default {
         this.updateBalanceFromPayload(result);
         
         // Mensaje de confirmación
-        alert(`Sala cancelada. Se te ha reembolsado ${safeTable.entry_price} Dcoins`);
+        alert(`Sala cancelada. Se te ha reembolsado ${safeTable.entry_price} Bs`);
         
         // Resetear juego y volver a elegir mesa
         this.resetGame();

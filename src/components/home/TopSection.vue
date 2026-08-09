@@ -31,7 +31,7 @@
             </div>
             <p class="top-tagline">
               Demuestra quién manda en la mesa! 🀄<br>
-              Juega tus mejores piedras y acumula Dcoins todos los días
+              Juega tus mejores piedras y acumula Bs todos los días
             </p>
           </div>
         </div>
@@ -69,10 +69,10 @@ export default {
   data() {
     return {
       recentPlayers: [
-        { name: 'José Gregorio Márquez', amount: '200 Dcoins', avatarSeed: 'jose-gregorio-marquez', gender: 'male' },
+        { name: 'José Gregorio Márquez', amount: '200 Bs', avatarSeed: 'jose-gregorio-marquez', gender: 'male' },
         {
           name: 'Andrés Rangel',
-          amount: '120 Dcoins',
+          amount: '120 Bs',
           avatarSeed: 'andres-rangel-sin-arete',
           gender: 'male',
           avatarOverrides: {
@@ -81,13 +81,13 @@ export default {
             earringsProbability: '0'
           }
         },
-        { name: 'Valentina Soto', amount: '50 Dcoins', avatarSeed: 'valentina-soto', gender: 'female' }
+        { name: 'Valentina Soto', amount: '50 Bs', avatarSeed: 'valentina-soto', gender: 'female' }
       ],
       activePlayers: [
-        { name: 'Valentina Soto', amount: '50 Dcoins', avatarSeed: 'valentina-soto-activa', gender: 'female' },
+        { name: 'Valentina Soto', amount: '50 Bs', avatarSeed: 'valentina-soto-activa', gender: 'female' },
         {
           name: 'Luis Herrera',
-          amount: '200 Dcoins',
+          amount: '200 Bs',
           avatarSeed: 'luis-herrera-activo',
           gender: 'male',
           avatarOverrides: {
@@ -100,7 +100,7 @@ export default {
         },
         {
           name: 'Pedro Hernandez',
-          amount: '120 Dcoins',
+          amount: '120 Bs',
           avatarSeed: 'pedro-hernandez-activo-lentes',
           gender: 'male',
           avatarOverrides: {

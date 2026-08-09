@@ -218,7 +218,7 @@ export default {
           if (typeof window !== 'undefined' && window.dispatchEvent) {
             const diff = detectedBalance - oldBalance;
             const entryLabel = entryPrice > 0
-              ? `Inscripción: ${Math.abs(diff).toFixed(2)} Dcoins descontados.`
+              ? `Inscripción: ${Math.abs(diff).toFixed(2)} Bs descontados.`
               : '';
             window.dispatchEvent(new CustomEvent('balance-updated', {
               detail: {

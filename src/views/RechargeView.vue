@@ -6,7 +6,8 @@
         <p>Elige el método de pago para recargar tu cuenta</p>
         <p class="currency-note">
           <i class="fas fa-info-circle me-1"></i>
-          Bs y USDT ($) son medios de pago para obtener <strong>DCoins</strong>, nuestra moneda interna.
+          <span v-if="showsBlockbeeForUser">Bs y USDT ($) son medios de pago para obtener <strong>Bs</strong>, nuestra moneda interna.</span>
+          <span v-else>Recarga con Pago Móvil para obtener <strong>Bs</strong>, nuestra moneda interna.</span>
         </p>
       </div>
 
@@ -20,8 +21,8 @@
 
       <!-- Contenido cuando ya se determinó el método -->
       <template v-if="!isLoadingMethod">
-        <!-- Selector de método de pago -->
-        <div class="payment-method-selector" v-if="!showOnlyLastMethod">
+        <!-- Selector de método de pago (oculto mientras BlockBee está temporalmente deshabilitado para nuevos) -->
+        <div class="payment-method-selector" v-if="!showOnlyLastMethod && !blockbeeTemporarilyDisabled">
           <button
             type="button"
             class="method-tab"
@@ -1109,6 +1110,8 @@ export default {
       },
       lastRechargeMethod: null, // Método de la última recarga
       showOnlyLastMethod: false, // Si debe mostrar solo el método de la última recarga
+      // Temporal: oculta BlockBee salvo usuarios cuya última recarga ya fue BlockBee
+      blockbeeTemporarilyDisabled: true,
       isLoadingMethod: true, // Loading para determinar método preferido
       showPostRechargeModal: false,
       rechargeSuccessSnapshot: null,
@@ -1144,6 +1147,11 @@ export default {
       if (this.currentUser?.name) return this.currentUser.name;
       if (this.currentUser?.email) return this.currentUser.email.split('@')[0];
       return '';
+    },
+
+    /** BlockBee solo para quien ya recargó con ese método (lock histórico). */
+    showsBlockbeeForUser() {
+      return this.lastRechargeMethod === 'blockbee' || !this.blockbeeTemporarilyDisabled;
     },
 
     whatsappBlockbeeNotifyUrl() {
@@ -1307,12 +1315,33 @@ export default {
         }
       } catch (error) {
         console.error('Error al cargar última recarga:', error);
-        // Si hay error, mostramos ambos métodos por defecto
+        // Si hay error, por defecto Pago Móvil (BlockBee temporalmente oculto)
         this.showOnlyLastMethod = false;
       } finally {
+        this.applyBlockbeeTemporaryPolicy();
         // Siempre ocultar el loading al final
         this.isLoadingMethod = false;
       }
+    },
+
+    /**
+     * Temporal: solo Pago Móvil para usuarios nuevos / sin historial BlockBee.
+     * Si la última recarga fue BlockBee, se mantiene el lock a ese método.
+     */
+    applyBlockbeeTemporaryPolicy() {
+      if (!this.blockbeeTemporarilyDisabled) return;
+
+      // Lock histórico o retorno reciente desde BlockBee
+      if (this.lastRechargeMethod === 'blockbee' || this.blockbeeReturnMessage) {
+        this.showOnlyLastMethod = true;
+        this.paymentMethod = 'blockbee';
+        this.lastRechargeMethod = 'blockbee';
+        return;
+      }
+
+      this.showOnlyLastMethod = true;
+      this.paymentMethod = 'pagomovil';
+      this.lastRechargeMethod = this.lastRechargeMethod || 'pagomovil';
     },
     
     // Cargar información de la cuenta del usuario
@@ -1553,6 +1582,8 @@ export default {
       this.blockbeeReturnMessage = 'Pago recibido en BlockBee. Tu transacción quedará en revisión hasta que un administrador la apruebe.';
       this.blockbeeReturnType = 'success';
       this.paymentMethod = 'blockbee';
+      this.lastRechargeMethod = 'blockbee';
+      this.showOnlyLastMethod = true;
       this.blockbeePaymentUrl = null;
       this.blockbeeError = '';
 

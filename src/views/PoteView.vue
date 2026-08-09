@@ -410,12 +410,8 @@ export default {
         currency: 'BOB',
         minimumFractionDigits: 2
       }).format(amount || 0);
-      // Reemplazar todas las variantes de Bs/BOB por Dcoins
-      return formatted
-        .replace(/BOB/g, 'Dcoins')
-        .replace(/Bs\./g, 'Dcoins')
-        .replace(/Bs\s/g, 'Dcoins ')
-        .replace(/Bs/g, 'Dcoins');
+      // Mostrar Bs (Intl BOB a veces deja el código BOB)
+      return formatted.replace(/BOB/g, 'Bs');
     },
     
     formatDate(date) {

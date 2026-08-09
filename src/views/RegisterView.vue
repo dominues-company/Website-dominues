@@ -230,7 +230,7 @@
           >
             <div class="terms-scroll-content">
               <strong>Resumen – Términos y Condiciones y Política de Privacidad (Dominues)</strong>
-              <p>Al registrarte aceptas que Dominues es una plataforma de entretenimiento (dominó) y que el acceso debe ser legal en tu país. Los Dcoins son moneda interna; no son dinero real fuera de la plataforma.</p>
+              <p>Al registrarte aceptas que Dominues es una plataforma de entretenimiento (dominó) y que el acceso debe ser legal en tu país. Los Bs son moneda interna; no son dinero real fuera de la plataforma.</p>
               <p><strong>Cargas y retiros:</strong> Los saldos no son depósitos bancarios; son créditos para jugar en la plataforma. Las cargas pueden requerir validación de comprobante. Los retiros se procesan de forma manual (hasta 48 h hábiles), con tope diario equivalente a $50 USD y solo a cuentas del mismo titular registrado. Eres responsable de los datos de pago; no se devuelven fondos enviados a cuentas erróneas o de terceros.</p>
               <p><strong>Privacidad:</strong> Solo usamos datos necesarios (correo, usuario, país) para tu cuenta y seguridad. No vendemos ni compartimos datos con terceros. Usamos pasarelas como Cryptomus; no guardamos claves ni datos sensibles de pago.</p>
               <p><strong>Prohibido:</strong> Bots, trampas, colusión entre jugadores o uso de la plataforma para actividades ilícitas. Los fondos deben ser de origen lícito. Nos reservamos el derecho de pedir KYC y de bloquear cuentas o retener fondos si hay sospecha de fraude.</p>

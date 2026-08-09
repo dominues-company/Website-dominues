@@ -516,12 +516,12 @@ export default {
     },
     
     formatCurrency(amount) {
-      if (!amount) return 'DCoins 0.00';
+      if (!amount) return 'Bs 0.00';
       const formatted = new Intl.NumberFormat('es-VE', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       }).format(parseFloat(amount));
-      return `DCoins ${formatted}`;
+      return `Bs ${formatted}`;
     },
     
     formatDate(dateString) {

@@ -296,9 +296,9 @@ export function notifySettlementSuccess({ result, store } = {}) {
 
   if (isWinner) {
     if (Number.isFinite(winnerAmount) && winnerAmount > 0) {
-      message = `¡Ganaste! +${winnerAmount.toFixed(2)} Dcoins en tu saldo.`;
+      message = `¡Ganaste! +${winnerAmount.toFixed(2)} Bs en tu saldo.`;
     } else if (difference > 0) {
-      message = `¡Ganaste! +${difference.toFixed(2)} Dcoins en tu saldo.`;
+      message = `¡Ganaste! +${difference.toFixed(2)} Bs en tu saldo.`;
     } else {
       message = GAME_CONFIG.MESSAGES.NOTIFY_WIN;
     }
