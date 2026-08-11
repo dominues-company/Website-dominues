@@ -23,6 +23,13 @@
     </div>
 
     <div class="waiting-container" :class="{ 'game-active': gameStarted }">
+      <div v-if="!isLobbyHidden && !serviceSuspended" class="exit-section exit-section-top">
+        <button type="button" @click="exitGame" class="exit-btn">
+          <i class="fas fa-arrow-left"></i>
+          <span>Volver al Dashboard</span>
+        </button>
+      </div>
+
       <!-- Saldo visible al elegir mesa -->
       <div v-if="!isLobbyHidden" class="waiting-balance-bar">
         <div class="waiting-balance-content">
@@ -6576,6 +6583,15 @@ export default {
   margin-top: 30px;
   padding-top: 20px;
   border-top: 2px solid rgba(255, 165, 0, 0.1);
+}
+
+.exit-section-top {
+  margin-top: 0;
+  margin-bottom: 18px;
+  padding-top: 0;
+  padding-bottom: 18px;
+  border-top: none;
+  border-bottom: 2px solid rgba(255, 165, 0, 0.1);
 }
 
 .exit-btn {
