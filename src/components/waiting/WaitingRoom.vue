@@ -7442,11 +7442,11 @@ export default {
 .choice-container {
   background: white;
   border-radius: 20px;
-  padding: 40px;
-  max-width: 500px;
-  width: 90%;
-  max-height: min(560px, calc(100vh - 32px));
-  max-height: min(560px, calc(100dvh - 32px));
+  padding: 28px 24px 24px;
+  max-width: 560px;
+  width: 92%;
+  max-height: min(92dvh, calc(100vh - 24px));
+  max-height: min(92dvh, calc(100dvh - 24px));
   overflow-y: auto;
   margin: auto;
   text-align: center;
@@ -7457,20 +7457,20 @@ export default {
 
 .choice-header h2 {
   color: #333;
-  margin-bottom: 10px;
-  font-size: 28px;
+  margin-bottom: 6px;
+  font-size: 26px;
 }
 
 .choice-header p {
   color: #666;
-  font-size: 16px;
-  margin-bottom: 30px;
+  font-size: 15px;
+  margin-bottom: 16px;
 }
 
 .invite-table-economics {
   text-align: left;
-  margin: 0 0 24px;
-  padding: 16px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
   background: rgba(45, 27, 105, 0.06);
   border-radius: 14px;
   border: 1px solid rgba(45, 27, 105, 0.12);
@@ -7532,20 +7532,26 @@ export default {
 
 .choice-options {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-bottom: 30px;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 0;
 }
 
 .choice-btn {
   display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
   align-items: center;
-  padding: 20px;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px 12px;
   border: none;
   border-radius: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-align: left;
+  text-align: center;
   background: #f8f9fa;
   border: 2px solid transparent;
 }
@@ -7588,23 +7594,29 @@ export default {
 }
 
 .choice-icon {
-  font-size: 32px;
-  margin-right: 20px;
-  min-width: 50px;
+  font-size: 28px;
+  margin-right: 0;
+  min-width: auto;
+  line-height: 1;
   color: white;
 }
 
+.choice-content {
+  width: 100%;
+}
+
 .choice-content h3 {
-  margin: 0 0 5px 0;
-  font-size: 18px;
-  font-weight: 600;
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
   color: #333;
 }
 
 .choice-content p {
   margin: 0;
-  font-size: 14px;
-  opacity: 0.9;
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: 0.95;
   color: #666;
 }
 
@@ -7635,7 +7647,7 @@ export default {
 /* Media queries para modal de invitación en móvil */
 @media (max-width: 768px) {
   .choice-container {
-    padding: 20px 15px;
+    padding: 20px 14px 16px;
     width: calc(100% - 20px);
     margin: 10px;
     border-radius: 15px;
@@ -7643,32 +7655,34 @@ export default {
 
   .choice-header h2 {
     font-size: 20px;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
 
   .choice-header p {
     font-size: 13px;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
+  }
+
+  .invite-table-economics {
+    margin-bottom: 12px;
+    padding: 10px 12px;
   }
 
   .choice-options {
     gap: 10px;
-    margin-bottom: 15px;
   }
 
   .choice-btn {
-    padding: 12px;
+    padding: 12px 8px;
     border-radius: 12px;
   }
 
   .choice-icon {
-    font-size: 24px;
-    margin-right: 12px;
-    min-width: 35px;
+    font-size: 22px;
   }
 
   .choice-content h3 {
-    font-size: 15px;
+    font-size: 14px;
     margin-bottom: 2px;
   }
 
@@ -7688,7 +7702,7 @@ export default {
 
 @media (max-width: 480px) {
   .choice-container {
-    padding: 15px 12px;
+    padding: 18px 10px 14px;
     width: calc(100% - 16px);
     margin: 8px;
     border-radius: 12px;
@@ -7696,41 +7710,35 @@ export default {
 
   .choice-header h2 {
     font-size: 18px;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
   }
 
   .choice-header p {
     font-size: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .choice-options {
     gap: 8px;
-    margin-bottom: 12px;
   }
 
   .choice-btn {
-    padding: 10px;
+    padding: 10px 6px;
     border-radius: 10px;
-    flex-direction: column;
-    text-align: center;
   }
 
   .choice-icon {
-    font-size: 32px;
-    margin-right: 0;
-    margin-bottom: 6px;
-    min-width: auto;
+    font-size: 20px;
   }
 
   .choice-content h3 {
-    font-size: 14px;
-    margin-bottom: 3px;
+    font-size: 13px;
+    margin-bottom: 2px;
   }
 
   .choice-content p {
     font-size: 10px;
-    line-height: 1.2;
+    line-height: 1.25;
   }
 
   .close-btn {
