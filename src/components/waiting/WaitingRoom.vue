@@ -1845,6 +1845,12 @@ export default {
       const baseUrl = this.gameUrl.split('?')[0];
       const params = new URLSearchParams(this.gameUrl.split('?')[1] || '');
       params.set('_t', timestamp.toString()); // Añadir timestamp para evitar caché
+      const inviteRoomCode = this.getPersistedInviteRoomCode();
+      if (params.get('inviteMode') === 'true' && inviteRoomCode) {
+        params.set('roomCode', inviteRoomCode);
+        params.set('isInviteGuest', this.isInviteGuest ? 'true' : 'false');
+        params.delete('autoCreateRoom');
+      }
       
       this.gameUrl = `${baseUrl}?${params.toString()}`;
       
@@ -2444,6 +2450,36 @@ export default {
       return this.gameMode === 'online' && !this.inviteMode;
     },
 
+    getPersistedInviteRoomCode() {
+      const current = (this.pendingRoomCodeToJoin || this.roomCode || this.friendRoomCode || '').toString().trim();
+      if (current) return current;
+      try {
+        return (sessionStorage.getItem('dominues_invite_room_code') || '').trim();
+      } catch (error) {
+        return '';
+      }
+    },
+
+    persistInviteRoomCode(roomCode) {
+      const normalized = (roomCode || '').toString().trim();
+      if (!normalized) return '';
+      this.roomCode = normalized;
+      try {
+        sessionStorage.setItem('dominues_invite_room_code', normalized);
+      } catch (error) {
+        /* ignore */
+      }
+      return normalized;
+    },
+
+    clearPersistedInviteRoomCode() {
+      try {
+        sessionStorage.removeItem('dominues_invite_room_code');
+      } catch (error) {
+        /* ignore */
+      }
+    },
+
     clearGameSessionStorage() {
       try {
         sessionStorage.removeItem('domino_room');
@@ -2576,10 +2612,11 @@ export default {
           params.append('opponentType', 'human');
           params.append('inviteMode', 'true');
           params.append('maxPlayers', '2');
-          if (this.inviteMode && !this.isInviteGuest) {
+          const inviteRoomCode = this.getPersistedInviteRoomCode();
+          params.append('isInviteGuest', this.isInviteGuest ? 'true' : 'false');
+          if (this.inviteMode && !this.isInviteGuest && !inviteRoomCode) {
             params.append('autoCreateRoom', 'true');
           }
-          const inviteRoomCode = this.pendingRoomCodeToJoin || this.roomCode || this.friendRoomCode;
           if (inviteRoomCode) {
             params.append('roomCode', String(inviteRoomCode).trim());
           }
@@ -2665,7 +2702,7 @@ export default {
           inviteMode: this.inviteMode || this.isInviteGuest,
           autoCreateRoom: !!(this.inviteMode && !this.isInviteGuest),
           isInviteGuest: !!this.isInviteGuest,
-          roomCode: (this.pendingRoomCodeToJoin || this.roomCode || this.friendRoomCode || '').toString().trim() || undefined,
+          roomCode: this.getPersistedInviteRoomCode() || undefined,
           winnerPayout: tableContext?.winner_payout || 0, // Agregar premio al ganador
           // Datos adicionales de la mesa
           tableId: tableContext?.id,
@@ -2726,6 +2763,7 @@ export default {
       this.showInviteChoiceModal = false;
       this.friendRoomCode = '';
       this.pendingRoomCodeToJoin = null;
+      this.clearPersistedInviteRoomCode();
       this.roomCodeValidated = false;
       this.currentMatchId = null;
       this.matchSearchCancelled = true;
@@ -2844,6 +2882,8 @@ export default {
       }
       
       // Configurar para modo de invitación
+      this.clearPersistedInviteRoomCode();
+      this.roomCode = '';
       this.gameMode = 'online';
       this.playersRoom = 2;
       this.inviteMode = true;
@@ -2978,6 +3018,7 @@ export default {
         }
 
         this.currentMatchId = this.extractMatchId(result);
+        this.persistInviteRoomCode(this.pendingRoomCodeToJoin);
           
         // Marcar que el código ya fue validado exitosamente
         // A partir de este punto, se debe mostrar el botón "Rendirse" en lugar de "Cancelar"
@@ -3111,6 +3152,10 @@ export default {
           break;
         case 'ROOM_JOIN_ERROR':
           this.handleRoomJoinError(data);
+          break;
+        case 'SURRENDER_REJECTED':
+          this.isSurrendering = false;
+          console.warn('⛔ [WAITING-ROOM] Rendición rechazada por el juego:', data?.reason);
           break;
         case 'GAME_ERROR':
           this.handleGameError(data);
@@ -3565,7 +3610,7 @@ export default {
     async handleRoomCodeGenerated(data) {
       // Manejar código de invitación generado
       // Actualizar el código en el estado local
-      this.roomCode = data.roomCode;
+      this.persistInviteRoomCode(data.roomCode);
       
       console.log('🔑 [WAITING-ROOM] Código de sala generado:', data.roomCode);
       
