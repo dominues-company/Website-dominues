@@ -3445,7 +3445,7 @@ export default {
       this.disableSessionNavigationGuard();
 
       if (this.resultSent) {
-        setTimeout(() => this.returnToTableSelection(), 800);
+        console.log('⏭️ [WAITING-ROOM] Derrota por reconexión duplicada omitida');
         return;
       }
 
@@ -3455,15 +3455,18 @@ export default {
       if (!isFourPlayerOnline) {
         this.resultSent = true;
         this.isSurrendering = false;
-        this.showGameResultMessage({
+        this.showDisconnectLoseMessage({
           playerName: this.getFirstName(this.playerName),
           opponentName: data?.opponentName || 'Oponente',
-          playerScore: 0,
-          opponentScore: 0,
           isWinner: false,
+          disconnected: true,
+          playerDisconnected: true,
+          disconnectReason: data?.message || 'Agotaste tu oportunidad de reconexión.',
+          resultTitle: 'DERROTA POR DESCONEXIÓN',
+          displayDuration: 5000,
           gameData: data || {}
         });
-        setTimeout(() => this.returnToTableSelection(), GAME_CONFIG.REDIRECT_DELAY || 2000);
+        setTimeout(() => this.returnToTableSelection(), 5000);
         return;
       }
 
@@ -4216,8 +4219,9 @@ export default {
     },
     
     showDisconnectLoseMessage(gameData) {
-      const title = GAME_CONFIG.MESSAGES.CONNECTION_LOSS_TITLE;
+      const title = gameData?.resultTitle || 'DERROTA POR DESCONEXIÓN';
       const customReason = String(gameData?.disconnectReason || '').trim();
+      const displayDuration = Number(gameData?.displayDuration || 4000);
       const bodyText = customReason.length > 40
         ? customReason
         : `${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_BODY} ${GAME_CONFIG.MESSAGES.CONNECTION_LOSS_FOOTER}`;
@@ -4230,7 +4234,10 @@ export default {
 
       const iconHtml = getConnectionLossIconHtml(72);
 
+      const previousResultModal = document.getElementById('dominues-game-result-modal');
+      if (previousResultModal) previousResultModal.remove();
       const modal = document.createElement('div');
+      modal.id = 'dominues-game-result-modal';
       modal.style.cssText = `
         position: fixed;
         top: 0;
@@ -4263,10 +4270,21 @@ export default {
           ">
             ${iconHtml}
           </div>
+          <div style="
+            display:inline-block;
+            margin-bottom:12px;
+            padding:7px 14px;
+            border-radius:999px;
+            background:#fff;
+            color:#b91c1c;
+            font-size:13px;
+            font-weight:900;
+            letter-spacing:.14em;
+          ">PARTIDA PERDIDA</div>
           <h2 style="
             color: white;
             margin-bottom: 15px;
-            font-size: 28px;
+            font-size: 32px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             font-weight: bold;
             line-height: 1.3;
@@ -4309,7 +4327,7 @@ export default {
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(90deg, #ff5252, #ff1744);
-                animation: progress 4s linear forwards;
+                animation: progress ${displayDuration / 1000}s linear forwards;
                 box-shadow: 0 0 10px rgba(255,82,82,0.5);
               "></div>
             </div>
@@ -4333,12 +4351,12 @@ export default {
       
       document.body.appendChild(modal);
       
-      // Remover modal después de 4 segundos
+      // Remover modal después del tiempo configurado
       setTimeout(() => {
         if (modal.parentNode) {
           modal.parentNode.removeChild(modal);
         }
-      }, 4000);
+      }, displayDuration);
     },
     
     showInviteCodeModal(roomCode) {
