@@ -7762,30 +7762,29 @@ export default {
 
 @media (max-width: 360px) {
   .choice-container {
-    padding: 18px 12px;
-    width: calc(100% - 24px);
-    margin: 12px;
+    padding: 16px 8px 12px;
+    width: calc(100% - 16px);
+    margin: 8px;
   }
 
   .choice-header h2 {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .choice-header p {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .choice-icon {
-    font-size: 32px;
-    margin-bottom: 6px;
+    font-size: 18px;
   }
 
   .choice-content h3 {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .choice-content p {
-    font-size: 10px;
+    font-size: 9px;
   }
 }
 
