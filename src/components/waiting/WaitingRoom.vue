@@ -6544,6 +6544,25 @@ export default {
   background: linear-gradient(180deg, rgba(45, 27, 105, 0.08) 0%, rgba(45, 27, 105, 0.04) 100%);
 }
 
+.mode-price.mode-entry {
+  align-self: center;
+  width: 86%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  gap: 2px;
+}
+
+.mode-price.mode-entry .price-label {
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.mode-price.mode-entry .price-value,
+.mode-price.mode-entry .price-value.free {
+  font-size: 1.05rem;
+}
+
 .price-label {
   font-size: 0.72rem;
   color: #2d1b69;
@@ -7534,6 +7553,16 @@ export default {
   font-weight: 800 !important;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
   font-size: 1.15rem !important;
+}
+
+.invite-mode .mode-price.mode-entry .price-value,
+.invite-mode .mode-price.mode-entry .price-value.free {
+  font-size: 0.98rem !important;
+}
+
+.invite-mode .mode-price.mode-entry .price-label {
+  font-size: 0.62rem !important;
+  opacity: 0.75 !important;
 }
 
 .invite-mode .price-coin {
