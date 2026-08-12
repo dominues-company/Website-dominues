@@ -306,6 +306,11 @@ export function notifySettlementSuccess({ result, store } = {}) {
     message = GAME_CONFIG.MESSAGES.NOTIFY_LOSE;
   }
 
+  const resolvedWinnerAmount =
+    Number.isFinite(winnerAmount) && winnerAmount > 0
+      ? winnerAmount
+      : (isWinner && difference > 0 ? difference : 0);
+
   window.dispatchEvent(new CustomEvent('dominues:history-refresh'));
   window.dispatchEvent(new CustomEvent('app-refresh-data'));
   window.dispatchEvent(
@@ -317,7 +322,8 @@ export function notifySettlementSuccess({ result, store } = {}) {
         message,
         source: 'settlement',
         isWinner,
-        notificationType
+        notificationType,
+        winnerAmount: resolvedWinnerAmount
       }
     })
   );

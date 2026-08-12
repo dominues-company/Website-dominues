@@ -617,6 +617,30 @@
         </div>
       </div>
 
+      <!-- Overlay de recompensa al ganar -->
+      <transition name="win-reward">
+        <div
+          v-if="showWinReward"
+          class="win-reward-overlay"
+          role="dialog"
+          aria-live="polite"
+          aria-label="Recompensa"
+          @click="hideWinReward"
+        >
+          <div class="win-reward-content" @click.stop>
+            <p class="win-reward-label">Recompensa:</p>
+            <img
+              class="win-reward-coins"
+              src="/img/reward-coins.png"
+              alt=""
+              width="160"
+              height="160"
+            >
+            <p class="win-reward-amount">{{ formattedWinReward }}</p>
+          </div>
+        </div>
+      </transition>
+
     <!-- Aviso personalizado antes de salir (cancelar / rendirse) -->
     <div v-if="sessionExitModal.visible" class="session-exit-modal" role="dialog" aria-modal="true">
       <div class="session-exit-backdrop" @click="dismissSessionExitModal"></div>
@@ -749,6 +773,12 @@ export default {
       balanceNotificationType: 'success',
       balanceNotificationTimer: null,
       gameResultModalTimer: null,
+
+      // Overlay de recompensa al ganar
+      showWinReward: false,
+      winRewardAmount: 0,
+      winRewardTimer: null,
+      lastWinRewardAmount: 0,
       
       // Overlay de loading para esperar jugadores
       showLoadingOverlay: false,
@@ -840,6 +870,12 @@ export default {
         info: 'fas fa-info-circle'
       };
       return icons[this.balanceNotificationType] || icons.info;
+    },
+
+    formattedWinReward() {
+      const amount = Number(this.winRewardAmount);
+      if (!Number.isFinite(amount) || amount <= 0) return 'Bs. 0,00';
+      return `Bs. ${amount.toFixed(2).replace('.', ',')}`;
     },
 
     // 🔧 Total de jugadores en línea - Sumar waiting_players de las mesas
@@ -1515,7 +1551,61 @@ export default {
     // Método para manejar actualización de balance
     handleBalanceUpdate(event) {
       const detail = event?.detail || {};
+
+      if (detail.isWinner === true) {
+        const amount = this.resolveWinRewardAmount(detail);
+        if (amount > 0) {
+          this.showWinRewardOverlay(amount);
+          return;
+        }
+      }
+
       this.showTopNotification(this.resolveBalanceNotification(detail));
+    },
+
+    resolveWinRewardAmount(detail = {}) {
+      const candidates = [
+        detail.winnerAmount,
+        detail.winner_amount,
+        detail.winnerPayout,
+        detail.winner_payout,
+        this.lastWinRewardAmount,
+        Number(detail.difference) > 0 ? detail.difference : null,
+        this.selectedTable?.winner_payout,
+        this.pendingTable?.winner_payout
+      ];
+
+      for (const candidate of candidates) {
+        const parsed = Number(candidate);
+        if (Number.isFinite(parsed) && parsed > 0) return parsed;
+      }
+      return 0;
+    },
+
+    showWinRewardOverlay(amount, duration = 5000) {
+      const reward = Number(amount);
+      if (!Number.isFinite(reward) || reward <= 0) return;
+
+      if (this.winRewardTimer) {
+        clearTimeout(this.winRewardTimer);
+        this.winRewardTimer = null;
+      }
+
+      this.winRewardAmount = reward;
+      this.lastWinRewardAmount = reward;
+      this.showWinReward = true;
+
+      this.winRewardTimer = setTimeout(() => {
+        this.hideWinReward();
+      }, duration);
+    },
+
+    hideWinReward() {
+      this.showWinReward = false;
+      if (this.winRewardTimer) {
+        clearTimeout(this.winRewardTimer);
+        this.winRewardTimer = null;
+      }
     },
 
     resolveBalanceNotification(detail = {}) {
@@ -2834,6 +2924,8 @@ export default {
       // === RESET DE NOTIFICACIONES ===
       this.showBalanceNotification = false;
       this.balanceNotificationMessage = '';
+      // No cortar el overlay de recompensa a mitad de la celebración
+      // (se autodescarta a los 5s).
       
       // === GENERAR NUEVA SESSION ID ===
       try {
@@ -3737,9 +3829,12 @@ export default {
           this.hideGameResultSaveProgress();
           notifySettlementSuccess({ result, store: this.$store });
           await this.syncUserBalance(true);
-          // El evento de settlement ya muestra el único toast (incluye el premio).
+          // El overlay de recompensa / settlement reemplaza el toast de victoria.
           this.showGameResultMessage(gameData, { showToast: false });
-          setTimeout(() => this.returnToTableSelection(), GAME_CONFIG.REDIRECT_DELAY);
+          const redirectDelay = gameData.isWinner
+            ? GAME_CONFIG.REDIRECT_DELAY_WIN
+            : GAME_CONFIG.REDIRECT_DELAY;
+          setTimeout(() => this.returnToTableSelection(), redirectDelay);
           return;
         }
 
@@ -4065,7 +4160,18 @@ export default {
           <p style="font-size:12px;color:#94a3b8;margin:0;">Dominó por castigo: gana la puntuación más baja.</p>
         `;
       }
-      
+
+      const rewardAmount = gameData.isWinner ? this.resolveWinRewardAmount({
+        winnerAmount: gameData.winnerAmount,
+        winner_amount: gameData.winner_amount,
+        winnerPayout: gameData.winnerPayout || this.selectedTable?.winner_payout,
+        winner_payout: this.selectedTable?.winner_payout
+      }) : 0;
+
+      if (gameData.isWinner && rewardAmount > 0 && !this.showWinReward) {
+        // Overlay principal de dopamina (5s); el modal sigue con el resultado.
+        this.showWinRewardOverlay(rewardAmount, 5000);
+      }
       // Determinar tiempo de redirección según resultado
       const redirectDelay = gameData.isWinner ? GAME_CONFIG.REDIRECT_DELAY_WIN : GAME_CONFIG.REDIRECT_DELAY;
       const redirectSeconds = Math.floor(redirectDelay / 1000);
@@ -4171,6 +4277,14 @@ export default {
     },
     
     showDisconnectResultMessage(gameData, disconnectMessage) {
+      const rewardAmount = this.resolveWinRewardAmount({
+        winnerAmount: gameData?.winnerAmount,
+        winnerPayout: this.selectedTable?.winner_payout
+      });
+      if (rewardAmount > 0) {
+        this.showWinRewardOverlay(rewardAmount, 5000);
+      }
+
       // Mostrar mensaje especial de victoria por desconexión
       const modal = document.createElement('div');
       modal.style.cssText = `
@@ -5756,6 +5870,10 @@ export default {
     if (this.balanceNotificationTimer) {
       clearTimeout(this.balanceNotificationTimer);
       this.balanceNotificationTimer = null;
+    }
+    if (this.winRewardTimer) {
+      clearTimeout(this.winRewardTimer);
+      this.winRewardTimer = null;
     }
     if (this.gameResultModalTimer) {
       clearTimeout(this.gameResultModalTimer);
@@ -8556,6 +8674,88 @@ export default {
   
   .notification-content i {
     font-size: 16px;
+  }
+}
+
+/* Overlay de recompensa al ganar */
+.win-reward-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 8, 6, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+.win-reward-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  padding: 24px;
+  pointer-events: none;
+  animation: winRewardPop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.win-reward-label {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.35rem, 4.5vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.win-reward-coins {
+  width: min(42vw, 168px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
+  animation: winRewardCoins 1.1s ease-in-out infinite alternate;
+}
+
+.win-reward-amount {
+  margin: 4px 0 0;
+  color: #ffffff;
+  font-size: clamp(2rem, 7vw, 2.75rem);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.5);
+}
+
+.win-reward-enter-active,
+.win-reward-leave-active {
+  transition: opacity 0.28s ease;
+}
+
+.win-reward-enter-from,
+.win-reward-leave-to {
+  opacity: 0;
+}
+
+@keyframes winRewardPop {
+  from {
+    opacity: 0;
+    transform: scale(0.82) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes winRewardCoins {
+  from {
+    transform: translateY(0) scale(1);
+  }
+  to {
+    transform: translateY(-6px) scale(1.04);
   }
 }
 
