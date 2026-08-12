@@ -130,11 +130,19 @@
               <div class="mode-content">
                 <h4>{{ table.name }}</h4>
                 <p>{{ table.description }}</p>
-                <div class="mode-price">
-                  <span class="price-label">Inscripción</span>
-                  <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
-                  </span>
+                <div class="mode-pricing">
+                  <div class="mode-price">
+                    <span class="price-label">Inscripción</span>
+                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
+                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
+                    </span>
+                  </div>
+                  <div class="mode-price mode-prize">
+                    <span class="price-label">Ganancia</span>
+                    <span class="price-value prize-value">
+                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
+                    </span>
+                  </div>
                 </div>
                 <div class="mode-features">
                   <span class="feature">🤖 IA Avanzada</span>
@@ -161,11 +169,19 @@
               <div class="mode-content">
                 <h4>{{ table.name }}</h4>
                 <p>{{ table.description }}</p>
-                <div class="mode-price">
-                  <span class="price-label">Inscripción</span>
-                  <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
-                  </span>
+                <div class="mode-pricing">
+                  <div class="mode-price">
+                    <span class="price-label">Inscripción</span>
+                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
+                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
+                    </span>
+                  </div>
+                  <div class="mode-price mode-prize">
+                    <span class="price-label">Ganancia</span>
+                    <span class="price-value prize-value">
+                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
+                    </span>
+                  </div>
                 </div>
                 <div class="mode-features">
                   <span class="feature">👥 2 Jugadores</span>
@@ -198,11 +214,19 @@
               <div class="mode-content">
                 <h4>{{ table.name }}</h4>
                 <p>{{ table.description }}</p>
-                <div class="mode-price">
-                  <span class="price-label">Inscripción</span>
-                  <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                    {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
-                  </span>
+                <div class="mode-pricing">
+                  <div class="mode-price">
+                    <span class="price-label">Inscripción</span>
+                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
+                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
+                    </span>
+                  </div>
+                  <div class="mode-price mode-prize">
+                    <span class="price-label">Ganancia</span>
+                    <span class="price-value prize-value">
+                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
+                    </span>
+                  </div>
                 </div>
                 <div class="mode-features">
                   <span class="feature">👥 4 Jugadores</span>
@@ -243,7 +267,7 @@
                     </span>
                   </div>
                   <div class="mode-price mode-prize">
-                    <span class="price-label">Premio al Ganador</span>
+                    <span class="price-label">Ganancia</span>
                     <span class="price-value prize-value">
                       {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
