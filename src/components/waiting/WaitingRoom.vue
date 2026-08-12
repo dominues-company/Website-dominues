@@ -134,7 +134,7 @@
                   <div class="mode-price mode-prize">
                     <span class="price-label">Recompensa</span>
                     <span class="price-value">
-                      <img class="price-coin" src="/img/reward-coins.png" alt="" width="22" height="22">
+                      <img class="price-coin" src="/img/coins-removebg-preview.png" alt="" width="22" height="22">
                       {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
                   </div>
@@ -174,7 +174,7 @@
                   <div class="mode-price mode-prize">
                     <span class="price-label">Recompensa</span>
                     <span class="price-value">
-                      <img class="price-coin" src="/img/reward-coins.png" alt="" width="22" height="22">
+                      <img class="price-coin" src="/img/coins-removebg-preview.png" alt="" width="22" height="22">
                       {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
                   </div>
@@ -220,7 +220,7 @@
                   <div class="mode-price mode-prize">
                     <span class="price-label">Recompensa</span>
                     <span class="price-value">
-                      <img class="price-coin" src="/img/reward-coins.png" alt="" width="22" height="22">
+                      <img class="price-coin" src="/img/coins-removebg-preview.png" alt="" width="22" height="22">
                       {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
                   </div>
@@ -266,7 +266,7 @@
                   <div class="mode-price mode-prize">
                     <span class="price-label">Recompensa</span>
                     <span class="price-value">
-                      <img class="price-coin" src="/img/reward-coins.png" alt="" width="22" height="22">
+                      <img class="price-coin" src="/img/coins-removebg-preview.png" alt="" width="22" height="22">
                       {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
                   </div>
@@ -635,7 +635,7 @@
             <p class="win-reward-label">Recompensa:</p>
             <img
               class="win-reward-coins"
-              src="/img/reward-coins.png"
+              src="/img/coins-removebg-preview.png"
               alt=""
               width="160"
               height="160"
