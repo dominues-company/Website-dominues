@@ -131,16 +131,17 @@
                 <h4>{{ table.name }}</h4>
                 <p>{{ table.description }}</p>
                 <div class="mode-pricing">
-                  <div class="mode-price">
-                    <span class="price-label">Inscripción</span>
-                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
+                  <div class="mode-price mode-prize">
+                    <span class="price-label">Recompensa</span>
+                    <span class="price-value">
+                      <img class="price-coin" src="/img/reward-coins.png" alt="" width="22" height="22">
+                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
                   </div>
-                  <div class="mode-price mode-prize">
-                    <span class="price-label">Ganancia</span>
-                    <span class="price-value prize-value">
-                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
+                  <div class="mode-price mode-entry">
+                    <span class="price-label">Entrada</span>
+                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
+                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
                     </span>
                   </div>
                 </div>
@@ -170,16 +171,17 @@
                 <h4>{{ table.name }}</h4>
                 <p>{{ table.description }}</p>
                 <div class="mode-pricing">
-                  <div class="mode-price">
-                    <span class="price-label">Inscripción</span>
-                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
+                  <div class="mode-price mode-prize">
+                    <span class="price-label">Recompensa</span>
+                    <span class="price-value">
+                      <img class="price-coin" src="/img/reward-coins.png" alt="" width="22" height="22">
+                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
                   </div>
-                  <div class="mode-price mode-prize">
-                    <span class="price-label">Ganancia</span>
-                    <span class="price-value prize-value">
-                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
+                  <div class="mode-price mode-entry">
+                    <span class="price-label">Entrada</span>
+                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
+                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
                     </span>
                   </div>
                 </div>
@@ -215,16 +217,17 @@
                 <h4>{{ table.name }}</h4>
                 <p>{{ table.description }}</p>
                 <div class="mode-pricing">
-                  <div class="mode-price">
-                    <span class="price-label">Inscripción</span>
-                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
+                  <div class="mode-price mode-prize">
+                    <span class="price-label">Recompensa</span>
+                    <span class="price-value">
+                      <img class="price-coin" src="/img/reward-coins.png" alt="" width="22" height="22">
+                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
                   </div>
-                  <div class="mode-price mode-prize">
-                    <span class="price-label">Ganancia</span>
-                    <span class="price-value prize-value">
-                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
+                  <div class="mode-price mode-entry">
+                    <span class="price-label">Entrada</span>
+                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
+                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
                     </span>
                   </div>
                 </div>
@@ -260,16 +263,17 @@
                 <h4>{{ table.name }}</h4>
                 <p>{{ table.description }}</p>
                 <div class="mode-pricing">
-                  <div class="mode-price">
-                    <span class="price-label">Inscripción</span>
-                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
-                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
+                  <div class="mode-price mode-prize">
+                    <span class="price-label">Recompensa</span>
+                    <span class="price-value">
+                      <img class="price-coin" src="/img/reward-coins.png" alt="" width="22" height="22">
+                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
                     </span>
                   </div>
-                  <div class="mode-price mode-prize">
-                    <span class="price-label">Ganancia</span>
-                    <span class="price-value prize-value">
-                      {{ table.winner_payout != null ? `${table.winner_payout} Bs` : '—' }}
+                  <div class="mode-price mode-entry">
+                    <span class="price-label">Entrada</span>
+                    <span class="price-value" :class="{ 'free': table.entry_price === 0 }">
+                      {{ table.entry_price === 0 ? 'GRATIS' : `${table.entry_price} Bs` }}
                     </span>
                   </div>
                 </div>
@@ -6506,54 +6510,60 @@ export default {
 .mode-pricing {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
   margin-bottom: 15px;
 }
 
 .mode-price {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 15px;
-  padding: 12px 20px;
-  background: rgba(45, 27, 105, 0.05);
-  border-radius: 12px;
+  gap: 4px;
+  margin-bottom: 0;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, rgba(45, 27, 105, 0.06) 0%, rgba(45, 27, 105, 0.03) 100%);
+  border-radius: 14px;
   border: 1px solid rgba(45, 27, 105, 0.1);
 }
 
-.mode-pricing .mode-price {
-  margin-bottom: 0;
-}
-
-.mode-price.mode-prize .price-value.prize-value {
-  color: #27ae60;
+.mode-price.mode-prize {
+  background: linear-gradient(180deg, rgba(45, 27, 105, 0.08) 0%, rgba(45, 27, 105, 0.04) 100%);
 }
 
 .price-label {
-  font-size: 0.9rem;
-  color: #666;
-  font-weight: 600;
+  font-size: 0.72rem;
+  color: #2d1b69;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  opacity: 0.78;
 }
 
 .price-value {
-  font-size: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #2d1b69;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  line-height: 1.2;
+}
+
+.price-coin {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
 }
 
 .price-value.free {
-  color: #22c55e;
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 1.3rem;
-  text-shadow: none;
+  color: #2d1b69;
+  font-size: 1.25rem;
 }
 
 .mode-features {
@@ -7215,11 +7225,16 @@ export default {
   }
   
   .price-value {
-    font-size: 0.9rem;
+    font-size: 1.05rem;
+  }
+
+  .price-coin {
+    width: 18px;
+    height: 18px;
   }
   
   .price-value.free {
-    font-size: 1rem;
+    font-size: 1.05rem;
   }
   
   .feature {
@@ -7382,15 +7397,20 @@ export default {
   }
   
   .price-label {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
   }
   
   .price-value {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  .price-coin {
+    width: 16px;
+    height: 16px;
   }
   
   .price-value.free {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
   
   .feature {
@@ -7485,21 +7505,27 @@ export default {
   z-index: 2;
 }
 
-.invite-mode .mode-price.mode-prize .price-value.prize-value {
-  color: #86efac !important;
+.invite-mode .mode-price {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
 .invite-mode .price-label {
-  color: #e8e8e8 !important;
-  font-weight: 600 !important;
+  color: #ffffff !important;
+  opacity: 0.85 !important;
+  font-weight: 700 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
 }
 
 .invite-mode .price-value {
   color: #ffffff !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
-  font-size: 1.1rem !important;
+  font-size: 1.15rem !important;
+}
+
+.invite-mode .price-coin {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
 
 .invite-mode .mode-features {
