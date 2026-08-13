@@ -21,8 +21,17 @@
         La cuenta de destino debe pertenecer al titular registrado en dominues! No se permiten registros a terceros
       </p>
 
+      <div v-if="identityVerificationStatus !== 'approved'" class="identity-gate" :class="`status-${identityVerificationStatus}`">
+        <h3><i class="fas fa-id-card me-2"></i>Verificación de identidad requerida</h3>
+        <p v-if="identityVerificationStatus === 'pending'">Tu documento está siendo revisado. Por seguridad, el retiro se habilitará después de que el equipo apruebe tu identidad.</p>
+        <p v-else-if="identityVerificationStatus === 'rejected'">El documento anterior no pudo validarse. Sube una nueva foto clara de tu cédula para volver a solicitar la revisión.</p>
+        <p v-else>Antes de solicitar tu primer retiro, necesitamos validar que la cuenta y el documento pertenecen a la misma persona.</p>
+        <button v-if="identityVerificationStatus !== 'pending'" type="button" class="btn-register" @click="showIdentityModal = true">Subir documento</button>
+        <button v-else type="button" class="btn-cancel" @click="loadClientData">Actualizar estado</button>
+      </div>
+
       <!-- FORMULARIO DE RETIRO -->
-      <form @submit.prevent="handleWithdrawal" class="withdrawal-form">
+      <form @submit.prevent="handleWithdrawal" class="withdrawal-form" :class="{ 'form-locked': identityVerificationStatus !== 'approved' }">
 
         <div class="form-row">
           <div class="form-group">
@@ -83,7 +92,7 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn-register" :disabled="isLoading || !isFormValid">
+          <button type="submit" class="btn-register" :disabled="isLoading || !isFormValid || identityVerificationStatus !== 'approved'">
             <span v-if="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             <i v-else class="fas fa-money-bill-wave me-2"></i>
             {{ isLoading ? 'Procesando...' : 'REGISTRAR' }}
@@ -159,6 +168,21 @@
   line-height: 1.4;
   padding: 0 10px;
 }
+
+.identity-gate {
+  margin: 0 0 22px;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #f0ad4e;
+  background: #fff8e5;
+  color: #5f4300;
+  text-align: center;
+}
+.identity-gate h3 { font-size: 1.15rem; margin-bottom: 8px; }
+.identity-gate p { margin-bottom: 16px; line-height: 1.5; }
+.identity-gate .btn-register, .identity-gate .btn-cancel { margin: 0 auto; }
+.identity-gate.status-rejected { border-color: #dc3545; background: #fff0f1; color: #7b1d26; }
+.form-locked { opacity: .58; pointer-events: none; }
 
 .client-data-section,
 .bank-info-section {
@@ -579,7 +603,7 @@ export default {
       const noErrors = Object.keys(this.errors).length === 0;
       const amountValid = parseFloat(withdrawalAmount) >= 500 && parseFloat(withdrawalAmount) <= this.availableBalance;
       
-      return requiredFieldsFilled && noErrors && amountValid;
+      return requiredFieldsFilled && noErrors && amountValid && this.identityVerificationStatus === 'approved';
     }
   },
   async mounted() {
@@ -709,13 +733,8 @@ export default {
           return;
         }
 
-        if (status === 'pending') {
-          await this.submitWithdrawal();
-          this.showPendingModal = true;
-          return;
-        }
-
-        this.showIdentityModal = true;
+        if (status === 'pending') this.showPendingModal = true;
+        else this.showIdentityModal = true;
       } catch (error) {
         console.error('Error general durante el retiro:', error);
         this.errorMessage = 'Ocurrió un error inesperado. Por favor, intenta de nuevo más tarde.';
@@ -726,12 +745,7 @@ export default {
       this.showIdentityModal = false;
       this.identityVerificationStatus = 'pending';
 
-      try {
-        await this.submitWithdrawal();
-        this.showPendingModal = true;
-      } catch (error) {
-        this.showPendingModal = true;
-      }
+      this.showPendingModal = true;
     },
 
     onPendingModalClose() {
@@ -797,7 +811,9 @@ export default {
                       `Error del servidor: ${error.response.status} ${error.response.statusText}`;
 
         if (error.response.data?.requires_identity_verification) {
-          this.showIdentityModal = true;
+          this.identityVerificationStatus = error.response.data.identity_verification_status || this.identityVerificationStatus;
+          if (this.identityVerificationStatus === 'pending') this.showPendingModal = true;
+          else this.showIdentityModal = true;
         }
       } else {
         // Errores de red u otros
