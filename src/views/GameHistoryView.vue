@@ -387,15 +387,15 @@ export default {
 
 <style scoped>
 .game-history-view {
-  --bg-deep: #0d0a14;
-  --bg-mid: #13101f;
-  --bg-card: #1a1528;
-  --bg-card-hover: #201b34;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-glow: rgba(183, 146, 92, 0.3);
-  --gold: #c9a84c;
-  --gold-light: #e8c97a;
-  --gold-dim: rgba(201, 168, 76, 0.15);
+  --bg-deep: #1D1841;
+  --bg-mid: #241f4f;
+  --bg-card: #2A255C;
+  --bg-card-hover: #322c6a;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(241, 184, 56, 0.3);
+  --gold: #F1B838;
+  --gold-light: #F1B838;
+  --gold-dim: rgba(241, 184, 56, 0.15);
   --green: #3ecf82;
   --green-dim: rgba(62, 207, 130, 0.12);
   --red: #f06060;
@@ -408,7 +408,7 @@ export default {
 
   position: relative;
   min-height: 100vh;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   background-color: var(--bg-deep);
   color: var(--text-primary);
   padding: 96px 0 48px;
@@ -450,7 +450,7 @@ export default {
 }
 
 .logo {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--gold-light);
@@ -508,7 +508,7 @@ export default {
 }
 
 .page-header h1 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   font-weight: 700;
   color: var(--text-primary);
@@ -583,7 +583,7 @@ export default {
 }
 
 .stat-value {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -638,7 +638,7 @@ export default {
   background: transparent;
   border: none;
   color: var(--text-primary);
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   font-size: 0.85rem;
   outline: none;
   cursor: pointer;
@@ -667,7 +667,7 @@ export default {
   border-radius: 10px;
   padding: 10px 20px;
   color: #0d0a14;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -908,7 +908,7 @@ export default {
 }
 
 .score-value {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   font-size: 2.2rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -919,7 +919,7 @@ export default {
   border-top: 1px solid var(--border);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(29, 24, 65, 0.35);
 }
 
 .footer-cell {
@@ -1021,7 +1021,7 @@ export default {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
 }
 
 .page-btn:hover {
@@ -1056,7 +1056,7 @@ export default {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
 }
 
 .page-arrow:hover:not(:disabled) {
@@ -1075,7 +1075,7 @@ export default {
 }
 
 .empty-state h3 {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   color: var(--text-primary);
   margin: 16px 0 8px;
 }

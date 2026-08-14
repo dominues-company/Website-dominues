@@ -538,14 +538,14 @@ export default {
 
 <style scoped>
 .profile-page {
-  --bg-deep: #0d0a14;
-  --bg-card: #1a1528;
-  --bg-card-soft: #211a33;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-glow: rgba(201, 168, 76, 0.28);
-  --gold: #c9a84c;
-  --gold-light: #e8c97a;
-  --gold-dim: rgba(201, 168, 76, 0.14);
+  --bg-deep: #1D1841;
+  --bg-card: #2A255C;
+  --bg-card-soft: #2A255C;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(241, 184, 56, 0.28);
+  --gold: #F1B838;
+  --gold-light: #F1B838;
+  --gold-dim: rgba(241, 184, 56, 0.14);
   --green: #3ecf82;
   --green-dim: rgba(62, 207, 130, 0.14);
   --text-primary: #f0ecff;
@@ -560,6 +560,7 @@ export default {
   min-height: 100vh;
   background: var(--bg-deep);
   color: var(--text-primary);
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   overflow-x: hidden;
 }
 
@@ -602,7 +603,7 @@ export default {
 .profile-page-title h1 {
   margin: 0;
   color: var(--text-primary);
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Montserrat', 'Josefin Sans', sans-serif;
   font-size: clamp(2rem, 7vw, 3.5rem);
   font-weight: 800;
   line-height: 1.05;
@@ -613,7 +614,7 @@ export default {
 }
 
 .profile-header {
-  background: linear-gradient(145deg, rgba(32, 27, 52, 0.96), rgba(21, 17, 33, 0.96));
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 24px;
   padding: 2rem;
@@ -739,7 +740,7 @@ export default {
 }
 
 .stat-card {
-  background: linear-gradient(145deg, rgba(32, 27, 52, 0.95), rgba(24, 19, 38, 0.98));
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 1.5rem;
@@ -778,7 +779,7 @@ export default {
 }
 
 .card {
-  background: linear-gradient(145deg, rgba(32, 27, 52, 0.94), rgba(18, 14, 30, 0.98));
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 20px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
