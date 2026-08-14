@@ -89,7 +89,7 @@
             <tbody>
               <tr 
                 v-for="(player, index) in players" 
-                :key="player.user_id"
+                :key="'t-' + player.user_id"
                 :class="getRankClass(index + 1)"
                 @click="showPlayerHistory(player)"
                 class="player-row"
@@ -146,11 +146,44 @@
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <div v-if="players.length === 0" class="no-data">
-            <i class="fas fa-inbox"></i>
-            <p>No hay datos disponibles para este mes</p>
-          </div>
+        <div class="ranking-cards">
+          <button
+            v-for="(player, index) in players"
+            :key="'c-' + player.user_id"
+            type="button"
+            class="player-card"
+            :class="getRankClass(index + 1)"
+            @click="showPlayerHistory(player)"
+          >
+            <div class="card-rank" :class="getRankBadgeClass(index + 1)">
+              <span v-if="index < 3">{{ getTrophyIcon(index + 1) }}</span>
+              <span v-else>{{ index + 1 }}</span>
+            </div>
+            <div class="card-main">
+              <div class="card-top">
+                <span class="card-name">{{ player.player_name }}</span>
+                <span class="card-profit">{{ formatCurrency(displayProfit(player.net_profit)) }}</span>
+              </div>
+              <div class="card-meta">
+                <span class="card-winrate">
+                  <i class="winrate-dot" :style="{ backgroundColor: getWinrateColor(player.win_rate) }"></i>
+                  {{ player.win_rate }}%
+                </span>
+                <span>{{ player.wins }}W · {{ player.losses }}L</span>
+                <span>{{ player.total_games }} partidas</span>
+              </div>
+            </div>
+            <span class="btn-view btn-view-compact" aria-hidden="true">
+              <i class="fas fa-eye"></i>
+            </span>
+          </button>
+        </div>
+
+        <div v-if="players.length === 0" class="no-data">
+          <i class="fas fa-inbox"></i>
+          <p>No hay datos disponibles para este mes</p>
         </div>
       </div>
     </div>
@@ -649,6 +682,10 @@ export default {
 /* Table */
 .ranking-table {
   overflow-x: auto;
+}
+
+.ranking-cards {
+  display: none;
 }
 
 table {
@@ -1194,124 +1231,385 @@ td {
 /* Responsive */
 @media (max-width: 768px) {
   .pote-view {
-    padding: 80px 10px 30px 10px;
+    padding: 72px 8px 20px;
   }
 
-  /* Ranking Section */
-  .ranking-section {
-    padding: 15px;
+  .pote-header {
+    margin-bottom: 12px;
   }
-  
+
+  .title-section {
+    margin-bottom: 12px;
+  }
+
   .title {
-    font-size: 1.8rem;
+    font-size: 1.45rem;
+    margin-bottom: 4px;
   }
-  
+
+  .title i {
+    margin-right: 8px;
+  }
+
   .subtitle {
-    font-size: 1rem;
-  }
-  
-  .table-header h2 {
-    font-size: 1.3rem;
-  }
-  
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-  
-  .stat-card {
-    padding: 12px;
-    gap: 10px;
-  }
-  
-  .stat-card-full {
-    grid-column: 1 / -1;
-  }
-  
-  .stat-icon {
-    width: 45px;
-    height: 45px;
-    font-size: 1.3rem;
-  }
-  
-  .stat-value {
-    font-size: 1.3rem;
-  }
-  
-  .stat-label {
-    font-size: 0.8rem;
-  }
-  
-  .table-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  table {
     font-size: 0.85rem;
   }
-  
-  .rank-badge,
-  .player-avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 0.9rem;
+
+  .stats-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 0;
   }
-  
-  .player-name {
+
+  .stat-card,
+  .stat-card-full {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 8px 4px;
+    gap: 4px;
+    border-radius: 12px;
+  }
+
+  .stat-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .stat-value {
+    font-size: 0.95rem;
+    margin-bottom: 0;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    line-height: 1.2;
+  }
+
+  .ranking-section {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .table-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .table-header h2 {
+    font-size: 1rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .month-select {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  .ranking-table {
+    display: none;
+  }
+
+  .ranking-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .player-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 10px 10px 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: white;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .player-card.rank-1 {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.22), rgba(255, 255, 255, 0.05));
+    border-color: rgba(251, 191, 36, 0.35);
+  }
+
+  .player-card.rank-2 {
+    background: linear-gradient(90deg, rgba(192, 192, 192, 0.18), rgba(255, 255, 255, 0.05));
+  }
+
+  .player-card.rank-3 {
+    background: linear-gradient(90deg, rgba(205, 127, 50, 0.18), rgba(255, 255, 255, 0.05));
+  }
+
+  .card-rank {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .card-rank.gold {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    border-color: #fbbf24;
+  }
+
+  .card-rank.silver {
+    background: linear-gradient(135deg, #d1d5db, #9ca3af);
+    border-color: #d1d5db;
+  }
+
+  .card-rank.bronze {
+    background: linear-gradient(135deg, #cd7f32, #b87333);
+    border-color: #cd7f32;
+  }
+
+  .card-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+
+  .card-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-profit {
+    flex-shrink: 0;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #10b981;
+  }
+
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .card-winrate {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .winrate-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .btn-view-compact {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 0.85rem;
+  }
+
+  .no-data {
+    padding: 32px 12px;
+  }
+
+  .modal-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .modal-content {
+    max-height: 100dvh;
+    height: 100dvh;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+  }
+
+  .modal-header {
+    padding: 12px 14px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .btn-close {
+    width: 34px;
+    height: 34px;
     font-size: 1rem;
   }
-  
-  .modal-content {
-    max-height: 95vh;
-    width: 95%;
+
+  .modal-body {
+    padding: 12px 12px 24px;
   }
-  
+
   .player-summary {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
+    margin-bottom: 14px;
   }
-  
+
+  .summary-card {
+    padding: 10px 12px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .summary-card i {
+    font-size: 1.15rem;
+  }
+
+  .summary-value {
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+
+  .summary-label {
+    font-size: 0.7rem;
+  }
+
+  .games-history h3 {
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+
+  .games-list {
+    gap: 8px;
+    max-height: none;
+    padding-right: 0;
+  }
+
+  .game-item {
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  .game-item:hover {
+    transform: none;
+  }
+
+  .game-header {
+    margin-bottom: 6px;
+  }
+
+  .game-status {
+    font-size: 0.95rem;
+  }
+
+  .game-status i {
+    font-size: 1rem;
+  }
+
+  .game-date {
+    font-size: 0.75rem;
+  }
+
+  .game-details {
+    gap: 6px;
+  }
+
+  .info-item {
+    font-size: 0.8rem;
+  }
+
   .game-score {
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 12px;
+    padding: 8px 10px;
   }
-  
-  .ranking-table {
-    overflow-x: auto;
+
+  .score-label {
+    font-size: 0.65rem;
+    margin-bottom: 0;
+  }
+
+  .score-value {
+    font-size: 1.25rem;
+  }
+
+  .score-separator {
+    font-size: 1.1rem;
+  }
+
+  .game-earnings {
+    padding: 8px 10px;
+  }
+
+  .earning-item span:first-child {
+    font-size: 0.7rem;
+  }
+
+  .bet,
+  .win,
+  .loss {
+    font-size: 0.9rem;
+  }
+
+  .game-badges {
+    margin-top: 4px;
+    gap: 6px;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    font-size: 0.7rem;
   }
 }
 
 @media (max-width: 480px) {
   .title {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
   }
-  
-  .subtitle {
+
+  .stat-value {
     font-size: 0.85rem;
   }
-  
-  .stats-cards {
-    gap: 6px;
+
+  .card-name {
+    font-size: 0.9rem;
   }
-  
-  .stat-card {
-    padding: 10px;
-    gap: 8px;
-  }
-  
-  .stat-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-  
-  .stat-value {
-    font-size: 1.2rem;
-  }
-  
-  .stat-label {
-    font-size: 0.75rem;
+
+  .summary-value {
+    font-size: 0.95rem;
   }
 }
 </style>
