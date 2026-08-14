@@ -874,8 +874,7 @@ td {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
+  background: #0b0818;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -884,13 +883,14 @@ td {
 }
 
 .modal-content {
-  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  background: #1a1540;
   border-radius: 25px;
   max-width: 900px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   border: 2px solid rgba(255, 255, 255, 0.2);
+  isolation: isolate;
 }
 
 .modal-header {
@@ -937,7 +937,7 @@ td {
 }
 
 .summary-card {
-  background: rgba(255, 255, 255, 0.1);
+  background: #2a2258;
   border-radius: 15px;
   padding: 20px;
   display: flex;
@@ -974,43 +974,46 @@ td {
 .games-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
   max-height: 500px;
   overflow-y: auto;
   padding-right: 10px;
+  background: #1a1540;
 }
 
 .game-item {
-  background: linear-gradient(135deg, #6b1a3d 0%, #4a1229 100%);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  background: #2b1633;
+  background-image: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  isolation: isolate;
+  overflow: hidden;
 }
 
 .game-item:hover {
-  background: linear-gradient(135deg, #7d2049 0%, #5a1432 100%);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateX(5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  background: #351c3e;
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: none;
+  box-shadow: none;
 }
 
 .game-item.winner {
-  border-left: 5px solid #51cf66;
-  background: linear-gradient(135deg, #2d5016 0%, #1a3d0f 100%);
+  border-left: 4px solid #51cf66;
+  background: #17301c;
 }
 
 .game-item.loser {
-  border-left: 5px solid #ff6b6b;
-  background: linear-gradient(135deg, #6b1a1a 0%, #4a1212 100%);
+  border-left: 4px solid #ff6b6b;
+  background: #30151a;
 }
 
 .game-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .game-status {
@@ -1019,10 +1022,11 @@ td {
   gap: 8px;
   font-weight: 800;
   color: #ffffff;
-  font-size: 1.15rem;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  font-size: 1.05rem;
+  text-decoration: none;
+  text-shadow: none;
   position: relative;
-  z-index: 10;
+  z-index: 1;
 }
 
 .game-status i {
@@ -1039,10 +1043,11 @@ td {
 }
 
 .game-date {
-  color: #ffffff;
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.85rem;
   font-weight: 600;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  text-decoration: none;
+  text-shadow: none;
 }
 
 .game-details {
@@ -1080,11 +1085,11 @@ td {
   align-items: center;
   justify-content: center;
   gap: 20px;
-  padding: 18px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+  padding: 10px 14px;
+  background: #120c18;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
 }
 
 .score-item {
@@ -1121,10 +1126,10 @@ td {
 .game-earnings {
   display: flex;
   justify-content: space-between;
-  padding: 12px 18px;
-  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 14px;
+  background: #120c18;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .earning-item {
@@ -1453,6 +1458,7 @@ td {
   .modal-overlay {
     padding: 0;
     align-items: stretch;
+    background: #0b0818;
   }
 
   .modal-content {
@@ -1521,6 +1527,15 @@ td {
   .game-item {
     padding: 10px 12px;
     border-radius: 12px;
+    background-image: none;
+  }
+
+  .game-item.winner {
+    background: #17301c;
+  }
+
+  .game-item.loser {
+    background: #30151a;
   }
 
   .game-item:hover {
@@ -1555,6 +1570,7 @@ td {
     flex-direction: row;
     gap: 12px;
     padding: 8px 10px;
+    background: #120c18;
   }
 
   .score-label {
@@ -1572,6 +1588,7 @@ td {
 
   .game-earnings {
     padding: 8px 10px;
+    background: #120c18;
   }
 
   .earning-item span:first-child {
