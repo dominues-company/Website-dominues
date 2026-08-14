@@ -7,10 +7,6 @@
       "a": "Es la plataforma definitiva para jugar dominó online con personas reales. Aquí no juegas contra la computadora, juegas contra otros apasionados del dominó y pones a prueba tu estrategia."
     },
     {
-      "q": "¿Qué son los \"Bs\"?",
-      "a": "Es nuestra moneda interna. Para que todo sea más fácil, te diremos cuánto vale. Así siempre sabes exactamente cuánto tienes y cuánto ganas."
-    },
-    {
       "q": "¿Cómo cargo saldo en mi cuenta?",
       "a": "¡Es muy fácil! Tienes dos opciones:<br><strong>Si estás en Venezuela:</strong> Elige \"Pago Móvil\", dale al botón de WhatsApp y envíanos tu comprobante. ¡Te cargamos en minutos!<br><strong>Si estás en Chile o el resto del mundo:</strong> Elige \"Pago Automático\" y usa Cryptomus. Se acredita al instante sin hablar con nadie."
     },
@@ -34,7 +30,7 @@
     },
     {
       "q": "¿Tengo derecho a reembolso si hay mantenimiento o falla técnica?",
-      "a": "No de forma automática. Mantenimientos, actualizaciones y fallas técnicas (propias o de terceros) <strong>no generan derecho a compensación</strong>. Solo en fallas generales comprobadas Dominues puede, a su criterio, anular partidas afectadas y reintegrar la entrada. El saldo en Bs sigue las reglas de retiros y auditoría."
+      "a": "No de forma automática. Mantenimientos, actualizaciones y fallas técnicas (propias o de terceros) <strong>no generan derecho a compensación</strong>. El saldo en Bs sigue las reglas de retiros y auditoría."
     },
     {
       "q": "¿Puedo jugar desde mi teléfono?",
