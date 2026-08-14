@@ -1,5 +1,6 @@
 import api from './api';
 import store from '@/store'; 
+import { clearClientSession, isClientUser } from '@/utils/clientAccess';
 
 class AuthService {
   constructor() {
@@ -20,10 +21,17 @@ class AuthService {
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user');
     
+    const parsedUser = userData ? JSON.parse(userData) : null;
+
+    if (token && !isClientUser(parsedUser)) {
+      clearClientSession();
+      return false;
+    }
+
     if (token && store) {      
       store.commit('auth/LOGIN_SUCCESS', {
         token,
-        user: userData ? JSON.parse(userData) : null
+        user: parsedUser
       });
       
       this.startSessionCheck();

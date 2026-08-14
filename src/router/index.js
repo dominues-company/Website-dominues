@@ -1,6 +1,7 @@
 // router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '@/store'
+import { clearClientSession, isClientUser } from '@/utils/clientAccess'
 
 
 // Importar componentes
@@ -170,6 +171,17 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const isAuthenticated = store.getters['auth/isAuthenticated'];
+  const currentUser = store.getters['auth/currentUser'];
+
+  if (isAuthenticated && !isClientUser(currentUser)) {
+    clearClientSession();
+    store.commit('auth/LOGOUT');
+    next({
+      path: '/login',
+      query: { access: 'client-only' }
+    });
+    return;
+  }
   
   // 🔧 CACHE CONTROL: Forzar limpieza de caché al acceder a waiting-room
   if (to.name === 'WaitingRoomPage' && !to.query._nocache) {

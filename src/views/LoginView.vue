@@ -404,6 +404,8 @@ label {
 
 <script>
 
+import { CLIENT_ACCESS_DENIED_MESSAGE } from '@/utils/clientAccess';
+
 export default {
   name: 'LoginView',
   data() {
@@ -415,6 +417,11 @@ export default {
       isLoading: false,
       errorMessage: '',
       errors: {} 
+    }
+  },
+  mounted() {
+    if (this.$route.query.access === 'client-only') {
+      this.errorMessage = CLIENT_ACCESS_DENIED_MESSAGE;
     }
   },
   methods: {

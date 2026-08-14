@@ -1,4 +1,5 @@
 import AuthService from '@/services/auth.service'
+import { clearClientSession, CLIENT_ACCESS_DENIED_MESSAGE, isClientUser } from '@/utils/clientAccess'
 
 export default {
   namespaced: true,
@@ -51,6 +52,13 @@ export default {
         const response = await AuthService.login(userData)
         
         if (response && response.token) {
+          if (!isClientUser(response.user)) {
+            clearClientSession();
+            const accessError = new Error(CLIENT_ACCESS_DENIED_MESSAGE);
+            accessError.code = 'CLIENT_ROLE_REQUIRED';
+            throw accessError;
+          }
+
           localStorage.setItem('auth_token', response.token)
           if (response.user) {
             localStorage.setItem('user', JSON.stringify(response.user))
