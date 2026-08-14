@@ -26,7 +26,7 @@
       <div v-if="!isLobbyHidden && !serviceSuspended" class="exit-section exit-section-top">
         <button type="button" @click="exitGame" class="exit-btn">
           <i class="fas fa-arrow-left"></i>
-          <span>Volver al Dashboard</span>
+          <span>Inicio</span>
         </button>
       </div>
 
@@ -98,20 +98,13 @@
           </div>
 
           <template v-else>
-          <!-- 🔧 Contador general de jugadores en línea - Solo mostrar cuando las mesas estén cargadas -->
-          <div class="global-online-indicator" v-if="gameTables && gameTables.length > 0">
-            <div class="online-indicator-content">
-              <i class="fas fa-users online-icon"></i>
-              <i class="fas fa-circle online-dot" :class="{ 'has-players': totalOnlinePlayers > 0 }"></i>
-              <span class="online-text">
-                <strong class="players-number">{{ totalOnlinePlayers || 0 }}</strong> 
-                <span class="players-label">
-                  {{ (totalOnlinePlayers || 0) === 1 ? 'jugador' : 'jugadores' }} 
-                  <span v-if="totalOnlinePlayers > 0">en línea</span>
-                  <span v-else>buscando partida</span>
-                </span>
-              </span>
+          <div class="lobby-hook-wrap" v-if="gameTables && gameTables.length > 0">
+            <div v-if="totalOnlinePlayers > 0" class="live-seeking-banner" role="status">
+              <span class="live-dot" aria-hidden="true"></span>
+              <strong>{{ totalOnlinePlayers }}</strong>
+              {{ totalOnlinePlayers === 1 ? 'jugador buscando mesa ahora' : 'jugadores buscando mesa ahora' }}
             </div>
+            <p v-else class="lobby-hook">gana hasta <em>10 mil Bs</em> hoy !</p>
           </div>
           
           <div class="mode-options">
@@ -161,7 +154,7 @@
               :key="'online-2-' + table.id"
               class="mode-card online-mode" 
               @click="startOnlineModeTwoPlayers(table)" 
-              :class="{ disabled: !playerName.trim() || isConnecting }"
+              :class="{ disabled: !playerName.trim() || isConnecting, 'has-seekers': table.waiting_players > 0 }"
             >
               <div class="mode-badge">MULTIJUGADOR</div>
               <div class="mode-icon">
@@ -189,11 +182,10 @@
                   <span class="feature">👥 2 Jugadores</span>
                   <span class="feature">🌐 En Tiempo Real</span>
                 </div>
-                <!-- 🔧 Indicador de jugadores buscando partida - SIEMPRE VISIBLE -->
-                <div class="online-players-indicator">
-                  <i class="fas fa-users"></i>
-                  <span class="players-count">{{ table.waiting_players || 0 }}</span>
-                  <span class="players-text">buscando partida</span>
+                <div v-if="table.waiting_players > 0" class="online-players-indicator">
+                  <span class="live-dot" aria-hidden="true"></span>
+                  <span class="players-count">{{ table.waiting_players }}</span>
+                  <span class="players-text">{{ table.waiting_players === 1 ? 'buscando ahora' : 'buscando ahora' }}</span>
                 </div>
               </div>
               <div class="mode-action">
@@ -207,7 +199,7 @@
               :key="'online-4-' + table.id"
               class="mode-card online-mode" 
               @click="startOnlineModeFourPlayers(table)" 
-              :class="{ disabled: !playerName.trim() || isConnecting }"
+              :class="{ disabled: !playerName.trim() || isConnecting, 'has-seekers': table.waiting_players > 0 }"
             >
               <div class="mode-badge">TURNO</div>
               <div class="mode-icon">
@@ -235,11 +227,10 @@
                   <span class="feature">👥 4 Jugadores</span>
                   <span class="feature">🎯 Estrategia</span>
                 </div>
-                <!-- 🔧 Indicador de jugadores buscando partida - SIEMPRE VISIBLE -->
-                <div class="online-players-indicator">
-                  <i class="fas fa-users"></i>
-                  <span class="players-count">{{ table.waiting_players || 0 }}</span>
-                  <span class="players-text">buscando partida</span>
+                <div v-if="table.waiting_players > 0" class="online-players-indicator">
+                  <span class="live-dot" aria-hidden="true"></span>
+                  <span class="players-count">{{ table.waiting_players }}</span>
+                  <span class="players-text">{{ table.waiting_players === 1 ? 'buscando ahora' : 'buscando ahora' }}</span>
                 </div>
               </div>
               <div class="mode-action">
@@ -308,7 +299,7 @@
         <div class="exit-section">
           <button @click="exitGame" class="exit-btn">
             <i class="fas fa-arrow-left"></i>
-            <span>Volver al Dashboard</span>
+            <span>Inicio</span>
           </button>
         </div>
         </div>
@@ -6614,7 +6605,7 @@ export default {
   font-weight: 600;
 }
 
-/* 🔧 Indicador de jugadores en línea por mesa */
+/* Indicador de jugadores en línea por mesa — solo si hay gente buscando */
 .online-players-indicator {
   display: flex;
   align-items: center;
@@ -6622,30 +6613,28 @@ export default {
   gap: 6px;
   margin-top: 10px;
   padding: 8px 12px;
-  background: linear-gradient(135deg, rgba(46, 204, 113, 0.15) 0%, rgba(39, 174, 96, 0.15) 100%);
-  border: 1px solid rgba(46, 204, 113, 0.3);
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(39, 174, 96, 0.18) 100%);
+  border: 1px solid rgba(46, 204, 113, 0.45);
   border-radius: 8px;
   font-size: 0.85rem;
   color: #2ecc71;
   font-weight: 600;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.online-players-indicator i {
-  font-size: 0.9rem;
-  color: #2ecc71;
+  animation: pulse 1.4s ease-in-out infinite;
 }
 
 .online-players-indicator .players-count {
   font-size: 1.1rem;
   font-weight: 800;
   color: #27ae60;
-  text-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
 }
 
 .online-players-indicator .players-text {
   font-size: 0.8rem;
-  opacity: 0.9;
+  opacity: 0.95;
+}
+
+.mode-card.has-seekers {
+  box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.45), 0 8px 22px rgba(46, 204, 113, 0.2);
 }
 
 @keyframes pulse {
@@ -6654,91 +6643,69 @@ export default {
     transform: scale(1);
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.85;
     transform: scale(1.02);
   }
 }
 
-/* 🔧 Indicador global de jugadores en línea - MÁS VISIBLE */
-.global-online-indicator {
-  margin: 20px 0 30px 0;
-  padding: 18px 30px;
-  background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(41, 128, 185, 0.15) 100%);
-  border: 2px solid rgba(100, 180, 255, 0.45);
-  border-radius: 18px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+.lobby-hook-wrap {
+  margin: 8px 0 18px;
   text-align: center;
-  position: relative;
-  z-index: 10;
 }
 
-.online-indicator-content {
+.lobby-hook {
+  margin: 0;
+  font-family: 'Pacifico', 'Playfair Display', Georgia, cursive;
+  font-size: clamp(1.45rem, 5.2vw, 2.15rem);
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, #fff4c4 0%, #fbbf24 42%, #fff8dc 78%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.35));
+}
+
+.lobby-hook em {
+  font-style: italic;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+}
+
+.live-seeking-banner {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  color: #7ec8f0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.online-icon {
-  font-size: 1.5rem;
-  color: #7ec8f0;
-}
-
-.players-number {
-  font-size: 1.8rem;
-  font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 0 12px rgba(100, 180, 255, 0.5);
-  margin-right: 8px;
-}
-
-.players-label {
-  font-size: 1.1rem;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: #123522;
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  color: #ecfdf3;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  animation: pulse 1.4s ease-in-out infinite;
 }
 
-.online-dot {
-  font-size: 0.8rem;
-  color: #95a5a6;
-  animation: none;
+.live-seeking-banner strong {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #4ade80;
 }
 
-.online-text {
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.online-text strong {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 0 12px rgba(100, 180, 255, 0.5);
-  margin-right: 5px;
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+  animation: blink 1.2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 @keyframes blink {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.online-dot.has-players {
-  color: #2ecc71;
-  animation: blink 1.5s ease-in-out infinite;
-}
-
-.online-dot:not(.has-players) {
-  color: #95a5a6;
-  animation: none;
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 
 /* Botón de acción */
@@ -6770,41 +6737,43 @@ export default {
 
 .exit-section-top {
   margin-top: 0;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
   padding-top: 0;
-  padding-bottom: 18px;
+  padding-bottom: 10px;
   border-top: none;
-  border-bottom: 2px solid rgba(255, 165, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 165, 0, 0.1);
+  display: flex;
+  justify-content: flex-start;
 }
 
 .exit-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  width: 100%;
-  padding: 18px 30px;
+  gap: 6px;
+  width: auto;
+  padding: 7px 14px;
   background: linear-gradient(135deg, #6b46c1 0%, #4c1d95 100%);
   color: white;
   border: none;
-  border-radius: 15px;
-  font-size: 1.1rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(107, 70, 193, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  box-shadow: 0 3px 10px rgba(107, 70, 193, 0.28);
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .exit-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(107, 70, 193, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(107, 70, 193, 0.4);
   background: linear-gradient(135deg, #4c1d95 0%, #3b0764 100%);
 }
 
 .exit-btn i {
-  font-size: 1.2rem;
+  font-size: 0.8rem;
 }
 
 @keyframes spin {
@@ -7456,8 +7425,8 @@ export default {
   }
   
   .exit-btn {
-    padding: 12px 20px;
-    font-size: 0.9rem;
+    padding: 6px 12px;
+    font-size: 0.78rem;
   }
 }
 
