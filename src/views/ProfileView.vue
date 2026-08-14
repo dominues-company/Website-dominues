@@ -122,11 +122,12 @@
                         <input 
                           type="tel" 
                           id="phone" 
-                          v-model="editForm.phone" 
+                          :value="currentUser?.phone || 'No especificado'" 
                           class="form-control"
-                          :class="{ 'is-invalid': errors.phone }"
+                          disabled
+                          readonly
                         >
-                        <div class="invalid-feedback" v-if="errors.phone">{{ errors.phone }}</div>
+                        <small class="form-text text-muted">El teléfono no se puede cambiar porque se usa para pagos</small>
                       </div>
                     </div>
                     <div class="col-md-6">
@@ -406,8 +407,7 @@ export default {
         // Por ahora solo actualizamos el store local
         const updatedData = {
           name: this.editForm.name.trim(),
-          email: this.editForm.email.trim(),
-          phone: this.editForm.phone.trim()
+          email: this.editForm.email.trim()
         };
         
         this.updateUserData(updatedData);
