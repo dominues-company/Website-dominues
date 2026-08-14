@@ -15,9 +15,6 @@
               <div class="avatar-circle">
                 <i class="fas fa-user"></i>
               </div>
-              <button class="btn-edit-avatar" @click="editAvatar = true" title="Cambiar foto de perfil">
-                <i class="fas fa-camera"></i>
-              </button>
             </div>
             <div class="profile-info">
               <div class="profile-name-section">
@@ -78,85 +75,10 @@
           <div class="profile-details">
             <div class="card">
               <div class="card-header">
-                <h3><i class="fas fa-user-edit"></i> Información Personal</h3>
-                <button class="btn btn--base btn--sm" @click="toggleEdit">
-                  <i class="fas fa-edit"></i> {{ isEditing ? 'Cancelar' : 'Editar' }}
-                </button>
+                <h3><i class="fas fa-user"></i> Información Personal</h3>
               </div>
               <div class="card-body">
-                <form @submit.prevent="updateProfile" v-if="isEditing">
-                  <div class="row">
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="name">Nombre completo</label>
-                        <input 
-                          type="text" 
-                          id="name" 
-                          v-model="editForm.name" 
-                          class="form-control"
-                          :class="{ 'is-invalid': errors.name }"
-                          required
-                        >
-                        <div class="invalid-feedback" v-if="errors.name">{{ errors.name }}</div>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="email">Correo electrónico</label>
-                        <input 
-                          type="email" 
-                          id="email" 
-                          v-model="editForm.email" 
-                          class="form-control"
-                          :class="{ 'is-invalid': errors.email }"
-                          required
-                        >
-                        <div class="invalid-feedback" v-if="errors.email">{{ errors.email }}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="phone">Teléfono</label>
-                        <input 
-                          type="tel" 
-                          id="phone" 
-                          :value="currentUser?.phone || 'No especificado'" 
-                          class="form-control"
-                          disabled
-                          readonly
-                        >
-                        <small class="form-text text-muted">El teléfono no se puede cambiar porque se usa para pagos</small>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="rol">Rol</label>
-                        <input 
-                          type="text" 
-                          id="rol" 
-                          v-model="editForm.rol" 
-                          class="form-control"
-                          disabled
-                        >
-                        <small class="form-text text-muted">El rol no puede ser modificado</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="form-actions">
-                    <button type="submit" class="btn btn--base" :disabled="isUpdating">
-                      <i class="fas fa-save" v-if="!isUpdating"></i>
-                      <i class="fas fa-spinner fa-spin" v-else></i>
-                      {{ isUpdating ? 'Guardando...' : 'Guardar Cambios' }}
-                    </button>
-                    <button type="button" class="btn btn--secondary" @click="cancelEdit">
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-                
-                <div v-else class="profile-info-display">
+                <div class="profile-info-display">
                   <div class="info-row">
                     <div class="info-label">
                       <i class="fas fa-user"></i> Nombre completo
@@ -196,6 +118,12 @@
                     <div class="info-value">{{ formatDate(currentUser?.updated_at) }}</div>
                   </div>
                 </div>
+                <p class="profile-support-note">
+                  Si hay un error en tus datos, contacta a
+                  <a :href="profileSupportWhatsAppUrl" target="_blank" rel="noopener noreferrer" class="profile-support-link">
+                    <i class="fab fa-whatsapp"></i> soporte
+                  </a>
+                </p>
               </div>
             </div>
           </div>
@@ -319,24 +247,14 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
 import api from '@/services/api'
+import { rechargeWhatsAppUrl } from '@/utils/rechargeWhatsApp'
 
 export default {
   name: 'ProfileView',
   data() {
     return {
-      isEditing: false,
-      isUpdating: false,
-      editAvatar: false,
-      editForm: {
-        name: '',
-        email: '',
-        phone: '',
-        rol: ''
-      },
-      errors: {},
-      // Modal cambio de contraseña
       showPasswordModal: false,
       isChangingPassword: false,
       passwordForm: {
@@ -351,78 +269,16 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('auth', ['currentUser', 'isAuthenticated'])
-  },
-  mounted() {
-    this.initEditForm();
+    ...mapGetters('auth', ['currentUser', 'isAuthenticated']),
+    profileSupportWhatsAppUrl() {
+      const userLine = this.currentUser?.name?.trim() || '[usuario]';
+      const message = `¡Saludos! Necesito corregir mis datos de perfil en Dominues.
+Usuario: ${userLine}
+Dato a corregir: `;
+      return rechargeWhatsAppUrl(message);
+    }
   },
   methods: {
-    ...mapActions('auth', ['updateUserData']),
-    
-    initEditForm() {
-      if (this.currentUser) {
-        this.editForm = {
-          name: this.currentUser.name || '',
-          email: this.currentUser.email || '',
-          phone: this.currentUser.phone || '',
-          rol: this.currentUser.rol || ''
-        };
-      }
-    },
-    
-    toggleEdit() {
-      this.isEditing = !this.isEditing;
-      if (this.isEditing) {
-        this.initEditForm();
-      } else {
-        this.cancelEdit();
-      }
-    },
-    
-    cancelEdit() {
-      this.isEditing = false;
-      this.errors = {};
-      this.initEditForm();
-    },
-    
-    async updateProfile() {
-      this.isUpdating = true;
-      this.errors = {};
-      
-      try {
-        // Validaciones básicas
-        if (!this.editForm.name.trim()) {
-          this.errors.name = 'El nombre es obligatorio';
-        }
-        if (!this.editForm.email.trim()) {
-          this.errors.email = 'El correo electrónico es obligatorio';
-        }
-        
-        if (Object.keys(this.errors).length > 0) {
-          this.isUpdating = false;
-          return;
-        }
-        
-        // Aquí harías la llamada a la API para actualizar el perfil
-        // Por ahora solo actualizamos el store local
-        const updatedData = {
-          name: this.editForm.name.trim(),
-          email: this.editForm.email.trim()
-        };
-        
-        this.updateUserData(updatedData);
-        
-        this.isEditing = false;
-        this.$toast?.success('Perfil actualizado correctamente');
-        
-      } catch (error) {
-        console.error('Error actualizando perfil:', error);
-        this.$toast?.error('Error al actualizar el perfil');
-      } finally {
-        this.isUpdating = false;
-      }
-    },
-    
     async refreshProfile() {
       try {
         // Aquí harías una llamada para refrescar los datos del usuario
@@ -923,6 +779,27 @@ export default {
 .info-value {
   color: var(--text-primary);
   font-weight: 500;
+}
+
+.profile-support-note {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.profile-support-link {
+  color: #25d366;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.profile-support-link:hover {
+  text-decoration: underline;
+  color: #6ee7a0;
 }
 
 .action-btn {
