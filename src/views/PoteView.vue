@@ -133,8 +133,8 @@
                   </div>
                 </td>
                 <td class="earnings-col">
-                  <span class="earnings-amount" :class="{ 'positive': player.net_profit > 0, 'negative': player.net_profit < 0 }">
-                    {{ formatCurrency(player.net_profit) }}
+                  <span class="earnings-amount positive">
+                    {{ formatCurrency(displayProfit(player.net_profit)) }}
                   </span>
                 </td>
                 <td class="actions-col">
@@ -195,7 +195,7 @@
             <div class="summary-card">
               <i class="fas fa-coins"></i>
               <div>
-                <div class="summary-value">{{ formatCurrency(selectedPlayer?.net_profit) }}</div>
+                <div class="summary-value profit-value">{{ formatCurrency(displayProfit(selectedPlayer?.net_profit)) }}</div>
                 <div class="summary-label">Ganancia Neta</div>
               </div>
             </div>
@@ -404,6 +404,12 @@ export default {
       this.playerHistory = [];
     },
     
+    displayProfit(amount) {
+      const n = Number(amount);
+      if (!Number.isFinite(n) || n < 0) return 0;
+      return n;
+    },
+
     formatCurrency(amount) {
       const formatted = new Intl.NumberFormat('es-BO', {
         style: 'currency',
@@ -791,8 +797,8 @@ td {
   color: #10b981;
 }
 
-.earnings-amount.negative {
-  color: #ef4444;
+.profit-value {
+  color: #10b981;
 }
 
 /* Action Button */
