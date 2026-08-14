@@ -99,23 +99,9 @@
                   </div>
                   <div class="info-row">
                     <div class="info-label">
-                      <i class="fas fa-crown"></i> Rol
-                    </div>
-                    <div class="info-value">
-                      <span class="badge badge--base">{{ currentUser?.rol?.toUpperCase() || 'No especificado' }}</span>
-                    </div>
-                  </div>
-                  <div class="info-row">
-                    <div class="info-label">
                       <i class="fas fa-calendar-plus"></i> Fecha de registro
                     </div>
                     <div class="info-value">{{ formatDate(currentUser?.created_at) }}</div>
-                  </div>
-                  <div class="info-row">
-                    <div class="info-label">
-                      <i class="fas fa-clock"></i> Última actualización
-                    </div>
-                    <div class="info-value">{{ formatDate(currentUser?.updated_at) }}</div>
                   </div>
                 </div>
                 <p class="profile-support-note">
