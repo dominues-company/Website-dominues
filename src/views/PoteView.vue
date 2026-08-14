@@ -202,121 +202,52 @@
         </div>
 
         <div class="modal-body">
-          <!-- Player Summary -->
-          <div class="player-summary">
-            <div class="summary-card">
-              <i class="fas fa-trophy"></i>
-              <div>
-                <div class="summary-value">{{ selectedPlayer?.wins }}</div>
-                <div class="summary-label">Victorias</div>
-              </div>
+          <div class="hist-stats">
+            <div class="hist-stat">
+              <span class="hist-stat-value">{{ selectedPlayer?.wins }}</span>
+              <span class="hist-stat-label">Victorias</span>
             </div>
-            <div class="summary-card">
-              <i class="fas fa-times-circle"></i>
-              <div>
-                <div class="summary-value">{{ selectedPlayer?.losses }}</div>
-                <div class="summary-label">Derrotas</div>
-              </div>
+            <div class="hist-stat">
+              <span class="hist-stat-value">{{ selectedPlayer?.losses }}</span>
+              <span class="hist-stat-label">Derrotas</span>
             </div>
-            <div class="summary-card">
-              <i class="fas fa-percent"></i>
-              <div>
-                <div class="summary-value">{{ selectedPlayer?.win_rate }}%</div>
-                <div class="summary-label">Win Rate</div>
-              </div>
+            <div class="hist-stat">
+              <span class="hist-stat-value">{{ selectedPlayer?.win_rate }}%</span>
+              <span class="hist-stat-label">Win Rate</span>
             </div>
-            <div class="summary-card">
-              <i class="fas fa-coins"></i>
-              <div>
-                <div class="summary-value profit-value">{{ formatCurrency(displayProfit(selectedPlayer?.net_profit)) }}</div>
-                <div class="summary-label">Ganancia Neta</div>
-              </div>
+            <div class="hist-stat">
+              <span class="hist-stat-value hist-profit">{{ formatCurrency(displayProfit(selectedPlayer?.net_profit)) }}</span>
+              <span class="hist-stat-label">Ganancia Neta</span>
             </div>
           </div>
 
-          <!-- Loading History -->
           <div v-if="loadingHistory" class="loading-history">
             <div class="spinner"></div>
             <p>Cargando historial...</p>
           </div>
 
-          <!-- Games History -->
-          <div v-else class="games-history">
-            <h3>Últimas Partidas</h3>
-            <div class="games-list">
-              <div 
-                v-for="game in playerHistory" 
+          <div v-else class="hist-section">
+            <h3>Últimas partidas</h3>
+            <p v-if="playerHistory.length === 0" class="no-history">No hay historial disponible</p>
+            <ul v-else class="hist-list">
+              <li
+                v-for="game in playerHistory"
                 :key="game.result_id"
-                class="game-item"
-                :class="{ 'winner': game.is_winner, 'loser': !game.is_winner }"
+                class="hist-row"
+                :class="game.is_winner ? 'is-win' : 'is-loss'"
               >
-                <div class="game-header">
-                  <div class="game-status">
-                    <i :class="game.is_winner ? 'fas fa-trophy' : 'fas fa-times-circle'"></i>
-                    <span>{{ game.is_winner ? 'Victoria' : 'Derrota' }}</span>
-                  </div>
-                  <div class="game-date">{{ formatDate(game.game_date) }}</div>
-                </div>
-                
-                <div class="game-details">
-                  <div class="game-info">
-                    <div class="info-item">
-                      <i class="fas fa-table-tennis"></i>
-                      <span>{{ game.table_name }} - {{ game.mode_name }}</span>
-                    </div>
-                    <div class="info-item">
-                      <i class="fas fa-user-friends"></i>
-                      <span>vs {{ game.opponent_name }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="game-score">
-                    <div class="score-item">
-                      <span class="score-label">Tu Score:</span>
-                      <span class="score-value">{{ game.player_score || '0' }}</span>
-                    </div>
-                    <span class="score-separator">-</span>
-                    <div class="score-item">
-                      <span class="score-label">Oponente:</span>
-                      <span class="score-value">{{ game.opponent_score || '0' }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="game-earnings">
-                    <div class="earning-item">
-                      <span>Apuesta:</span>
-                      <span class="bet">-{{ formatCurrency(game.bet_amount) }}</span>
-                    </div>
-                    <div class="earning-item">
-                      <span>Premio:</span>
-                      <span class="win" v-if="game.is_winner">+{{ formatCurrency(game.winner_amount) }}</span>
-                      <span class="loss" v-else>{{ formatCurrency(0) }}</span>
-                    </div>
-                  </div>
-
-                  <!-- Badges especiales -->
-                  <div class="game-badges">
-                    <span v-if="game.surrendered === 'true'" class="badge badge-surrender">
-                      <i class="fas fa-flag"></i> Rendición
-                    </span>
-                    <span v-if="game.disconnect_reason" class="badge badge-disconnect">
-                      <i class="fas fa-plug"></i> Desconexión
-                    </span>
-                    <span v-if="game.game_mode === 'cpu'" class="badge badge-cpu">
-                      <i class="fas fa-robot"></i> vs CPU
-                    </span>
-                    <span v-if="game.room_code" class="badge badge-private">
-                      <i class="fas fa-lock"></i> Sala Privada
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="playerHistory.length === 0" class="no-history">
-              <i class="fas fa-inbox"></i>
-              <p>No hay historial disponible</p>
-            </div>
+                <span class="hist-result">{{ game.is_winner ? 'Victoria' : 'Derrota' }}</span>
+                <span class="hist-meta">{{ game.table_name }} · vs {{ game.opponent_name || '—' }}</span>
+                <span class="hist-score">{{ game.player_score || 0 }}–{{ game.opponent_score || 0 }}</span>
+                <span class="hist-prize" :class="{ 'is-plus': game.is_winner }">
+                  {{ game.is_winner ? '+' + formatCurrency(game.winner_amount) : formatCurrency(0) }}
+                </span>
+                <span class="hist-date">{{ formatDate(game.game_date) }}</span>
+                <span v-if="gameBadges(game).length" class="hist-tags">
+                  <span v-for="tag in gameBadges(game)" :key="tag" class="hist-tag">{{ tag }}</span>
+                </span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -441,6 +372,16 @@ export default {
       const n = Number(amount);
       if (!Number.isFinite(n) || n < 0) return 0;
       return n;
+    },
+
+    gameBadges(game) {
+      if (!game) return [];
+      const tags = [];
+      if (game.surrendered === 'true' || game.surrendered === true) tags.push('Rendición');
+      if (game.disconnect_reason) tags.push('Desconexión');
+      if (game.game_mode === 'cpu') tags.push('vs CPU');
+      if (game.room_code) tags.push('Privada');
+      return tags;
     },
 
     formatCurrency(amount) {
@@ -834,10 +775,6 @@ td {
   color: #10b981;
 }
 
-.profit-value {
-  color: #10b981;
-}
-
 /* Action Button */
 .btn-view {
   padding: 8px 20px;
@@ -884,13 +821,26 @@ td {
 
 .modal-content {
   background: #1a1540;
-  border-radius: 25px;
-  max-width: 900px;
+  border-radius: 20px;
+  max-width: 920px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   isolation: isolate;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #141030;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
 }
 
 .modal-header {
@@ -928,309 +878,158 @@ td {
   padding: 30px;
 }
 
-/* Player Summary */
-.player-summary {
+/* Player history */
+.hist-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.summary-card {
-  background: #2a2258;
-  border-radius: 15px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-}
-
-.summary-card i {
-  font-size: 2rem;
-  color: #fbbf24;
-}
-
-.summary-value {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: white;
-}
-
-.summary-label {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* Games History */
-.games-history h3 {
-  color: white;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.games-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: 500px;
-  overflow-y: auto;
-  padding-right: 10px;
-  background: #1a1540;
-}
-
-.game-item {
-  background: #2b1633;
-  background-image: none;
-  border-radius: 14px;
-  padding: 14px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: none;
-  isolation: isolate;
-  overflow: hidden;
-}
-
-.game-item:hover {
-  background: #351c3e;
-  border-color: rgba(255, 255, 255, 0.22);
-  transform: none;
-  box-shadow: none;
-}
-
-.game-item.winner {
-  border-left: 4px solid #51cf66;
-  background: #17301c;
-}
-
-.game-item.loser {
-  border-left: 4px solid #ff6b6b;
-  background: #30151a;
-}
-
-.game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.game-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  color: #ffffff;
-  font-size: 1.05rem;
-  text-decoration: none;
-  text-shadow: none;
-  position: relative;
-  z-index: 1;
-}
-
-.game-status i {
-  font-size: 1.4rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
-}
-
-.game-item.winner .game-status i {
-  color: #51cf66;
-}
-
-.game-item.loser .game-status i {
-  color: #ff6b6b;
-}
-
-.game-date {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  text-shadow: none;
-}
-
-.game-details {
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
+  margin-bottom: 22px;
 }
 
-.game-info {
+.hist-stat {
+  background: #241c4f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.hist-stat-value {
+  display: block;
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.hist-stat-value.hist-profit {
+  color: #4ade80;
+}
+
+.hist-stat-label {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.75rem;
+}
+
+.hist-section h3 {
+  color: #fff;
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.hist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  color: #ffffff;
-  font-size: 1rem;
-  font-weight: 600;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  position: relative;
-  z-index: 5;
 }
 
-.info-item i {
-  color: #ffd93d;
-  width: 16px;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
-}
-
-.game-score {
-  display: flex;
+.hist-row {
+  display: grid;
+  grid-template-columns: 7.2rem minmax(0, 1fr) 4.2rem 7.4rem 9rem;
+  grid-template-areas:
+    "result meta score prize date"
+    "tags tags tags tags tags";
   align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 10px 14px;
-  background: #120c18;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: none;
+  column-gap: 14px;
+  row-gap: 6px;
+  padding: 13px 16px;
+  background: #241c4f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  line-height: 1.35;
 }
 
-.score-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.hist-row.is-win {
+  border-left: 3px solid #4ade80;
 }
 
-.score-label {
-  font-size: 0.9rem;
-  color: #ffffff;
-  margin-bottom: 5px;
-  font-weight: 700;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.hist-row.is-loss {
+  border-left: 3px solid #f87171;
 }
 
-.score-value {
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 255, 255, 0.3);
-  position: relative;
-  z-index: 10;
-}
-
-.score-separator {
-  font-size: 2rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 700;
-}
-
-.game-earnings {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: #120c18;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.earning-item {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.earning-item span:first-child {
-  font-size: 0.9rem;
-  color: #ffffff;
-  font-weight: 700;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.bet {
-  color: #ff8787;
+.hist-result {
+  grid-area: result;
   font-weight: 800;
-  font-size: 1.1rem;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  font-size: 0.92rem;
+  color: #fff;
 }
 
-.win {
-  color: #69db7c;
-  font-weight: 800;
-  font-size: 1.2rem;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 15px rgba(105, 219, 124, 0.3);
+.hist-row.is-win .hist-result {
+  color: #4ade80;
 }
 
-.loss {
-  color: rgba(255, 255, 255, 0.7);
+.hist-row.is-loss .hist-result {
+  color: #fca5a5;
+}
+
+.hist-meta {
+  grid-area: meta;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hist-score {
+  grid-area: score;
+  color: #fff;
   font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
-/* Badges */
-.game-badges {
+.hist-prize {
+  grid-area: prize;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+.hist-prize.is-plus {
+  color: #4ade80;
+}
+
+.hist-date {
+  grid-area: date;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.hist-tags {
+  grid-area: tags;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
   gap: 6px;
-  padding: 7px 16px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 800;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  position: relative;
-  z-index: 5;
 }
 
-.badge-surrender {
-  background: rgba(255, 107, 107, 0.3);
-  color: #ffffff;
-  border: 2px solid #ff8787;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+.hist-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
-.badge-disconnect {
-  background: rgba(255, 217, 61, 0.3);
-  color: #ffffff;
-  border: 2px solid #ffd93d;
-  box-shadow: 0 2px 8px rgba(255, 217, 61, 0.3);
-}
-
-.badge-cpu {
-  background: rgba(129, 140, 248, 0.3);
-  color: #ffffff;
-  border: 2px solid #a5b4fc;
-  box-shadow: 0 2px 8px rgba(129, 140, 248, 0.3);
-}
-
-.badge-private {
-  background: rgba(167, 139, 250, 0.3);
-  color: #ffffff;
-  border: 2px solid #c4b5fd;
-  box-shadow: 0 2px 8px rgba(167, 139, 250, 0.3);
-}
-
-.loading-history {
-  text-align: center;
-  padding: 40px 20px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
+.loading-history,
 .no-history {
   text-align: center;
-  padding: 40px 20px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.no-history i {
-  font-size: 2.5rem;
-  margin-bottom: 15px;
+  padding: 36px 16px;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
 }
 
 /* Responsive */
@@ -1488,127 +1287,61 @@ td {
     padding: 12px 12px 24px;
   }
 
-  .player-summary {
-    grid-template-columns: repeat(2, 1fr);
+  .hist-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     margin-bottom: 14px;
   }
 
-  .summary-card {
-    padding: 10px 12px;
-    gap: 8px;
-    border-radius: 12px;
+  .hist-stat {
+    padding: 10px 8px;
   }
 
-  .summary-card i {
-    font-size: 1.15rem;
-  }
-
-  .summary-value {
-    font-size: 1.05rem;
-    line-height: 1.2;
-  }
-
-  .summary-label {
-    font-size: 0.7rem;
-  }
-
-  .games-history h3 {
-    font-size: 1.05rem;
-    margin-bottom: 10px;
-  }
-
-  .games-list {
-    gap: 8px;
-    max-height: none;
-    padding-right: 0;
-  }
-
-  .game-item {
-    padding: 10px 12px;
-    border-radius: 12px;
-    background-image: none;
-  }
-
-  .game-item.winner {
-    background: #17301c;
-  }
-
-  .game-item.loser {
-    background: #30151a;
-  }
-
-  .game-item:hover {
-    transform: none;
-  }
-
-  .game-header {
-    margin-bottom: 6px;
-  }
-
-  .game-status {
-    font-size: 0.95rem;
-  }
-
-  .game-status i {
-    font-size: 1rem;
-  }
-
-  .game-date {
-    font-size: 0.75rem;
-  }
-
-  .game-details {
-    gap: 6px;
-  }
-
-  .info-item {
-    font-size: 0.8rem;
-  }
-
-  .game-score {
-    flex-direction: row;
-    gap: 12px;
-    padding: 8px 10px;
-    background: #120c18;
-  }
-
-  .score-label {
-    font-size: 0.65rem;
-    margin-bottom: 0;
-  }
-
-  .score-value {
-    font-size: 1.25rem;
-  }
-
-  .score-separator {
+  .hist-stat-value {
     font-size: 1.1rem;
   }
 
-  .game-earnings {
-    padding: 8px 10px;
-    background: #120c18;
-  }
-
-  .earning-item span:first-child {
+  .hist-stat-label {
     font-size: 0.7rem;
   }
 
-  .bet,
-  .win,
-  .loss {
+  .hist-section h3 {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+  }
+
+  .hist-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "result date"
+      "meta meta"
+      "score prize"
+      "tags tags";
+    padding: 12px;
+    column-gap: 8px;
+    row-gap: 4px;
+  }
+
+  .hist-result {
     font-size: 0.9rem;
   }
 
-  .game-badges {
-    margin-top: 4px;
-    gap: 6px;
+  .hist-meta {
+    white-space: normal;
+    font-size: 0.8rem;
   }
 
-  .badge {
-    padding: 4px 10px;
-    font-size: 0.7rem;
+  .hist-score {
+    text-align: left;
+    font-size: 0.95rem;
+  }
+
+  .hist-prize {
+    font-size: 0.9rem;
+  }
+
+  .hist-date {
+    font-size: 0.72rem;
   }
 }
 
@@ -1623,10 +1356,6 @@ td {
 
   .card-name {
     font-size: 0.9rem;
-  }
-
-  .summary-value {
-    font-size: 0.95rem;
   }
 }
 </style>
