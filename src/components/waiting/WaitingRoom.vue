@@ -6657,7 +6657,7 @@ export default {
   margin: 0;
   font-family: 'Pacifico', 'Playfair Display', Georgia, cursive;
   font-size: clamp(1.45rem, 5.2vw, 2.15rem);
-  line-height: 1.25;
+  line-height: 2.25;
   letter-spacing: 0.02em;
   background: linear-gradient(90deg, #fff4c4 0%, #fbbf24 42%, #fff8dc 78%, #f59e0b 100%);
   -webkit-background-clip: text;
