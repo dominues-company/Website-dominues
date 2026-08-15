@@ -24,7 +24,7 @@
 
         <div class="col-lg-4">
           <div class="cla-wrapper text-center">
-            <h3 class="title mb-4">Dominó online, <br> partidas con premios reales</h3>
+            <h3 class="title mb-4">Dominó online, <br> desafíos de destreza</h3>
             <a :href="isAuthenticated ? '#games' : '/login'" class="cmn--btn active btn--md radius-0">Empezar a jugar</a>
             <div class="thumb">
               <img :src="getImageUrl('img_20.png')" alt="Premios">
