@@ -35,19 +35,19 @@
 
         <div class="balance-summary">
           <div class="balance-summary-item">
-            <span class="balance-summary-label">Saldo total</span>
+            <span class="balance-summary-label">Saldo total de tu cuenta</span>
             <span class="balance-summary-value">{{ formatBs(availableBalance) }}</span>
-            <span class="balance-summary-hint">Para jugar en mesas</span>
+            <span class="balance-summary-hint">Disponible para jugar en mesas</span>
           </div>
           <div class="balance-summary-item balance-summary-item--withdraw">
-            <span class="balance-summary-label">Balance aceptado para retiro</span>
+            <span class="balance-summary-label">Saldo disponible para retiro</span>
             <span class="balance-summary-value">{{ formatBs(withdrawableBalance) }}</span>
-            <span class="balance-summary-hint">Monto máximo de la solicitud</span>
+            <span class="balance-summary-hint">Monto máximo que puedes solicitar</span>
           </div>
         </div>
 
         <p v-if="!withdrawalEligible" class="withdrawal-eligibility-note">
-          Aún no puedes retirar. Debes apostar el 100% de tus depósitos.
+          Aún no tienes saldo habilitado para retiro. Debes apostar el 100% de tus depósitos aprobados.
           <template v-if="remainingToWager > 0">
             Faltan <strong>{{ formatBs(remainingToWager) }}</strong> por jugar.
           </template>
