@@ -6490,6 +6490,7 @@ export default {
 /* Contenido del modo */
 .mode-content {
   flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -6513,9 +6514,12 @@ export default {
 .mode-pricing {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 8px;
   width: 100%;
-  margin-bottom: 15px;
+  max-width: 280px;
+  margin: 0 auto 15px;
+  box-sizing: border-box;
 }
 
 .mode-price {
@@ -6529,29 +6533,35 @@ export default {
   background: linear-gradient(180deg, rgba(45, 27, 105, 0.06) 0%, rgba(45, 27, 105, 0.03) 100%);
   border-radius: 14px;
   border: 1px solid rgba(45, 27, 105, 0.1);
+  box-sizing: border-box;
 }
 
 .mode-price.mode-prize {
+  width: 100%;
+  min-height: 78px;
   background: linear-gradient(180deg, rgba(45, 27, 105, 0.1) 0%, rgba(45, 27, 105, 0.04) 100%);
-  padding: 14px 16px 12px;
-  gap: 6px;
+  padding: 12px 14px 10px;
+  gap: 4px;
 }
 
 .mode-price.mode-prize .price-value {
-  font-size: 1.55rem;
+  font-size: 1.42rem;
   font-weight: 900;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
 }
 
 .mode-price.mode-prize .price-coin {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
 }
 
 .mode-price.mode-entry {
-  align-self: center;
-  width: 68%;
-  max-width: 220px;
+  width: calc(100% - 48px);
+  min-height: 46px;
+  margin: 0 auto;
   padding: 5px 10px;
   border-radius: 10px;
   gap: 1px;
@@ -6568,10 +6578,12 @@ export default {
 
 .mode-price.mode-entry .price-value,
 .mode-price.mode-entry .price-value.free {
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #4a3d78;
   opacity: 0.88;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .price-label {
@@ -7258,8 +7270,8 @@ export default {
   }
 
   .mode-price.mode-entry {
-    width: 64%;
-    padding: 4px 8px;
+    width: calc(100% - 48px);
+    padding: 5px 10px;
   }
 
   .mode-price.mode-entry .price-value,
@@ -7444,22 +7456,22 @@ export default {
   }
 
   .mode-price.mode-prize .price-value {
-    font-size: 1.32rem;
+    font-size: 1.42rem;
   }
 
   .mode-price.mode-prize .price-coin {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
   }
 
   .mode-price.mode-entry {
-    width: 62%;
-    padding: 4px 8px;
+    width: calc(100% - 48px);
+    padding: 5px 10px;
   }
 
   .mode-price.mode-entry .price-value,
   .mode-price.mode-entry .price-value.free {
-    font-size: 0.78rem;
+    font-size: 0.82rem;
   }
 
   .price-coin {
@@ -7583,18 +7595,18 @@ export default {
 }
 
 .invite-mode .mode-price.mode-prize .price-value {
-  font-size: 1.45rem !important;
+  font-size: 1.42rem !important;
   font-weight: 900 !important;
 }
 
 .invite-mode .mode-price.mode-entry {
-  width: 68%;
+  width: calc(100% - 48px);
   padding: 5px 10px;
 }
 
 .invite-mode .mode-price.mode-entry .price-value,
 .invite-mode .mode-price.mode-entry .price-value.free {
-  font-size: 0.84rem !important;
+  font-size: 0.82rem !important;
   font-weight: 600 !important;
   opacity: 0.9 !important;
 }
