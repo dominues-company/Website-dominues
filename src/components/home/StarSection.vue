@@ -40,7 +40,7 @@
                                 </div>
                                 <div class="why-item__content">
                                     <h4 class="title">Más Oportunidades de Destacar</h4>
-                                    <p>Con nuestros torneos y mesas de desafíos, tendrás muchas oportunidades de demostrar tu destreza y obtener incentivos por mérito.</p>
+                                    <p>Con nuestros torneos y mesas de estrategia y análisis, tendrás muchas oportunidades de demostrar tu destreza y obtener incentivos por mérito.</p>
                                 </div>
                             </div>
                         </div>
@@ -51,7 +51,7 @@
                                 </div>
                                 <div class="why-item__content">
                                     <h4 class="title">Participa, Destaca y Redime</h4>
-                                    <p>Al competir con nosotros, no solo perfeccionas tu técnica: también puedes obtener Incentivos de Mérito por tu destreza en los desafíos.</p>
+                                    <p>Al competir con nosotros, no solo perfeccionas tu técnica de estrategia y análisis: también puedes obtener Incentivos de Mérito por tu destreza en los desafíos.</p>
                                 </div>
                             </div>
                         </div>
