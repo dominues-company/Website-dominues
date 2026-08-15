@@ -4102,7 +4102,7 @@ export default {
               <div style="font-size:30px;font-weight:900;color:#f8fafc;">${opponentScore}</div>
             </div>
           </div>
-          <p style="font-size:12px;color:#94a3b8;margin:0 0 4px;">Dominó por castigo: gana la puntuación más baja.</p>
+			<p style="font-size:12px;color:#94a3b8;margin:0 0 4px;">Gana quien acumula más puntos.</p>
         `;
       }
 
