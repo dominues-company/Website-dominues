@@ -7,7 +7,7 @@
                     <div class="about-content">
                         <div class="section-header">
                             <h2 class="section-header__title">Sobre el Juego de Dominó</h2>
-                            <p>El dominó es un juego de mesa popular que se juega con fichas rectangulares divididas en dos partes. Cada jugador recibe un número determinado de fichas y el objetivo es colocar todas las fichas en el tablero antes que los demás. En nuestro juego online de dominó, puedes disfrutar de partidas emocionantes contra jugadores de todo el mundo y poner a prueba tus habilidades estratégicas.</p>
+                            <p>El dominó es un juego de mesa popular de estrategia y análisis que se juega con fichas rectangulares divididas en dos partes. Cada jugador recibe un número determinado de fichas y el objetivo es colocar todas las fichas en el tablero antes que los demás. En nuestro juego online de dominó, puedes disfrutar de partidas emocionantes contra jugadores de todo el mundo y poner a prueba tus habilidades estratégicas.</p>
                         </div>
                         <!-- <a href="#" class="cmn--btn active">Know More</a> -->
                     </div>
