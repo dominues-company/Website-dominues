@@ -35,23 +35,16 @@
 
         <div class="balance-summary">
           <div class="balance-summary-item">
-            <span class="balance-summary-label">Créditos de Acceso</span>
+            <span class="balance-summary-label">Fondo para competir</span>
             <span class="balance-summary-value">{{ formatCredits(availableBalance) }}</span>
-            <span class="balance-summary-hint">Uso exclusivo para desafíos</span>
+            <span class="balance-summary-hint">Disponible para jugar en mesas</span>
           </div>
           <div class="balance-summary-item balance-summary-item--withdraw">
-            <span class="balance-summary-label">Incentivos de Mérito</span>
+            <span class="balance-summary-label">Fondos retirables</span>
             <span class="balance-summary-value">{{ formatCredits(withdrawableBalance) }}</span>
-            <span class="balance-summary-hint">Únicos sujetos a redención</span>
+            <span class="balance-summary-hint">Monto máximo que puedes solicitar</span>
           </div>
         </div>
-
-        <p v-if="!withdrawalEligible" class="withdrawal-eligibility-note">
-          Aún no tienes incentivos habilitados para redención. Debes consumir el 100% de tus Créditos de Acceso adquiridos en desafíos.
-          <template v-if="remainingToWager > 0">
-            Faltan <strong>{{ formatCredits(remainingToWager) }}</strong> por usar en desafíos.
-          </template>
-        </p>
 
         <div class="form-row">
           <div class="form-group form-group-full">
