@@ -57,9 +57,9 @@
               :disabled="isLoading || !withdrawalEligible"
               :class="{'is-invalid': errors.withdrawalAmount}"
               @input="validateWithdrawalAmount"
-              min="500"
+              min="450"
               step="0.01"
-              placeholder="500.00"
+              placeholder="450.00"
             >
             <div v-if="errors.withdrawalAmount" class="error-message">
               <i class="fas fa-exclamation-circle"></i> {{ errors.withdrawalAmount }}
@@ -672,7 +672,7 @@ export default {
       const requiredFieldsFilled = withdrawalAmount && bankName;
       const noErrors = Object.keys(this.errors).length === 0;
       const amount = parseFloat(withdrawalAmount);
-      const amountValid = amount >= 500 && amount <= this.withdrawableBalance;
+      const amountValid = amount >= 450 && amount <= this.withdrawableBalance;
       
       return requiredFieldsFilled
         && noErrors
@@ -742,10 +742,10 @@ export default {
     formatCredits(amount) {
       const n = Number(amount);
       const safe = Number.isFinite(n) ? n : 0;
-      return `${safe.toLocaleString('es-VE', {
+      return `Bs ${safe.toLocaleString('es-VE', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-      })} créditos`;
+      })}`;
     },
     // Cargar bancos desde la API
     async loadBanks() {
@@ -794,8 +794,8 @@ export default {
         return;
       }
       
-      if (amount < 500) {
-        this.errors.withdrawalAmount = 'El monto mínimo es de 500 créditos';
+      if (amount < 450) {
+        this.errors.withdrawalAmount = 'El monto mínimo es de 450 Bs';
         return;
       }
       
