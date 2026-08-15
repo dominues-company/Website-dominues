@@ -33,26 +33,35 @@
       <!-- FORMULARIO DE RETIRO -->
       <form @submit.prevent="handleWithdrawal" class="withdrawal-form" :class="{ 'form-locked': identityVerificationStatus !== 'approved' }">
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="availableBalance">Saldo Disponible</label>
-            <input 
-              type="text" 
-              id="availableBalance" 
-              :value="`${availableBalance} Bs`"
-              readonly 
-              class="readonly-input balance-input"
-            >
+        <div class="balance-summary">
+          <div class="balance-summary-item">
+            <span class="balance-summary-label">Saldo total</span>
+            <span class="balance-summary-value">{{ formatBs(availableBalance) }}</span>
+            <span class="balance-summary-hint">Para jugar en mesas</span>
           </div>
+          <div class="balance-summary-item balance-summary-item--withdraw">
+            <span class="balance-summary-label">Balance aceptado para retiro</span>
+            <span class="balance-summary-value">{{ formatBs(withdrawableBalance) }}</span>
+            <span class="balance-summary-hint">Monto máximo de la solicitud</span>
+          </div>
+        </div>
 
-          <div class="form-group">
+        <p v-if="!withdrawalEligible" class="withdrawal-eligibility-note">
+          Aún no puedes retirar. Debes apostar el 100% de tus depósitos.
+          <template v-if="remainingToWager > 0">
+            Faltan <strong>{{ formatBs(remainingToWager) }}</strong> por jugar.
+          </template>
+        </p>
+
+        <div class="form-row">
+          <div class="form-group form-group-full">
             <label for="withdrawalAmount">Monto a retirar</label>
             <input 
               type="number" 
               id="withdrawalAmount" 
               v-model="form.withdrawalAmount"
               required
-              :disabled="isLoading"
+              :disabled="isLoading || !withdrawalEligible"
               :class="{'is-invalid': errors.withdrawalAmount}"
               @input="validateWithdrawalAmount"
               min="500"
@@ -183,6 +192,67 @@
 .identity-gate .btn-register, .identity-gate .btn-cancel { margin: 0 auto; }
 .identity-gate.status-rejected { border-color: #dc3545; background: #fff0f1; color: #7b1d26; }
 .form-locked { opacity: .58; pointer-events: none; }
+
+.balance-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.balance-summary-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.balance-summary-item--withdraw {
+  background: #e8f5e8;
+  border-color: #b7e0b7;
+}
+
+.balance-summary-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+}
+
+.balance-summary-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e1b4b;
+}
+
+.balance-summary-item--withdraw .balance-summary-value {
+  color: #1b7a3d;
+}
+
+.balance-summary-hint {
+  font-size: 0.75rem;
+  color: #8795a1;
+}
+
+.withdrawal-eligibility-note {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff8e5;
+  border: 1px solid #f0ad4e;
+  color: #5f4300;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.form-group-full {
+  grid-column: 1 / -1;
+  width: 100%;
+}
 
 .client-data-section,
 .bank-info-section {
@@ -526,6 +596,10 @@
   .withdrawal-card {
     padding: 15px;
   }
+
+  .balance-summary {
+    grid-template-columns: 1fr;
+  }
   
   .client-data-grid {
     grid-template-columns: 1fr;
@@ -593,7 +667,10 @@ export default {
       },
       bankAccounts: [],
       banks: [],
-      availableBalance: 0
+      availableBalance: 0,
+      withdrawableBalance: 0,
+      withdrawalEligible: false,
+      remainingToWager: 0
     };
   },
   computed: {
@@ -601,9 +678,14 @@ export default {
       const { withdrawalAmount, bankName } = this.form;
       const requiredFieldsFilled = withdrawalAmount && bankName;
       const noErrors = Object.keys(this.errors).length === 0;
-      const amountValid = parseFloat(withdrawalAmount) >= 500 && parseFloat(withdrawalAmount) <= this.availableBalance;
+      const amount = parseFloat(withdrawalAmount);
+      const amountValid = amount >= 500 && amount <= this.withdrawableBalance;
       
-      return requiredFieldsFilled && noErrors && amountValid && this.identityVerificationStatus === 'approved';
+      return requiredFieldsFilled
+        && noErrors
+        && amountValid
+        && this.withdrawalEligible
+        && this.identityVerificationStatus === 'approved';
     }
   },
   async mounted() {
@@ -633,7 +715,16 @@ export default {
           balance: response.data.user?.balance
         };
         
-        this.availableBalance = response.data.user?.balance || 0;
+        this.availableBalance = Number(
+          response.data.balance ?? response.data.user?.balance ?? 0
+        ) || 0;
+        const eligibility = response.data.withdrawal_eligibility || {};
+        this.withdrawalEligible = eligibility.viable === true;
+        this.remainingToWager = Number(eligibility.remaining_to_wager || 0) || 0;
+        const apiWithdrawable = response.data.withdrawable_balance;
+        this.withdrawableBalance = apiWithdrawable != null
+          ? Number(apiWithdrawable) || 0
+          : (this.withdrawalEligible ? this.availableBalance : 0);
         this.identityVerificationStatus = response.data.identity_verification_status
           || response.data.user?.identity_verification_status
           || 'none';
@@ -644,7 +735,15 @@ export default {
         this.loadingData = false;
       }
     },
-    
+
+    formatBs(amount) {
+      const n = Number(amount);
+      const safe = Number.isFinite(n) ? n : 0;
+      return `${safe.toLocaleString('es-VE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })} Bs`;
+    },
     // Cargar bancos desde la API
     async loadBanks() {
       try {
@@ -697,8 +796,10 @@ export default {
         return;
       }
       
-      if (amount > this.availableBalance) {
-        this.errors.withdrawalAmount = 'El monto excede el saldo disponible';
+      if (amount > this.withdrawableBalance) {
+        this.errors.withdrawalAmount = this.withdrawalEligible
+          ? 'El monto excede el balance aceptado para retiro'
+          : 'Aún no tienes balance aceptado para retiro';
         return;
       }
       
