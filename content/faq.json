@@ -11,8 +11,8 @@
       "a": "¡Es muy fácil! Tienes dos opciones:<br><strong>Si estás en Venezuela:</strong> Elige \"Pago Móvil\", dale al botón de WhatsApp y envíanos tu comprobante. ¡Te cargamos en minutos!<br><strong>Si estás en Chile o el resto del mundo:</strong> Elige \"Pago Automático\" y usa Cryptomus. Se acredita al instante sin hablar con nadie."
     },
     {
-      "q": "¿Cómo retiro mis ganancias?",
-      "a": "Ve a la sección de Retiros, elige tu método (Banco o Cripto) y solicita el monto. La cuenta de destino debe ser tuya (mismo titular y cédula registrados). Verificamos tu historial de juego y el origen de los fondos; el proceso puede tardar hasta <strong>48 horas hábiles</strong>. Hay un tope diario de retiro equivalente a <strong>$50 USD</strong> por usuario. Más detalle en <a href=\"/terms\" style=\"color:#FFC827;\">Términos y Condiciones</a>."
+      "q": "¿Cómo redimo mis incentivos?",
+      "a": "Ve a la sección de Retiros, elige tu método (Banco o Cripto) y solicita la redención de tus Incentivos de Mérito. La cuenta de destino debe ser tuya (mismo titular y cédula registrados). Verificamos tu historial de desafíos y el origen de los fondos usados para adquirir créditos; el proceso puede tardar hasta <strong>48 horas hábiles</strong>. Hay un tope diario equivalente a <strong>$50 USD</strong> por usuario. Más detalle en <a href=\"/terms\" style=\"color:#FFC827;\">Términos y Condiciones</a>."
     }
   ],
   "right": [
@@ -26,11 +26,11 @@
     },
     {
       "q": "¿Qué pasa si se cae el servidor del juego (por ejemplo varias horas)?",
-      "a": "Si hay una interrupción del servidor o de un proveedor externo, Dominues puede suspender mesas, anular partidas no liquidadas de forma confiable y, <strong>solo cuando sea verificable</strong>, reintegrar la apuesta de entrada de esas partidas. <strong>Una caída no obliga a devolver el saldo completo de las cuentas</strong> ni genera compensación automática. Los reclamos se atienden por soporte oficial, caso por caso, con base en los logs del sistema. Detalle en Términos (secciones 32–36)."
+      "a": "Si hay una interrupción del servidor o de un proveedor externo, Dominues puede suspender mesas, anular desafíos no liquidados de forma confiable y, <strong>solo cuando sea verificable</strong>, reintegrar los Créditos de Acceso de entrada de esos desafíos. <strong>Una caída no obliga a devolver el total de créditos de las cuentas</strong> ni genera compensación automática. Los reclamos se atienden por soporte oficial, caso por caso, con base en los logs del sistema. Detalle en Términos (secciones 32–36)."
     },
     {
       "q": "¿Tengo derecho a reembolso si hay mantenimiento o falla técnica?",
-      "a": "No de forma automática. Mantenimientos, actualizaciones y fallas técnicas (propias o de terceros) <strong>no generan derecho a compensación</strong>. El saldo en Bs sigue las reglas de retiros y auditoría."
+      "a": "No de forma automática. Mantenimientos, actualizaciones y fallas técnicas (propias o de terceros) <strong>no generan derecho a compensación</strong>. Los créditos e incentivos siguen las reglas de redención y auditoría."
     },
     {
       "q": "¿Puedo jugar desde mi teléfono?",

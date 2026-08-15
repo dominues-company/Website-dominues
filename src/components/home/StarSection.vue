@@ -39,8 +39,8 @@
                                     <i class="fas fa-trophy"></i>
                                 </div>
                                 <div class="why-item__content">
-                                    <h4 class="title">Más Oportunidades de Ganar</h4>
-                                    <p>Con nuestros torneos y mesas de apuestas, tendrás muchas oportunidades de ganar grandes premios. ¡La suerte está de tu lado!</p>
+                                    <h4 class="title">Más Oportunidades de Destacar</h4>
+                                    <p>Con nuestros torneos y mesas de desafíos, tendrás muchas oportunidades de demostrar tu destreza y obtener incentivos por mérito.</p>
                                 </div>
                             </div>
                         </div>
@@ -50,8 +50,8 @@
                                     <i class="fas fa-coins"></i>
                                 </div>
                                 <div class="why-item__content">
-                                    <h4 class="title">Invierte, Gana y Gana Más</h4>
-                                    <p>Al jugar con nosotros, no solo te diviertes, sino que también puedes ganar premios y criptomonedas. ¡Juega, invierte y gana!</p>
+                                    <h4 class="title">Participa, Destaca y Redime</h4>
+                                    <p>Al competir con nosotros, no solo perfeccionas tu técnica: también puedes obtener Incentivos de Mérito por tu destreza en los desafíos.</p>
                                 </div>
                             </div>
                         </div>

@@ -35,21 +35,21 @@
 
         <div class="balance-summary">
           <div class="balance-summary-item">
-            <span class="balance-summary-label">Saldo total de tu cuenta</span>
-            <span class="balance-summary-value">{{ formatBs(availableBalance) }}</span>
-            <span class="balance-summary-hint">Disponible para jugar en mesas</span>
+            <span class="balance-summary-label">Créditos de Acceso</span>
+            <span class="balance-summary-value">{{ formatCredits(availableBalance) }}</span>
+            <span class="balance-summary-hint">Uso exclusivo para desafíos</span>
           </div>
           <div class="balance-summary-item balance-summary-item--withdraw">
-            <span class="balance-summary-label">Saldo disponible para retiro</span>
-            <span class="balance-summary-value">{{ formatBs(withdrawableBalance) }}</span>
-            <span class="balance-summary-hint">Monto máximo que puedes solicitar</span>
+            <span class="balance-summary-label">Incentivos de Mérito</span>
+            <span class="balance-summary-value">{{ formatCredits(withdrawableBalance) }}</span>
+            <span class="balance-summary-hint">Únicos sujetos a redención</span>
           </div>
         </div>
 
         <p v-if="!withdrawalEligible" class="withdrawal-eligibility-note">
-          Aún no tienes saldo habilitado para retiro. Debes apostar el 100% de tus depósitos aprobados.
+          Aún no tienes incentivos habilitados para redención. Debes consumir el 100% de tus Créditos de Acceso adquiridos en desafíos.
           <template v-if="remainingToWager > 0">
-            Faltan <strong>{{ formatBs(remainingToWager) }}</strong> por jugar.
+            Faltan <strong>{{ formatCredits(remainingToWager) }}</strong> por usar en desafíos.
           </template>
         </p>
 
@@ -746,13 +746,13 @@ export default {
       }
     },
 
-    formatBs(amount) {
+    formatCredits(amount) {
       const n = Number(amount);
       const safe = Number.isFinite(n) ? n : 0;
       return `${safe.toLocaleString('es-VE', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-      })} Bs`;
+      })} créditos`;
     },
     // Cargar bancos desde la API
     async loadBanks() {
@@ -802,14 +802,14 @@ export default {
       }
       
       if (amount < 500) {
-        this.errors.withdrawalAmount = 'El monto mínimo es de 500,00 Bs';
+        this.errors.withdrawalAmount = 'El monto mínimo es de 500 créditos';
         return;
       }
       
       if (amount > this.withdrawableBalance) {
         this.errors.withdrawalAmount = this.withdrawalEligible
-          ? 'El monto excede el balance aceptado para retiro'
-          : 'Aún no tienes balance aceptado para retiro';
+          ? 'El monto excede tus Incentivos de Mérito disponibles'
+          : 'Aún no tienes Incentivos de Mérito habilitados para redención';
         return;
       }
       
