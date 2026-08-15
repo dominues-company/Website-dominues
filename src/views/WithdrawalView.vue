@@ -180,10 +180,24 @@
   color: #5f4300;
   text-align: center;
 }
-.identity-gate h3 { font-size: 1.15rem; margin-bottom: 8px; }
+.identity-gate h3 {
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+  color: #7a4a00;
+  font-weight: 700;
+}
+.identity-gate h3 i,
+.identity-gate p {
+  color: #5f4300;
+}
 .identity-gate p { margin-bottom: 16px; line-height: 1.5; }
 .identity-gate .btn-register, .identity-gate .btn-cancel { margin: 0 auto; }
 .identity-gate.status-rejected { border-color: #dc3545; background: #fff0f1; color: #7b1d26; }
+.identity-gate.status-rejected h3,
+.identity-gate.status-rejected h3 i,
+.identity-gate.status-rejected p {
+  color: #7b1d26;
+}
 .form-locked { opacity: .58; pointer-events: none; }
 
 .balance-summary {
