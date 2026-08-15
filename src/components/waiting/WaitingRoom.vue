@@ -6513,7 +6513,7 @@ export default {
 .mode-pricing {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   margin-bottom: 15px;
 }
@@ -6532,26 +6532,46 @@ export default {
 }
 
 .mode-price.mode-prize {
-  background: linear-gradient(180deg, rgba(45, 27, 105, 0.08) 0%, rgba(45, 27, 105, 0.04) 100%);
+  background: linear-gradient(180deg, rgba(45, 27, 105, 0.1) 0%, rgba(45, 27, 105, 0.04) 100%);
+  padding: 14px 16px 12px;
+  gap: 6px;
+}
+
+.mode-price.mode-prize .price-value {
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.mode-price.mode-prize .price-coin {
+  width: 26px;
+  height: 26px;
 }
 
 .mode-price.mode-entry {
   align-self: center;
-  width: 86%;
-  padding: 8px 12px;
-  border-radius: 12px;
-  gap: 2px;
+  width: 68%;
+  max-width: 220px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  gap: 1px;
+  background: rgba(45, 27, 105, 0.035);
+  border-color: rgba(45, 27, 105, 0.07);
 }
 
 .mode-price.mode-entry .price-label {
-  font-size: 0.64rem;
-  letter-spacing: 0.06em;
-  opacity: 0.7;
+  font-size: 0.58rem;
+  letter-spacing: 0.05em;
+  opacity: 0.58;
+  font-weight: 600;
 }
 
 .mode-price.mode-entry .price-value,
 .mode-price.mode-entry .price-value.free {
-  font-size: 1.05rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #4a3d78;
+  opacity: 0.88;
 }
 
 .price-label {
@@ -7228,6 +7248,25 @@ export default {
     font-size: 1.05rem;
   }
 
+  .mode-price.mode-prize .price-value {
+    font-size: 1.42rem;
+  }
+
+  .mode-price.mode-prize .price-coin {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mode-price.mode-entry {
+    width: 64%;
+    padding: 4px 8px;
+  }
+
+  .mode-price.mode-entry .price-value,
+  .mode-price.mode-entry .price-value.free {
+    font-size: 0.82rem;
+  }
+
   .price-coin {
     width: 18px;
     height: 18px;
@@ -7404,6 +7443,25 @@ export default {
     font-size: 0.95rem;
   }
 
+  .mode-price.mode-prize .price-value {
+    font-size: 1.32rem;
+  }
+
+  .mode-price.mode-prize .price-coin {
+    width: 20px;
+    height: 20px;
+  }
+
+  .mode-price.mode-entry {
+    width: 62%;
+    padding: 4px 8px;
+  }
+
+  .mode-price.mode-entry .price-value,
+  .mode-price.mode-entry .price-value.free {
+    font-size: 0.78rem;
+  }
+
   .price-coin {
     width: 16px;
     height: 16px;
@@ -7524,9 +7582,21 @@ export default {
   font-size: 1.15rem !important;
 }
 
+.invite-mode .mode-price.mode-prize .price-value {
+  font-size: 1.45rem !important;
+  font-weight: 900 !important;
+}
+
+.invite-mode .mode-price.mode-entry {
+  width: 68%;
+  padding: 5px 10px;
+}
+
 .invite-mode .mode-price.mode-entry .price-value,
 .invite-mode .mode-price.mode-entry .price-value.free {
-  font-size: 0.98rem !important;
+  font-size: 0.84rem !important;
+  font-weight: 600 !important;
+  opacity: 0.9 !important;
 }
 
 .invite-mode .mode-price.mode-entry .price-label {
