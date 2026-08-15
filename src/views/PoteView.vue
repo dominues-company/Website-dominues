@@ -616,6 +616,11 @@ export default {
   transition: all 0.3s ease;
 }
 
+.month-select option {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+
 .month-select:hover {
   border-color: #fbbf24;
 }
