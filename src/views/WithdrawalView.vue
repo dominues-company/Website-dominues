@@ -696,41 +696,51 @@ export default {
   },
   methods: {
     // Cargar datos del cliente
+    applyClientPayload(data = {}) {
+      const user = data.user || {};
+      this.clientData = {
+        name: data.name || user.name,
+        typeIdentification: data.type_identification || user.type_identification,
+        nIdentification: data.n_identification || user.n_identification,
+        email: data.email || user.email,
+        username: data.username || user.email,
+        phone: data.phone || user.phone,
+        balance: data.balance ?? user.balance
+      };
+
+      this.availableBalance = Number(data.balance ?? user.balance ?? 0) || 0;
+      const eligibility = data.withdrawal_eligibility || {};
+      this.withdrawalEligible = eligibility.viable === true;
+      this.remainingToWager = Number(eligibility.remaining_to_wager || 0) || 0;
+      const apiWithdrawable = data.withdrawable_balance;
+      this.withdrawableBalance = apiWithdrawable != null
+        ? Number(apiWithdrawable) || 0
+        : (this.withdrawalEligible ? this.availableBalance : 0);
+      this.identityVerificationStatus = data.identity_verification_status
+        || user.identity_verification_status
+        || 'none';
+    },
+
     async loadClientData() {
       try {
         this.loadingData = true;
-        const response = await api.get('/api/client-data', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        });
-        
-        this.clientData = {
-          name: response.data.name || response.data.user?.name,
-          typeIdentification: response.data.type_identification || response.data.user?.type_identification,
-          nIdentification: response.data.n_identification || response.data.user?.n_identification,
-          email: response.data.email || response.data.user?.email,
-          username: response.data.username || response.data.user?.email,
-          phone: response.data.phone || response.data.user?.phone,
-          balance: response.data.user?.balance
-        };
-        
-        this.availableBalance = Number(
-          response.data.balance ?? response.data.user?.balance ?? 0
-        ) || 0;
-        const eligibility = response.data.withdrawal_eligibility || {};
-        this.withdrawalEligible = eligibility.viable === true;
-        this.remainingToWager = Number(eligibility.remaining_to_wager || 0) || 0;
-        const apiWithdrawable = response.data.withdrawable_balance;
-        this.withdrawableBalance = apiWithdrawable != null
-          ? Number(apiWithdrawable) || 0
-          : (this.withdrawalEligible ? this.availableBalance : 0);
-        this.identityVerificationStatus = response.data.identity_verification_status
-          || response.data.user?.identity_verification_status
-          || 'none';
+        const response = await api.get('/api/client-data');
+        this.applyClientPayload(response.data);
+        this.errorMessage = '';
       } catch (error) {
         console.error('Error al cargar datos del cliente:', error);
-        this.errorMessage = 'Error al cargar los datos del cliente.';
+        try {
+          const fallback = await api.get('/api/user_balance');
+          this.applyClientPayload({
+            ...(fallback.data.user || {}),
+            user: fallback.data.user,
+            balance: fallback.data.balance ?? fallback.data.user?.balance
+          });
+          this.errorMessage = '';
+        } catch (fallbackError) {
+          this.errorMessage = error.response?.data?.message
+            || 'Error al cargar los datos del cliente.';
+        }
       } finally {
         this.loadingData = false;
       }
