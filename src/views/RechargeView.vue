@@ -4,10 +4,6 @@
       <div class="recharge-header">
         <h2>Recargas</h2>
         <p>Elige el método de pago para recargar tu cuenta</p>
-        <p class="currency-note">
-          <i class="fas fa-info-circle me-1"></i>
-          <span>Recarga con Pago Móvil para obtener <strong>Bs</strong>, nuestra moneda interna.</span>
-        </p>
       </div>
 
       <!-- Contenido (solo Pago Móvil por ahora; BlockBee / última recarga desactivados) -->
@@ -359,20 +355,6 @@
 .recharge-header p {
   color: #7f8c8d;
   font-size: 16px;
-}
-
-.recharge-header .currency-note {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #2c3e50;
-  background: #eef6ff;
-  border: 1px solid #cfe5ff;
-  border-radius: 8px;
-  padding: 8px 12px;
-}
-
-.recharge-header .currency-note strong {
-  color: #1565c0;
 }
 
 .payment-method-selector {
