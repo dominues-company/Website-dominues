@@ -128,13 +128,13 @@
               type="number" 
               id="amount" 
               class="form-control" 
-              placeholder="250.00" 
+              placeholder="1000.00" 
               v-model="form.amount"
               required
               :disabled="isLoading"
               :class="{'is-invalid': errors.amount}"
               @input="validateAmount"
-              min="250"
+              min="1000"
               step="0.01"
             >
           </div>
@@ -142,7 +142,7 @@
             <i class="fas fa-exclamation-circle"></i> {{ errors.amount }}
           </div>
           <div class="amount-info">
-            <small>Monto mínimo: Bs. 250,00</small>
+            <small>Monto mínimo: Bs. 1.000,00</small>
           </div>
         </div>
 
@@ -219,7 +219,7 @@
         <ul>
           <li>La transacción será validada en pocos minutos</li>
           <li>Usaremos tu número telefónico: <strong>{{ accountInfo.phone }}</strong> y tu documento de identidad registrado: <strong>{{ accountInfo.type_identification }}-{{ accountInfo.n_identification }}</strong> para recargas y retiros</li>
-          <li>El monto mínimo de cada recarga es de <strong>Bs. 250,00</strong></li>
+          <li>El monto mínimo de cada recarga es de <strong>Bs. 1.000,00</strong></li>
           <li>Los montos se acreditan automáticamente una vez verificado el pago</li>
         </ul>
       </div>
@@ -1186,7 +1186,7 @@ export default {
       const { amount, reference } = this.form;
       const requiredFieldsFilled = amount && reference;
       const noErrors = Object.keys(this.errors).length === 0;
-      const amountValid = parseFloat(amount) >= 250;
+      const amountValid = parseFloat(amount) >= 1000;
       
       return requiredFieldsFilled && noErrors && amountValid;
     },
@@ -1424,8 +1424,8 @@ export default {
         return;
       }
       
-      if (amount < 250) {
-        this.errors.amount = 'El monto mínimo es de Bs. 250,00';
+      if (amount < 1000) {
+        this.errors.amount = 'El monto mínimo es de Bs. 1.000,00';
         return;
       }
       
