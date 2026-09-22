@@ -230,7 +230,7 @@
           >
             <div class="terms-scroll-content">
               <strong>Resumen – Términos y Condiciones y Política de Privacidad (Dominues)</strong>
-              <p>Dominues es operada por <strong>Soluciones y Desarrollos Tecnológicos RRPA</strong>, RIF <strong>J-508703626</strong>.</p>
+              <p>Dominues es de propiedad exclusiva de <strong>SOLUCIONES Y DESARROLLO TECNOLÓGICOS RRPA</strong>, RIF <strong>J-508703626</strong>.</p>
               <p>Al registrarte aceptas que Dominues es un hub de destreza (dominó): desafíos y competencias basados en habilidad técnica, no en envite. El acceso debe ser legal en tu país.</p>
               <p><strong>Créditos e incentivos:</strong> Los fondos se convierten en Créditos de Acceso, de uso exclusivo para desafíos y no reembolsables. Los Incentivos de Mérito (reconocimiento por destreza) son los únicos sujetos a redención. No son depósitos bancarios ni moneda de curso legal fuera de la plataforma.</p>
               <p><strong>Adquisición y redención:</strong> La compra de créditos puede requerir validación de comprobante. La redención de incentivos se procesa de forma manual (hasta 48 h hábiles), con tope diario equivalente a $50 USD y solo a cuentas del mismo titular registrado. Eres responsable de los datos de liquidación; no se reponen fondos enviados a cuentas erróneas o de terceros.</p>
