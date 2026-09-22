@@ -6,47 +6,16 @@
         <p>Elige el método de pago para recargar tu cuenta</p>
         <p class="currency-note">
           <i class="fas fa-info-circle me-1"></i>
-          <span v-if="showsBlockbeeForUser">Bs y USDT ($) son medios de pago para obtener <strong>Bs</strong>, nuestra moneda interna.</span>
-          <span v-else>Recarga con Pago Móvil para obtener <strong>Bs</strong>, nuestra moneda interna.</span>
+          <span>Recarga con Pago Móvil para obtener <strong>Bs</strong>, nuestra moneda interna.</span>
         </p>
       </div>
 
-      <!-- Loading para determinar método -->
-      <div v-if="isLoadingMethod" class="method-loading">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Determinando método de pago...</span>
-        </div>
-        <p class="mt-2">Determinando método de pago preferido...</p>
-      </div>
-
-      <!-- Contenido cuando ya se determinó el método -->
-      <template v-if="!isLoadingMethod">
-        <!-- Selector de método de pago (oculto mientras BlockBee está temporalmente deshabilitado para nuevos) -->
-        <div class="payment-method-selector" v-if="!showOnlyLastMethod && !blockbeeTemporarilyDisabled">
-          <button
-            type="button"
-            class="method-tab"
-            :class="{ active: paymentMethod === 'pagomovil' }"
-            @click="paymentMethod = 'pagomovil'"
-          >
-            <i class="fas fa-mobile-alt me-2"></i> Pago Móvil
-          </button>
-          <button
-            type="button"
-            class="method-tab"
-            :class="{ active: paymentMethod === 'blockbee' }"
-            @click="paymentMethod = 'blockbee'; blockbeePaymentUrl = null; blockbeeError = ''"
-          >
-            <img src="https://dominues.com/blockbee_logo.png" alt="BlockBee" class="method-tab-logo"> Cripto (USDT)
-          </button>
-        </div>
-
-        <!-- Indicador del método seleccionado cuando solo se muestra uno -->
-        <div class="selected-method-indicator" v-if="showOnlyLastMethod">
-          <div class="method-badge" :class="lastRechargeMethod === 'blockbee' ? 'method-crypto' : 'method-fiat'">
-            <i v-if="lastRechargeMethod === 'blockbee'" class="fab fa-bitcoin me-2"></i>
-            <i v-else class="fas fa-mobile-alt me-2"></i>
-            {{ lastRechargeMethod === 'blockbee' ? 'Cripto (USDT)' : 'Pago Móvil' }}
+      <!-- Contenido (solo Pago Móvil por ahora; BlockBee / última recarga desactivados) -->
+      <template>
+        <div class="selected-method-indicator">
+          <div class="method-badge method-fiat">
+            <i class="fas fa-mobile-alt me-2"></i>
+            Pago Móvil
           </div>
         </div>
       </template>
@@ -1108,11 +1077,11 @@ export default {
         n_identification: '',
         phone: ''
       },
-      lastRechargeMethod: null, // Método de la última recarga
-      showOnlyLastMethod: false, // Si debe mostrar solo el método de la última recarga
-      // Temporal: oculta BlockBee salvo usuarios cuya última recarga ya fue BlockBee
+      lastRechargeMethod: 'pagomovil',
+      showOnlyLastMethod: true,
+      // Temporal: solo Pago Móvil; BlockBee y lock por última recarga desactivados
       blockbeeTemporarilyDisabled: true,
-      isLoadingMethod: true, // Loading para determinar método preferido
+      isLoadingMethod: false,
       showPostRechargeModal: false,
       rechargeSuccessSnapshot: null,
       banks: [
@@ -1149,9 +1118,9 @@ export default {
       return '';
     },
 
-    /** BlockBee solo para quien ya recargó con ese método (lock histórico). */
+    /** BlockBee desactivado por ahora: solo Pago Móvil. */
     showsBlockbeeForUser() {
-      return this.lastRechargeMethod === 'blockbee' || !this.blockbeeTemporarilyDisabled;
+      return false;
     },
 
     whatsappBlockbeeNotifyUrl() {
@@ -1198,17 +1167,27 @@ export default {
     }
   },
   async mounted() {
+    this.forcePagoMovilOnly();
     this.handleBlockBeeReturnQuery();
     await this.loadAccountInfo();
-    await this.loadLastRecharge();
   },
   methods: {
+    /** Fuerza Pago Móvil: sin BlockBee ni preferencia por última recarga. */
+    forcePagoMovilOnly() {
+      this.paymentMethod = 'pagomovil';
+      this.lastRechargeMethod = 'pagomovil';
+      this.showOnlyLastMethod = true;
+      this.isLoadingMethod = false;
+      this.blockbeePaymentUrl = null;
+      this.blockbeeError = '';
+    },
+
     /** Alinea valores del API (p. ej. pago_movil) con las claves usadas en la vista (pagomovil). */
     normalizePaymentMethod(raw) {
       if (raw == null || raw === '') return 'pagomovil';
       const m = String(raw).toLowerCase().replace(/\s+/g, '_');
       if (m === 'pago_movil' || m === 'pagomovil') return 'pagomovil';
-      if (m === 'blockbee') return 'blockbee';
+      // BlockBee desactivado: cualquier otro método cae a Pago Móvil
       return 'pagomovil';
     },
 
@@ -1228,122 +1207,18 @@ export default {
       this.$router.push('/dashboard');
     },
 
-    // Cargar última recarga para determinar método preferido
+    // Última recarga desactivada: siempre Pago Móvil
     async loadLastRecharge() {
-      try {
-        console.log('Cargando última recarga...');
-        this.isLoadingMethod = true;
-        
-        // Intentar diferentes parámetros para obtener depósitos
-        let response;
-        try {
-          // Primer intento con type=dep
-          response = await api.get('/api/transactions?limit=1&type=dep', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            }
-          });
-        } catch (e) {
-          console.log('Error con type=dep, intentando con type=deposito');
-          // Segundo intento con type=deposito
-          response = await api.get('/api/transactions?limit=1&type=deposito', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            }
-          });
-        }
-        
-        console.log('Respuesta de API:', response.data);
-        
-        if (response.data.transactions && response.data.transactions.length > 0) {
-          const lastRecharge = response.data.transactions[0];
-          console.log('Última recarga cruda:', lastRecharge);
-          
-          this.lastRechargeMethod = this.normalizePaymentMethod(lastRecharge.payment_method);
-          this.showOnlyLastMethod = true;
-          
-          // Establecer el método de pago al de la última recarga
-          this.paymentMethod = this.lastRechargeMethod;
-          
-          console.log('Última recarga encontrada:', {
-            method: this.lastRechargeMethod,
-            id: lastRecharge.id,
-            date: lastRecharge.created_at,
-            payment_method: lastRecharge.payment_method,
-            showOnlyLastMethod: this.showOnlyLastMethod,
-            currentPaymentMethod: this.paymentMethod
-          });
-        } else {
-          console.log('No se encontraron transacciones de depósito, intentando sin filtro');
-          // Intentar sin filtro de tipo, solo obtener la última transacción
-          const allResponse = await api.get('/api/transactions?limit=5', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            }
-          });
-          
-          console.log('Respuesta sin filtro:', allResponse.data);
-          
-          if (allResponse.data.transactions && allResponse.data.transactions.length > 0) {
-            // Buscar la primera transacción que sea un depósito
-            const lastDeposit = allResponse.data.transactions.find(t => 
-              t.type_transaction === 'dep' || 
-              t.type_transaction === 'deposito' ||
-              t.type_transaction === 'deposit'
-            );
-            
-            if (lastDeposit) {
-              console.log('Depósito encontrado:', lastDeposit);
-              this.lastRechargeMethod = this.normalizePaymentMethod(lastDeposit.payment_method);
-              this.showOnlyLastMethod = true;
-              this.paymentMethod = this.lastRechargeMethod;
-              
-              console.log('Última recarga encontrada (sin filtro):', {
-                method: this.lastRechargeMethod,
-                id: lastDeposit.id,
-                date: lastDeposit.created_at,
-                payment_method: lastDeposit.payment_method
-              });
-            } else {
-              console.log('No se encontraron depósitos en las transacciones recientes');
-              this.showOnlyLastMethod = false;
-            }
-          } else {
-            console.log('No se encontraron transacciones');
-            this.showOnlyLastMethod = false;
-          }
-        }
-      } catch (error) {
-        console.error('Error al cargar última recarga:', error);
-        // Si hay error, por defecto Pago Móvil (BlockBee temporalmente oculto)
-        this.showOnlyLastMethod = false;
-      } finally {
-        this.applyBlockbeeTemporaryPolicy();
-        // Siempre ocultar el loading al final
-        this.isLoadingMethod = false;
-      }
+      this.forcePagoMovilOnly();
     },
 
     /**
-     * Temporal: solo Pago Móvil para usuarios nuevos / sin historial BlockBee.
-     * Si la última recarga fue BlockBee, se mantiene el lock a ese método.
+     * Solo Pago Móvil por ahora (BlockBee y lock por historial desactivados).
      */
     applyBlockbeeTemporaryPolicy() {
-      if (!this.blockbeeTemporarilyDisabled) return;
-
-      // Lock histórico o retorno reciente desde BlockBee
-      if (this.lastRechargeMethod === 'blockbee' || this.blockbeeReturnMessage) {
-        this.showOnlyLastMethod = true;
-        this.paymentMethod = 'blockbee';
-        this.lastRechargeMethod = 'blockbee';
-        return;
-      }
-
-      this.showOnlyLastMethod = true;
-      this.paymentMethod = 'pagomovil';
-      this.lastRechargeMethod = this.lastRechargeMethod || 'pagomovil';
+      this.forcePagoMovilOnly();
     },
-    
+
     // Cargar información de la cuenta del usuario
     async loadAccountInfo() {
       try {
@@ -1579,13 +1454,10 @@ export default {
       const payment = q.payment;
       if (payment !== 'success') return;
 
-      this.blockbeeReturnMessage = 'Pago recibido en BlockBee. Tu transacción quedará en revisión hasta que un administrador la apruebe.';
+      // BlockBee desactivado: avisar y quedarse en Pago Móvil
+      this.blockbeeReturnMessage = 'Pago recibido. Tu transacción quedará en revisión hasta que un administrador la apruebe.';
       this.blockbeeReturnType = 'success';
-      this.paymentMethod = 'blockbee';
-      this.lastRechargeMethod = 'blockbee';
-      this.showOnlyLastMethod = true;
-      this.blockbeePaymentUrl = null;
-      this.blockbeeError = '';
+      this.forcePagoMovilOnly();
 
       if (this.$router?.replace) {
         const query = { ...this.$route.query };
