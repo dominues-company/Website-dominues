@@ -24,7 +24,7 @@
       <div class="footer-bottom">
           <div class="container">
               <div class="footer-wrapper d-flex flex-wrap justify-content-center align-items-center text-center">
-                  <p class="copyright text-white">Copyrights &copy; {{ currentYear }} Dominues. Todos los derechos reservados.</p>
+                  <p class="copyright text-white">Copyrights &copy; {{ currentYear }} Dominues — Soluciones y Desarrollos Tecnológicos RRPA, RIF J-508703626. Todos los derechos reservados.</p>
               </div>
           </div>
       </div>
