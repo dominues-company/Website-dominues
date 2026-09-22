@@ -17,17 +17,13 @@
 <script>
 import { mapGetters } from 'vuex';
 import {
-  RECHARGE_WHATSAPP_PHONE,
-  WHATSAPP_FLOAT_GREETING
+  pickRechargeWhatsAppPhone,
+  WHATSAPP_FLOAT_GREETING,
+  rechargeWhatsAppUrl
 } from '@/utils/rechargeWhatsApp';
 
 export default {
   name: 'WhatsAppButton',
-  data() {
-    return {
-      phoneNumber: RECHARGE_WHATSAPP_PHONE
-    }
-  },
   computed: {
     ...mapGetters('auth', ['currentUser', 'isAuthenticated']),
     
@@ -55,15 +51,17 @@ export default {
     },
     
     whatsappLink() {
-      // Crear enlace de WhatsApp con mensaje personalizado
-      const encodedMessage = encodeURIComponent(this.whatsappMessage);
-      return `https://wa.me/${this.phoneNumber}?text=${encodedMessage}`;
+      // href de respaldo; al click se elige número al azar de nuevo
+      return rechargeWhatsAppUrl(this.whatsappMessage);
     }
   },
   methods: {
-    handleClick() {
-      console.log('📱 [WHATSAPP] Abriendo chat de WhatsApp con soporte');
-      console.log('Usuario:', this.userName);
+    handleClick(event) {
+      event.preventDefault();
+      const phone = pickRechargeWhatsAppPhone();
+      const url = rechargeWhatsAppUrl(this.whatsappMessage, phone);
+      console.log('📱 [WHATSAPP] Abriendo chat', phone, 'usuario:', this.userName);
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 }

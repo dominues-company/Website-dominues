@@ -1,8 +1,24 @@
 /** WhatsApp para reportar recargas (solo dígitos, incluye código país 58). */
-export const RECHARGE_WHATSAPP_PHONE = '584243038858';
+export const RECHARGE_WHATSAPP_PHONES = [
+  '584243038858', // principal
+  '584243548523'  // respaldo / rotación (+58 424-3548523)
+];
+
+/** @deprecated Usar RECHARGE_WHATSAPP_PHONES / pickRechargeWhatsAppPhone() */
+export const RECHARGE_WHATSAPP_PHONE = RECHARGE_WHATSAPP_PHONES[0];
 
 /** Mensaje corto del botón flotante (solo saludo / contacto general). */
 export const WHATSAPP_FLOAT_GREETING = '¡Saludos! Me contacto desde Dominues.';
+
+/**
+ * Elige un número al azar entre los configurados (reparte carga / evita bloqueos).
+ */
+export function pickRechargeWhatsAppPhone() {
+  const phones = RECHARGE_WHATSAPP_PHONES.filter(Boolean);
+  if (!phones.length) return RECHARGE_WHATSAPP_PHONE;
+  const index = Math.floor(Math.random() * phones.length);
+  return phones[index];
+}
 
 /**
  * Mensaje estructurado para notificar una recarga al equipo.
@@ -19,6 +35,7 @@ Método: ${methodLine}
 Adjunto el comprobante para la aprobación manual. ¡Gracias!`;
 }
 
-export function rechargeWhatsAppUrl(message) {
-  return `https://wa.me/${RECHARGE_WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+export function rechargeWhatsAppUrl(message, phone = null) {
+  const target = phone || pickRechargeWhatsAppPhone();
+  return `https://wa.me/${target}?text=${encodeURIComponent(message)}`;
 }
