@@ -183,7 +183,7 @@
         <h4>Información Importante:</h4>
         <ul>
           <li>La transacción será validada en pocos minutos</li>
-          <li>Usaremos tu número telefónico: <strong>{{ accountInfo.phone }}</strong> y tu documento de identidad registrado: <strong>{{ accountInfo.type_identification }}-{{ accountInfo.n_identification }}</strong> para recargas y retiros</li>
+          <li>Usaremos tu número telefónico: <strong>{{ clientPhoneDisplay }}</strong> y tu documento de identidad registrado: <strong>{{ clientDocumentDisplay }}</strong> para recargas y retiros</li>
           <li>El monto mínimo de cada recarga es de <strong>Bs. 1.000,00</strong></li>
           <li>Los montos se acreditan automáticamente una vez verificado el pago</li>
         </ul>
@@ -1098,6 +1098,18 @@ export default {
       if (this.currentUser?.name) return this.currentUser.name;
       if (this.currentUser?.email) return this.currentUser.email.split('@')[0];
       return '';
+    },
+
+    /** Datos del cliente (perfil), no de la cuenta de pago de la empresa. */
+    clientPhoneDisplay() {
+      return this.currentUser?.phone || 'el registrado en tu perfil';
+    },
+
+    clientDocumentDisplay() {
+      const type = this.currentUser?.type_identification;
+      const number = this.currentUser?.n_identification;
+      if (type && number) return `${type}-${number}`;
+      return 'el registrado en tu perfil';
     },
 
     /** BlockBee desactivado por ahora: solo Pago Móvil. */
